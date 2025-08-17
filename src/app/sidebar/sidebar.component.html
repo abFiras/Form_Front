@@ -1,0 +1,95 @@
+ <aside class="sidebar" [class.collapsed]="!isOpen">
+      <div class="sidebar-content">
+        
+        <!-- Navigation principale -->
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <h3 class="nav-title">Navigation</h3>
+            <ul class="nav-list">
+              <li *ngFor="let item of mainMenuItems" 
+                  class="nav-item"
+                  [class.active]="item.active"
+                  [class.has-children]="item.children && item.children.length > 0">
+                
+                <a [routerLink]="item.route" 
+                   class="nav-link"
+                   [class.active]="item.active"
+                   (click)="toggleSubmenu(item)">
+                  <span class="nav-icon">{{item.icon}}</span>
+                  <span class="nav-label">{{item.label}}</span>
+                  <span *ngIf="item.badge" class="nav-badge">{{item.badge}}</span>
+                  <span *ngIf="item.children" class="nav-arrow" 
+                        [class.rotated]="item.active">⌄</span>
+                </a>
+                
+                <ul *ngIf="item.children && item.active" class="nav-submenu">
+                  <li *ngFor="let child of item.children" class="nav-subitem">
+                    <a [routerLink]="child.route" class="nav-sublink">
+                      <span class="nav-subicon">{{child.icon}}</span>
+                      <span class="nav-sublabel">{{child.label}}</span>
+                      <span *ngIf="child.badge" class="nav-badge">{{child.badge}}</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Gestion -->
+          <div class="nav-section">
+            <h3 class="nav-title">Gestion</h3>
+            <ul class="nav-list">
+              <li *ngFor="let item of managementMenuItems" 
+                  class="nav-item"
+                  [class.active]="item.active">
+                <a [routerLink]="item.route" 
+                   class="nav-link"
+                   [class.active]="item.active">
+                  <span class="nav-icon">{{item.icon}}</span>
+                  <span class="nav-label">{{item.label}}</span>
+                  <span *ngIf="item.badge" class="nav-badge">{{item.badge}}</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Outils -->
+          <div class="nav-section">
+            <h3 class="nav-title">Outils</h3>
+            <ul class="nav-list">
+              <li *ngFor="let item of toolsMenuItems" 
+                  class="nav-item"
+                  [class.active]="item.active">
+                <a [routerLink]="item.route" 
+                   class="nav-link"
+                   [class.active]="item.active">
+                  <span class="nav-icon">{{item.icon}}</span>
+                  <span class="nav-label">{{item.label}}</span>
+                  <span *ngIf="item.badge" class="nav-badge">{{item.badge}}</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <!-- Statistiques rapides -->
+        <div class="sidebar-stats" *ngIf="isOpen">
+          <h4 class="stats-title">Statistiques</h4>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-number">{{stats.totalForms}}</div>
+              <div class="stat-label">Formulaires</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">{{stats.pendingValidations}}</div>
+              <div class="stat-label">En attente</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bouton de collapse -->
+        <button class="collapse-btn" (click)="toggleSidebar()">
+          <span class="collapse-icon" [class.rotated]="!isOpen">⟨</span>
+        </button>
+      </div>
+    </aside>
