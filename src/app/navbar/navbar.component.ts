@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { AuthService } from '../service/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -12,7 +13,7 @@ export class NavbarComponent {
   @Input() userRole = 'Administrateur';
   @Input() notificationCount = 3;
   @Output() sidebarToggle = new EventEmitter<void>();
-
+constructor(private authService:AuthService){}
   userMenuOpen = false;
 
   get userInitials(): string {
@@ -31,9 +32,7 @@ export class NavbarComponent {
     this.userMenuOpen = !this.userMenuOpen;
   }
 
-  logout(): void {
-    // Logique de déconnexion
-    console.log('Déconnexion...');
-    this.userMenuOpen = false;
+  logout() {
+    this.authService.logout(); // Appelle la méthode de déconnexion
   }
 }

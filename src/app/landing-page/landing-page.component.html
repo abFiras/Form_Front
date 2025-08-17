@@ -9,7 +9,7 @@
             <div class="nav-links">
                 <a href="#features">Fonctionnalités</a>
                 <a href="#footer">Contact</a>
-                <a href="/connexion" class="nav-btn">Connexion</a>
+                <a routerLink="/connexion" class="nav-btn">Connexion</a>
             </div>
             <div class="hamburger">
                 <span></span>
@@ -126,7 +126,7 @@
                         <span class="tag">CSV</span>
                     </div>
                 </div>
-                
+
             </div>
         </div>
     </section>
@@ -239,7 +239,7 @@
         // Mobile menu toggle
         const hamburger = document.querySelector('.hamburger');
         const navLinks = document.querySelector('.nav-links');
-        
+
         hamburger.addEventListener('click', () => {
             hamburger.classList.toggle('active');
             navLinks.classList.toggle('active');
@@ -263,7 +263,7 @@
                 const duration = 2000;
                 const step = target / (duration / 16);
                 let current = 0;
-                
+
                 const timer = setInterval(() => {
                     current += step;
                     if (current >= target) {
