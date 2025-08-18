@@ -21,6 +21,14 @@ export class AuthService {
   setToken(token: string): void {
     localStorage.setItem('accessToken', token);
   }
+  // auth.service.ts
+getCurrentUser(): Observable<any> {
+  const token = localStorage.getItem('accessToken'); // ou authService.getToken()
+  return this.http.get<any>(`${this.baseUrl}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
 
   // Méthode pour récupérer le token JWT depuis le localStorage
   getToken(): string | null {

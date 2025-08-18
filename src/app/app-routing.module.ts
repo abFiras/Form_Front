@@ -4,12 +4,14 @@ import { LandingPageComponent } from './landing-page/landing-page.component';
 import { LoginComponent } from './login/login.component';
 import { AddformComponent } from './addform/addform.component';
 import { UsersComponent } from './users/users.component';
+import { UserProfileComponent } from './user-profile/user-profile.component';
 
 const routes: Routes = [
   { path: '', component: LandingPageComponent }, // default route
   { path: 'connexion', component: LoginComponent }, // default route
   { path: 'ajouterform', component: AddformComponent }, // default route
   { path: 'users', component: UsersComponent },
+  { path: 'profil', component: UserProfileComponent },
 
 
 ];

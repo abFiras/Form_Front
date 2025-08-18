@@ -26,13 +26,12 @@ export class UsersComponent implements OnInit {
     phone: '',
     password: '',
     suspended: false,
-    roles: []
+    role: []
   };
 
   roles = [
     { value: 'ROLE_ADMIN', label: 'Administrateur' },
     { value: 'ROLE_USER', label: 'Utilisateur' },
-    { value: 'ROLE_MANAGER', label: 'Gestionnaire' }
   ];
 
   constructor(private userService: UserService) {}
@@ -100,6 +99,9 @@ export class UsersComponent implements OnInit {
 
   addUser(): void {
     if (this.isValidUser(this.newUser)) {
+        if (!Array.isArray(this.newUser.role)) {
+      this.newUser.role = [this.newUser.role];
+    }
       this.userService.createUser(this.newUser).subscribe({
         next: (user) => {
           this.users.push(user);
@@ -130,7 +132,16 @@ export class UsersComponent implements OnInit {
 
   updateUser(): void {
     if (this.selectedUser && this.isValidUser(this.selectedUser)) {
-      this.userService.updateUser(this.selectedUser.id!, this.selectedUser).subscribe({
+      // Préparer les données pour le backend
+      const userToUpdate = {
+        ...this.selectedUser,
+        roles: this.selectedUser.selectedRole ? [{ name: this.selectedUser.selectedRole }] : this.selectedUser.roles
+      };
+
+      // Supprimer la propriété temporaire
+      delete userToUpdate.selectedRole;
+
+      this.userService.updateUser(this.selectedUser.id!, userToUpdate).subscribe({
         next: (updatedUser) => {
           const index = this.users.findIndex(u => u.id === updatedUser.id);
           if (index !== -1) {
@@ -138,31 +149,66 @@ export class UsersComponent implements OnInit {
           }
           this.searchUsers();
           this.closeModals();
+          Swal.fire({
+            icon: 'success',
+            title: 'Succès',
+            text: 'Utilisateur modifié avec succès !',
+            confirmButtonText: 'OK'
+          });
         },
         error: (err) => {
           this.error = 'Erreur lors de la modification de l\'utilisateur';
           console.error('Erreur:', err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Une erreur est survenue lors de la modification de l\'utilisateur.',
+            confirmButtonText: 'Fermer'
+          });
         }
       });
     }
   }
+
 
   deleteUser(user: Utilisateur): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${user.username} ?`)) {
-      this.userService.deleteUser(user.id!).subscribe({
-        next: () => {
-          this.users = this.users.filter(u => u.id !== user.id);
-          this.searchUsers();
-        },
-        error: (err) => {
-          this.error = 'Erreur lors de la suppression de l\'utilisateur';
-          console.error('Erreur:', err);
-        }
-      });
-    }
+    Swal.fire({
+      title: 'Êtes-vous sûr?',
+      text: `Voulez-vous vraiment supprimer l'utilisateur ${user.username} ?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, supprimer!',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.userService.deleteUser(user.id!).subscribe({
+          next: () => {
+            this.users = this.users.filter(u => u.id !== user.id);
+            this.searchUsers();
+            Swal.fire({
+              icon: 'success',
+              title: 'Supprimé!',
+              text: 'L\'utilisateur a été supprimé avec succès.',
+              confirmButtonText: 'OK'
+            });
+          },
+          error: (err) => {
+            this.error = 'Erreur lors de la suppression de l\'utilisateur';
+            console.error('Erreur:', err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Erreur',
+              text: 'Une erreur est survenue lors de la suppression.',
+              confirmButtonText: 'Fermer'
+            });
+          }
+        });
+      }
+    });
   }
-
-  toggleUserStatus(user: Utilisateur): void {
+ toggleUserStatus(user: Utilisateur): void {
     const updatedUser = { ...user, suspended: !user.suspended };
     this.userService.updateUser(user.id!, updatedUser).subscribe({
       next: (result) => {
@@ -171,14 +217,25 @@ export class UsersComponent implements OnInit {
           this.users[index] = result;
         }
         this.searchUsers();
+        Swal.fire({
+          icon: 'success',
+          title: 'Statut modifié',
+          text: `L'utilisateur a été ${result.suspended ? 'suspendu' : 'réactivé'} avec succès.`,
+          confirmButtonText: 'OK'
+        });
       },
       error: (err) => {
         this.error = 'Erreur lors de la modification du statut';
         console.error('Erreur:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erreur',
+          text: 'Une erreur est survenue lors de la modification du statut.',
+          confirmButtonText: 'Fermer'
+        });
       }
     });
   }
-
   private isValidUser(user: any): boolean {
     return !!(user.username && user.email && user.phone);
   }

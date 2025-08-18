@@ -1,0 +1,236 @@
+<div class="profile-container">
+  <!-- Header avec photo de profil -->
+  <div class="profile-header">
+    <div class="profile-photo-section">
+      <div class="profile-photo-wrapper">
+        <img [src]="profilePhotoUrl" alt="Photo de profil" class="profile-photo">
+        <div class="photo-overlay">
+          <label for="photo-input" class="photo-change-btn">
+            <span class="photo-icon">📷</span>
+          </label>
+          <input type="file" id="photo-input" accept="image/*"
+                 (change)="onProfilePhotoChange($event)" style="display: none;">
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-info">
+      <h1 class="profile-name">{{user?.username}}</h1>
+      <p class="profile-email">{{user?.email}}</p>
+      <div class="profile-badges">
+        <span class="role-badge">{{getRoleDisplay()}}</span>
+        <span class="status-badge" [ngClass]="getStatusBadgeClass()">
+          {{getStatusText()}}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message de feedback -->
+  <div *ngIf="message" class="message" [ngClass]="messageType">
+    <span class="message-icon">
+      {{messageType === 'success' ? '✓' : '⚠'}}
+    </span>
+    {{message}}
+  </div>
+
+  <!-- Section Informations Personnelles -->
+  <div class="profile-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="section-icon">👤</span>
+        Informations Personnelles
+      </h2>
+      <button class="edit-btn"
+              [class.active]="isEditingProfile"
+              (click)="toggleEditProfile()">
+        <span class="btn-icon">{{isEditingProfile ? '✕' : '✏'}}</span>
+        {{isEditingProfile ? 'Annuler' : 'Modifier'}}
+      </button>
+    </div>
+
+    <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()" class="profile-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nom d'utilisateur</label>
+          <input type="text"
+                 formControlName="username"
+                 class="form-input"
+                 [readonly]="!isEditingProfile"
+                 [class.readonly]="!isEditingProfile">
+          <div *ngIf="profileForm.get('username')?.errors && profileForm.get('username')?.touched"
+               class="form-error">
+            Le nom d'utilisateur est requis (min. 3 caractères)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email"
+                 formControlName="email"
+                 class="form-input"
+                 [readonly]="!isEditingProfile"
+                 [class.readonly]="!isEditingProfile">
+          <div *ngIf="profileForm.get('email')?.errors && profileForm.get('email')?.touched"
+               class="form-error">
+            Email valide requis
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input type="tel"
+                 formControlName="phone"
+                 class="form-input"
+                 [readonly]="!isEditingProfile"
+                 [class.readonly]="!isEditingProfile"
+                 placeholder="12345678">
+          <div *ngIf="profileForm.get('phone')?.errors && profileForm.get('phone')?.touched"
+               class="form-error">
+            Format de téléphone invalide
+          </div>
+        </div>
+
+     
+      </div>
+
+      <div *ngIf="isEditingProfile" class="form-actions">
+        <button type="button"
+                class="btn btn-secondary"
+                (click)="toggleEditProfile()">
+          Annuler
+        </button>
+        <button type="submit"
+                class="btn btn-primary"
+                [disabled]="!profileForm.valid || loading">
+          <span *ngIf="loading" class="spinner"></span>
+          {{loading ? 'Sauvegarde...' : 'Sauvegarder'}}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Section Sécurité -->
+  <div class="profile-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="section-icon">🔒</span>
+        Sécurité
+      </h2>
+      <button class="edit-btn security-btn"
+              [class.active]="isChangingPassword"
+              (click)="toggleChangePassword()">
+        <span class="btn-icon">🔑</span>
+        {{isChangingPassword ? 'Annuler' : 'Changer le mot de passe'}}
+      </button>
+    </div>
+
+    <div *ngIf="isChangingPassword" class="password-section">
+      <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="password-form">
+        <div class="form-group">
+          <label class="form-label">Mot de passe actuel</label>
+          <input type="password"
+                 formControlName="currentPassword"
+                 class="form-input"
+                 placeholder="Entrez votre mot de passe actuel">
+          <div *ngIf="passwordForm.get('currentPassword')?.errors && passwordForm.get('currentPassword')?.touched"
+               class="form-error">
+            Mot de passe actuel requis
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nouveau mot de passe</label>
+          <input type="password"
+                 formControlName="newPassword"
+                 class="form-input"
+                 placeholder="Entrez le nouveau mot de passe">
+          <div *ngIf="passwordForm.get('newPassword')?.errors && passwordForm.get('newPassword')?.touched"
+               class="form-error">
+            Nouveau mot de passe requis (min. 6 caractères)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Confirmer le mot de passe</label>
+          <input type="password"
+                 formControlName="confirmPassword"
+                 class="form-input"
+                 placeholder="Confirmez le nouveau mot de passe">
+          <div *ngIf="passwordForm.get('confirmPassword')?.errors?.['mismatch'] && passwordForm.get('confirmPassword')?.touched"
+               class="form-error">
+            Les mots de passe ne correspondent pas
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button"
+                  class="btn btn-secondary"
+                  (click)="toggleChangePassword()">
+            Annuler
+          </button>
+          <button type="submit"
+                  class="btn btn-primary"
+                  [disabled]="!passwordForm.valid || loading">
+            <span *ngIf="loading" class="spinner"></span>
+            {{loading ? 'Modification...' : 'Modifier le mot de passe'}}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div *ngIf="!isChangingPassword" class="security-info">
+      <div class="security-item">
+        <span class="security-icon">🔐</span>
+        <div class="security-text">
+          <p class="security-title">Mot de passe</p>
+          <p class="security-desc">Dernière modification il y a 30 jours</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Activité -->
+  <div class="profile-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="section-icon">📊</span>
+        Statistiques d'activité
+      </h2>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div class="stat-content">
+          <div class="stat-number">12</div>
+          <div class="stat-label">Formulaires créés</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-content">
+          <div class="stat-number">8</div>
+          <div class="stat-label">Validations</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">⏰</div>
+        <div class="stat-content">
+          <div class="stat-number">4</div>
+          <div class="stat-label">En attente</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-content">
+          <div class="stat-number">95%</div>
+          <div class="stat-label">Taux de réussite</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

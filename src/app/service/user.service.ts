@@ -23,38 +23,85 @@ export interface Utilisateur {
   resetPasswordExpiry?: any;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  message: string;
+  success: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  private baseUrl = 'http://localhost:8080/api/admin'; // Ajustez selon votre configuration
+  private baseUrl = 'http://localhost:8080/api/admin';
+  private authUrl = 'http://localhost:8080/api/auth';
 
-  constructor(private http: HttpClient ,private authService: AuthService) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
+
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('accessToken'); // 👈 ton AuthService le stocke sous ce nom
+    const token = localStorage.getItem('accessToken');
     return new HttpHeaders({
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`
     });
   }
-   getAllUsers(): Observable<Utilisateur[]> {
+
+  getAllUsers(): Observable<Utilisateur[]> {
     return this.http.get<Utilisateur[]>(`${this.baseUrl}/getAllUsers`, {
       headers: this.getAuthHeaders()
     });
   }
 
-createUser(user: Utilisateur): Observable<Utilisateur> {
+  createUser(user: Utilisateur): Observable<Utilisateur> {
     return this.http.post<Utilisateur>(`${this.baseUrl}/create-user`, user, {
       headers: this.getAuthHeaders()
     });
   }
+
   updateUser(id: number, user: Utilisateur): Observable<Utilisateur> {
-    return this.http.put<Utilisateur>(`${this.baseUrl}/${id}`, user ,{
+    return this.http.put<Utilisateur>(`${this.baseUrl}/${id}`, user, {
       headers: this.getAuthHeaders()
     });
   }
 
   deleteUser(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/users/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/users/${id}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getCurrentUserProfile(): Observable<Utilisateur> {
+    return this.http.get<Utilisateur>(`${this.authUrl}/profile`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateCurrentUserProfile(user: Partial<Utilisateur>): Observable<Utilisateur> {
+    return this.http.put<Utilisateur>(`${this.authUrl}/profile`, user, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  changePassword(passwordData: ChangePasswordRequest): Observable<ChangePasswordResponse> {
+    return this.http.post<ChangePasswordResponse>(`${this.authUrl}/change-password`, passwordData, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  uploadProfilePhoto(file: File): Observable<{photoUrl: string}> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+    });
+
+    return this.http.post<{photoUrl: string}>(`${this.authUrl}/upload-photo`, formData, {
+      headers: headers
+    });
   }
 }

@@ -11,6 +11,7 @@ import { SidebarComponent } from './sidebar/sidebar.component';
 import { AddformComponent } from './addform/addform.component';
 import { HttpClientModule } from '@angular/common/http';
 import { UsersComponent } from './users/users.component';
+import { UserProfileComponent } from './user-profile/user-profile.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,9 @@ import { UsersComponent } from './users/users.component';
     NavbarComponent,
     SidebarComponent,
     AddformComponent,
-    UsersComponent
+    UsersComponent,
+    UserProfileComponent
+
   ],
   imports: [
     BrowserModule,
