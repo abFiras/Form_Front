@@ -1,0 +1,335 @@
+<!-- users.component.html -->
+<div class="users-container">
+  <!-- En-tête -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <span class="title-icon">👥</span>
+        Gestion des Utilisateurs
+      </h1>
+      <p class="page-subtitle">Gérez les utilisateurs et leurs permissions</p>
+    </div>
+    <button class="btn-add" (click)="openAddModal()">
+      <span class="btn-icon">➕</span>
+      <span class="btn-label">Ajouter un utilisateur</span>
+    </button>
+  </div>
+
+  <!-- Barre de recherche et filtres -->
+  <div class="controls-section">
+    <div class="search-container">
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Rechercher par nom d'utilisateur, email ou téléphone..."
+          [(ngModel)]="searchTerm"
+          (input)="searchUsers()"
+        >
+      </div>
+    </div>
+
+    <div class="results-info">
+      <span class="results-count">{{filteredUsers.length}} utilisateur(s)</span>
+    </div>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="error" class="error-message">
+    <span class="error-icon">⚠️</span>
+    {{error}}
+  </div>
+
+  <!-- Indicateur de chargement -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <span class="loading-text">Chargement des utilisateurs...</span>
+  </div>
+
+  <!-- Tableau des utilisateurs -->
+  <div *ngIf="!loading" class="table-container">
+    <div class="table-wrapper">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th class="table-header">
+              <span class="header-content">
+                <span class="header-icon">👤</span>
+                Utilisateur
+              </span>
+            </th>
+            <th class="table-header">
+              <span class="header-content">
+                <span class="header-icon">📧</span>
+                Email
+              </span>
+            </th>
+            <th class="table-header">
+              <span class="header-content">
+                <span class="header-icon">📞</span>
+                Téléphone
+              </span>
+            </th>
+            <th class="table-header">
+              <span class="header-content">
+                <span class="header-icon">🔐</span>
+                Rôle
+              </span>
+            </th>
+            <th class="table-header">
+              <span class="header-content">
+                <span class="header-icon">⚡</span>
+                Statut
+              </span>
+            </th>
+            <th class="table-header actions-header">
+              <span class="header-content">
+                <span class="header-icon">⚙️</span>
+                Actions
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of filteredUsers; trackBy: trackByUserId"
+              class="table-row"
+              [class.inactive]="user.suspended">
+            <td class="table-cell user-cell">
+              <div class="user-info">
+                <div class="user-avatar">
+                  {{getInitials(user)}}
+                </div>
+                <div class="user-details">
+                  <div class="user-name">{{user.username}}</div>
+                  <div class="user-id">ID: {{user.id}}</div>
+                </div>
+              </div>
+            </td>
+            <td class="table-cell">
+              <span class="email-text">{{user.email}}</span>
+            </td>
+            <td class="table-cell">
+              <span class="phone-text">{{user.phone}}</span>
+            </td>
+            <td class="table-cell">
+              <span class="role-badge" [class]="'role-' + getUserRole(user).toLowerCase().replace('role_', '')">
+                {{getUserRoleLabel(user)}}
+              </span>
+            </td>
+            <td class="table-cell">
+              <div class="status-container">
+                <button
+                  class="status-toggle"
+                  [class.active]="!user.suspended"
+                  [class.inactive]="user.suspended"
+                  (click)="toggleUserStatus(user)"
+                  [title]="user.suspended ? 'Activer' : 'Suspendre'">
+                  <span class="status-indicator"></span>
+                  <span class="status-text">{{user.suspended ? 'Suspendu' : 'Actif'}}</span>
+                </button>
+              </div>
+            </td>
+            <td class="table-cell actions-cell">
+              <div class="actions-container">
+                <button
+                  class="action-btn edit-btn"
+                  (click)="openEditModal(user)"
+                  title="Modifier">
+                  ✏️
+                </button>
+                <button
+                  class="action-btn delete-btn"
+                  (click)="deleteUser(user)"
+                  title="Supprimer">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Message si aucun utilisateur -->
+    <div *ngIf="filteredUsers.length === 0 && !loading" class="empty-state">
+      <div class="empty-icon">👥</div>
+      <h3 class="empty-title">Aucun utilisateur trouvé</h3>
+      <p class="empty-subtitle">
+        {{searchTerm ? 'Aucun résultat pour votre recherche' : 'Commencez par ajouter des utilisateurs'}}
+      </p>
+      <button *ngIf="!searchTerm" class="btn-add" (click)="openAddModal()">
+        <span class="btn-icon">➕</span>
+        Ajouter le premier utilisateur
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal d'ajout -->
+  <div *ngIf="showAddModal" class="modal-overlay" (click)="closeModals()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <span class="modal-icon">➕</span>
+          Ajouter un utilisateur
+        </h2>
+        <button class="modal-close" (click)="closeModals()">✕</button>
+      </div>
+
+      <form class="modal-form" (ngSubmit)="addUser()">
+        <div class="form-group">
+          <label class="form-label">Nom d'utilisateur</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="newUser.username"
+            name="username"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input
+            type="email"
+            class="form-input"
+            [(ngModel)]="newUser.email"
+            name="email"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="newUser.phone"
+            name="phone"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mot de passe</label>
+          <input
+            type="password"
+            class="form-input"
+            [(ngModel)]="newUser.password"
+            name="password"
+            required>
+        </div>
+
+       <!-- <div class="form-group">
+          <label class="form-label">Rôle</label>
+          <select
+            class="form-select"
+            [(ngModel)]="newUser.roles"
+            name="roles"
+            required>
+            <option *ngFor="let role of roles" [value]="role.value">
+              {{role.label}}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              class="form-checkbox"
+              [(ngModel)]="newUser.suspended"
+              name="suspended">
+            <span class="checkbox-text">Utilisateur suspendu</span>
+          </label>
+        </div>-->
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="closeModals()">
+            Annuler
+          </button>
+          <button type="submit" class="btn-save">
+            <span class="btn-icon">💾</span>
+            Ajouter
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de modification -->
+  <div *ngIf="showEditModal && selectedUser" class="modal-overlay" (click)="closeModals()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <span class="modal-icon">✏️</span>
+          Modifier l'utilisateur
+        </h2>
+        <button class="modal-close" (click)="closeModals()">✕</button>
+      </div>
+
+      <form class="modal-form" (ngSubmit)="updateUser()">
+        <div class="form-group">
+          <label class="form-label">Nom d'utilisateur</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="selectedUser.username"
+            name="username"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input
+            type="email"
+            class="form-input"
+            [(ngModel)]="selectedUser.email"
+            name="email"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="selectedUser.phone"
+            name="phone"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Rôle</label>
+          <select
+            class="form-select"
+            [(ngModel)]="selectedUser.roles"
+            name="roles"
+            required>
+            <option *ngFor="let role of roles" [value]="role.value">
+              {{role.label}}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              class="form-checkbox"
+              [(ngModel)]="selectedUser.suspended"
+              name="suspended">
+            <span class="checkbox-text">Utilisateur suspendu</span>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="closeModals()">
+            Annuler
+          </button>
+          <button type="submit" class="btn-save">
+            <span class="btn-icon">💾</span>
+            Modifier
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
