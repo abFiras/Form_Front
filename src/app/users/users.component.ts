@@ -26,6 +26,7 @@ export class UsersComponent implements OnInit {
     phone: '',
     password: '',
     suspended: false,
+    banned: false,
     role: []
   };
 
@@ -171,10 +172,99 @@ export class UsersComponent implements OnInit {
   }
 
 
+   // Nouvelle méthode pour bannir un utilisateur
+  banUser(user: Utilisateur): void {
+    Swal.fire({
+      title: 'Bannir l\'utilisateur',
+      text: `Voulez-vous vraiment bannir l'utilisateur ${user.username} ?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ff9800',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, bannir!',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.userService.banUser(user.email).subscribe({
+          next: (response) => {
+            // Mettre à jour l'utilisateur dans la liste locale
+            const index = this.users.findIndex(u => u.id === user.id);
+            if (index !== -1) {
+              this.users[index].banned = true;
+            }
+            this.searchUsers();
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Utilisateur banni!',
+              text: 'L\'utilisateur a été banni avec succès.',
+              confirmButtonText: 'OK'
+            });
+          },
+          error: (err) => {
+            this.error = 'Erreur lors du bannissement de l\'utilisateur';
+            console.error('Erreur:', err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Erreur',
+              text: 'Une erreur est survenue lors du bannissement.',
+              confirmButtonText: 'Fermer'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  // Nouvelle méthode pour débannir un utilisateur
+  unbanUser(user: Utilisateur): void {
+    Swal.fire({
+      title: 'Débannir l\'utilisateur',
+      text: `Voulez-vous vraiment débannir l'utilisateur ${user.username} ?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#4caf50',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, débannir!',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.userService.unbanUser(user.email).subscribe({
+          next: (response) => {
+            // Mettre à jour l'utilisateur dans la liste locale
+            const index = this.users.findIndex(u => u.id === user.id);
+            if (index !== -1) {
+              this.users[index].banned = false;
+            }
+            this.searchUsers();
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Utilisateur débanni!',
+              text: 'L\'utilisateur a été débanni avec succès.',
+              confirmButtonText: 'OK'
+            });
+          },
+          error: (err) => {
+            this.error = 'Erreur lors du débannissement de l\'utilisateur';
+            console.error('Erreur:', err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Erreur',
+              text: 'Une erreur est survenue lors du débannissement.',
+              confirmButtonText: 'Fermer'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  // Méthode de suppression mise à jour pour utiliser l'email
   deleteUser(user: Utilisateur): void {
     Swal.fire({
       title: 'Êtes-vous sûr?',
-      text: `Voulez-vous vraiment supprimer l'utilisateur ${user.username} ?`,
+      text: `Voulez-vous vraiment supprimer définitivement l'utilisateur ${user.username} ?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -183,14 +273,14 @@ export class UsersComponent implements OnInit {
       cancelButtonText: 'Annuler'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.userService.deleteUser(user.id!).subscribe({
+        this.userService.deleteUser(user.email).subscribe({
           next: () => {
             this.users = this.users.filter(u => u.id !== user.id);
             this.searchUsers();
             Swal.fire({
               icon: 'success',
               title: 'Supprimé!',
-              text: 'L\'utilisateur a été supprimé avec succès.',
+              text: 'L\'utilisateur a été supprimé définitivement.',
               confirmButtonText: 'OK'
             });
           },
@@ -208,6 +298,7 @@ export class UsersComponent implements OnInit {
       }
     });
   }
+
  toggleUserStatus(user: Utilisateur): void {
     const updatedUser = { ...user, suspended: !user.suspended };
     this.userService.updateUser(user.id!, updatedUser).subscribe({

@@ -1,63 +1,84 @@
 <nav class="navbar">
-      <div class="navbar-left">
-        <button
-          class="menu-toggle"
-          (click)="toggleSidebar()"
-          [class.active]="sidebarOpen">
-          <span class="hamburger-line"></span>
-          <span class="hamburger-line"></span>
-          <span class="hamburger-line"></span>
-        </button>
+  <div class="navbar-left">
+    <button
+      class="menu-toggle"
+      (click)="toggleSidebar()"
+      [class.active]="sidebarOpen">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
 
-        <div class="navbar-brand">
-          <div class="brand-icon">📋</div>
-          <span class="brand-text">GestForm</span>
-        </div>
+    <div class="navbar-brand">
+      <div class="brand-icon">📋</div>
+      <span class="brand-text">GestForm</span>
+    </div>
+  </div>
+
+  <div class="navbar-center">
+    <div class="search-container">
+      <input
+        type="text"
+        placeholder="Rechercher un formulaire..."
+        class="search-input">
+      <button class="search-btn">
+        🔍
+      </button>
+    </div>
+  </div>
+
+  <div class="navbar-right">
+    <button class="nav-btn notification-btn">
+      <span class="icon">🔔</span>
+      <span class="badge" *ngIf="notificationCount > 0">{{notificationCount}}</span>
+    </button>
+
+    <!-- Affichage conditionnel selon l'état de chargement -->
+    <div class="user-menu" (click)="toggleUserMenu()" *ngIf="!isLoading">
+      <div class="user-avatar">
+        <!-- Afficher la photo si elle existe, sinon les initiales -->
+        <img title="e"
+          *ngIf="profilePhotoUrl && profilePhotoUrl !== 'assets/default-avatar.png'"
+          [src]="profilePhotoUrl"
+          [alt]="userName"
+          class="avatar-image"
+          (error)="onImageError($event)">
+        <span
+          *ngIf="!profilePhotoUrl || profilePhotoUrl === 'assets/default-avatar.png'"
+          class="avatar-initials">
+          {{userInitials}}
+        </span>
       </div>
-
-      <div class="navbar-center">
-        <div class="search-container">
-          <input
-            type="text"
-            placeholder="Rechercher un formulaire..."
-            class="search-input">
-          <button class="search-btn">
-            🔍
-          </button>
-        </div>
+      <div class="user-info">
+        <span class="user-name">{{userName}}</span>
+        <span class="user-role">{{userRole}}</span>
       </div>
+      <span class="dropdown-arrow">⌄</span>
 
-      <div class="navbar-right">
-        <button class="nav-btn notification-btn">
-          <span class="icon">🔔</span>
-          <span class="badge" *ngIf="notificationCount > 0">{{notificationCount}}</span>
-        </button>
-
-        <div class="user-menu" (click)="toggleUserMenu()">
-          <div class="user-avatar">
-            <span>{{userInitials}}</span>
-          </div>
-          <div class="user-info">
-            <span class="user-name">{{userName}}</span>
-            <span class="user-role">{{userRole}}</span>
-          </div>
-          <span class="dropdown-arrow">⌄</span>
-
-          <div class="user-dropdown" [class.show]="userMenuOpen">
-            <a routerLink="/profil" class="dropdown-item">
-              <span class="dropdown-icon">👤</span>
-              Mon Profil
-            </a>
-            <a href="#" class="dropdown-item">
-              <span class="dropdown-icon">⚙️</span>
-              Paramètres
-            </a>
-            <div class="dropdown-divider"></div>
-            <a href="#" class="dropdown-item logout" (click)="logout()">
-              <span class="dropdown-icon">🚪</span>
-              Déconnexion
-            </a>
-          </div>
-        </div>
+      <div class="user-dropdown" [class.show]="userMenuOpen">
+        <a routerLink="/profil" class="dropdown-item">
+          <span class="dropdown-icon">👤</span>
+          Mon Profil
+        </a>
+        <a href="#" class="dropdown-item">
+          <span class="dropdown-icon">⚙️</span>
+          Paramètres
+        </a>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="dropdown-item logout" (click)="logout()">
+          <span class="dropdown-icon">🚪</span>
+          Déconnexion
+        </a>
       </div>
-    </nav>
+    </div>
+
+    <!-- Indicateur de chargement -->
+    <div class="user-menu loading" *ngIf="isLoading">
+      <div class="user-avatar loading-skeleton"></div>
+      <div class="user-info">
+        <span class="loading-skeleton loading-text"></span>
+        <span class="loading-skeleton loading-text small"></span>
+      </div>
+    </div>
+  </div>
+</nav>

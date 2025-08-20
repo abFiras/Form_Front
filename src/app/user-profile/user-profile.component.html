@@ -52,7 +52,7 @@
     <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()" class="profile-form">
       <div class="form-grid">
         <div class="form-group">
-          <label class="form-label">Nom d'utilisateur</label>
+        <!-- <label class="form-label">Nom d'utilisateur</label>
           <input type="text"
                  formControlName="username"
                  class="form-input"
@@ -61,7 +61,7 @@
           <div *ngIf="profileForm.get('username')?.errors && profileForm.get('username')?.touched"
                class="form-error">
             Le nom d'utilisateur est requis (min. 3 caractères)
-          </div>
+          </div>--> 
         </div>
 
         <div class="form-group">
@@ -91,7 +91,7 @@
           </div>
         </div>
 
-     
+
       </div>
 
       <div *ngIf="isEditingProfile" class="form-actions">

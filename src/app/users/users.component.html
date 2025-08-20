@@ -132,16 +132,39 @@
             </td>
             <td class="table-cell actions-cell">
               <div class="actions-container">
+                <!-- Bouton Toggle Suspension (seulement si pas banni) -->
+                <button
+                  *ngIf="!user.banned"
+                  class="action-btn toggle-btn"
+                  [class.active]="!user.suspended"
+                  [class.inactive]="user.suspended"
+                  (click)="toggleUserStatus(user)"
+                  [title]="user.suspended ? 'Réactiver' : 'Suspendre'">
+                  {{user.suspended ? '🔓' : '🔒'}}
+                </button>
+
+                <!-- Bouton Ban/Unban -->
+                <button
+                  class="action-btn ban-btn"
+                  [class.unban]="user.banned"
+                  (click)="user.banned ? unbanUser(user) : banUser(user)"
+                  [title]="user.banned ? 'Débannir' : 'Bannir'">
+                  {{user.banned ? '✅' : '🚫'}}
+                </button>
+
+                <!-- Bouton Modifier -->
                 <button
                   class="action-btn edit-btn"
                   (click)="openEditModal(user)"
                   title="Modifier">
                   ✏️
                 </button>
+
+                <!-- Bouton Supprimer -->
                 <button
                   class="action-btn delete-btn"
                   (click)="deleteUser(user)"
-                  title="Supprimer">
+                  title="Supprimer définitivement">
                   🗑️
                 </button>
               </div>

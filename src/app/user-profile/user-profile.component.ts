@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-
 import { AuthService } from '../service/auth.service';
 import { UserService, Utilisateur } from '../service/user.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-user-profile',
@@ -18,7 +17,7 @@ export class UserProfileComponent implements OnInit {
 
   isEditingProfile = false;
   isChangingPassword = false;
-  profilePhotoUrl = '';
+  profilePhotoUrl = 'assets/default-avatar.png'; // Image par défaut
 
   loading = false;
   message = '';
@@ -46,36 +45,74 @@ export class UserProfileComponent implements OnInit {
     this.loadUserProfile();
   }
 
-loadUserProfile(): void {
-  this.authService.getCurrentUser().subscribe({
-    next: (user) => {
-      if (user) { // ✅ Vérification
-        this.user = user;
+  loadUserProfile(): void {
+    this.authService.getCurrentUser().subscribe({
+      next: (user) => {
+        if (user) {
+          this.user = user;
+          this.profilePhotoUrl = user.profilePhotoUrl || 'assets/default-avatar.png';
 
-        this.profileForm.patchValue({
-          username: user.username ?? '',
-          email: user.email ?? '',
-          phone: user.phone ?? ''
-        });
+          this.profileForm.patchValue({
+            username: user.username ?? '',
+            email: user.email ?? '',
+            phone: user.phone ?? ''
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Erreur de récupération utilisateur:', err);
+        this.showMessage('Erreur lors du chargement du profil', 'error');
       }
-    },
-    error: (err) => {
-      console.error('Erreur de récupération utilisateur:', err);
-    }
-  });
-}
-
-
+    });
+  }
 
   onProfilePhotoChange(event: any): void {
     const file = event.target.files[0];
     if (file) {
+      // Vérifier la taille du fichier (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        this.showMessage('La taille de l\'image ne doit pas dépasser 5MB', 'error');
+        return;
+      }
+
+      // Vérifier le type de fichier
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        this.showMessage('Format d\'image non supporté. Utilisez JPG, PNG ou GIF', 'error');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        this.profilePhotoUrl = e.target.result;
+        const base64String = e.target.result;
+        this.profilePhotoUrl = base64String;
+
+        // Mettre à jour la photo de profil
+        this.updateProfilePhoto(base64String);
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  updateProfilePhoto(photoUrl: string): void {
+    this.loading = true;
+    this.userService.updateProfilePhoto(photoUrl).subscribe({
+      next: (response) => {
+        this.showMessage('Photo de profil mise à jour avec succès!', 'success');
+        this.loading = false;
+        // Mettre à jour l'utilisateur local
+        if (this.user) {
+          this.user.profilePhotoUrl = photoUrl;
+        }
+      },
+      error: (error) => {
+        console.error('Erreur lors de la mise à jour de la photo:', error);
+        this.showMessage('Erreur lors de la mise à jour de la photo', 'error');
+        this.loading = false;
+        // Revenir à l'ancienne photo
+        this.profilePhotoUrl = this.user?.profilePhotoUrl || 'assets/default-avatar.png';
+      }
+    });
   }
 
   toggleEditProfile(): void {
@@ -89,12 +126,9 @@ loadUserProfile(): void {
   onUpdateProfile(): void {
     if (this.profileForm.valid && this.user) {
       this.loading = true;
-      const updatedUser: Utilisateur = {
-        ...this.user,
-        ...this.profileForm.value
-      };
+      const updates = this.profileForm.value;
 
-      this.userService.updateUser(this.user.id!, updatedUser).subscribe({
+      this.userService.updateProfile(updates).subscribe({
         next: (response) => {
           this.user = response;
           this.isEditingProfile = false;
@@ -102,7 +136,14 @@ loadUserProfile(): void {
           this.loading = false;
         },
         error: (error) => {
-          this.showMessage('Erreur lors de la mise à jour du profil', 'error');
+          console.error('Erreur lors de la mise à jour:', error);
+          let errorMessage = 'Erreur lors de la mise à jour du profil';
+          if (error.error && typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.error && error.error.message) {
+            errorMessage = error.error.message;
+          }
+          this.showMessage(errorMessage, 'error');
           this.loading = false;
         }
       });
@@ -119,16 +160,36 @@ loadUserProfile(): void {
   onChangePassword(): void {
     if (this.passwordForm.valid) {
       this.loading = true;
-      // Ici vous devriez appeler votre service pour changer le mot de passe
-      // this.authService.changePassword(this.passwordForm.value).subscribe(...)
+      const currentPassword = this.passwordForm.get('currentPassword')?.value;
+      const newPassword = this.passwordForm.get('newPassword')?.value;
 
-      // Simulation d'une requête
-      setTimeout(() => {
-        this.showMessage('Mot de passe modifié avec succès!', 'success');
-        this.isChangingPassword = false;
-        this.passwordForm.reset();
-        this.loading = false;
-      }, 1000);
+      this.userService.changePassword(currentPassword, newPassword).subscribe({
+        next: (response) => {
+      Swal.fire({
+          icon: 'success',
+          title: 'Succès',
+          text: response.message, // le message JSON du backend
+          confirmButtonColor: '#3085d6'
+        });
+               this.isChangingPassword = false;
+          this.passwordForm.reset();
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Erreur lors du changement de mot de passe:', error);
+          let errorMessage = 'Erreur lors du changement de mot de passe';
+          if (error.error && typeof error.error === 'string') {
+            errorMessage = error.error;
+          }
+    Swal.fire({
+          icon: 'error',
+          title: 'Erreur',
+          text: errorMessage,
+          confirmButtonColor: '#d33'
+        });
+                  this.loading = false;
+        }
+      });
     }
   }
 

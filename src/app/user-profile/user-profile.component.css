@@ -1,9 +1,11 @@
 /* user-profile.component.css */
 .profile-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
-  background: #ffffff;
+  min-height: 100vh;
+  margin-top: 2.8vw;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 32px;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
 }
 
 /* Header avec photo de profil */

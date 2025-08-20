@@ -21,17 +21,11 @@ export interface Utilisateur {
   roles: Role[];
   resetPasswordToken?: any;
   resetPasswordExpiry?: any;
+  profilePhotoUrl?: string; // Nouveau champ
+
 }
 
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
 
-export interface ChangePasswordResponse {
-  message: string;
-  success: boolean;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -67,41 +61,64 @@ export class UserService {
       headers: this.getAuthHeaders()
     });
   }
-
-  deleteUser(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/users/${id}`, {
-      headers: this.getAuthHeaders()
+  // Nouvelles méthodes pour ban/unban/delete
+  banUser(email: string): Observable<string> {
+    return this.http.post<string>(`${this.baseUrl}/ban-user`, { email }, {
+      headers: this.getAuthHeaders(),
+      responseType: 'text' as 'json'
     });
   }
+
+  unbanUser(email: string): Observable<string> {
+    return this.http.post<string>(`${this.baseUrl}/unban-user`, { email }, {
+      headers: this.getAuthHeaders(),
+      responseType: 'text' as 'json'
+    });
+  }
+
+  deleteUser(email: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/delete-user`, {
+      headers: this.getAuthHeaders(),
+      body: { email }
+    });
+  }
+
+  // Méthode de suspension existante (pour compatibilité)
+  suspendUser(email: string): Observable<string> {
+    return this.http.post<string>(`${this.baseUrl}/suspend-user`, { email }, {
+      headers: this.getAuthHeaders(),
+      responseType: 'text' as 'json'
+    });
+  }
+
 
   getCurrentUserProfile(): Observable<Utilisateur> {
     return this.http.get<Utilisateur>(`${this.authUrl}/profile`, {
       headers: this.getAuthHeaders()
     });
   }
-
-  updateCurrentUserProfile(user: Partial<Utilisateur>): Observable<Utilisateur> {
-    return this.http.put<Utilisateur>(`${this.authUrl}/profile`, user, {
+// Nouvelles méthodes pour le profil utilisateur
+  updateProfile(updates: any): Observable<any> {
+    return this.http.post(`${this.authUrl}/update-profile`, updates, {
       headers: this.getAuthHeaders()
     });
   }
 
-  changePassword(passwordData: ChangePasswordRequest): Observable<ChangePasswordResponse> {
-    return this.http.post<ChangePasswordResponse>(`${this.authUrl}/change-password`, passwordData, {
+  updateProfilePhoto(photoUrl: string): Observable<any> {
+    return this.http.post(`${this.authUrl}/update-profile-photo`, { photoUrl }, {
       headers: this.getAuthHeaders()
     });
   }
 
-  uploadProfilePhoto(file: File): Observable<{photoUrl: string}> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-    });
-
-    return this.http.post<{photoUrl: string}>(`${this.authUrl}/upload-photo`, formData, {
-      headers: headers
+  changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.authUrl}/change-password`, {
+      currentPassword,
+      newPassword
+    }, {
+      headers: this.getAuthHeaders()
     });
   }
+
+
+
 }
