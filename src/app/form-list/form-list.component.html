@@ -1,0 +1,60 @@
+<div class="form-list-container">
+  <div class="header">
+    <h1>My Forms</h1>
+    <button mat-raised-button color="primary" (click)="createNewForm()">
+      <mat-icon>add</mat-icon>
+      New Form
+    </button>
+  </div>
+
+  <div class="forms-grid" *ngIf="!loading">
+    <mat-card class="form-card" *ngFor="let form of forms">
+      <mat-card-header>
+        <mat-card-title>{{form.name}}</mat-card-title>
+        <mat-card-subtitle>
+          <span class="status-badge" [class.published]="form.status === 'PUBLISHED'">
+            {{form.status}}
+          </span>
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{form.description || 'No description'}}</p>
+        <p class="field-count">{{form.fields.length}} fields</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button (click)="editForm(form.id!)">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-button (click)="previewForm(form.id!)">
+          <mat-icon>preview</mat-icon>
+          Preview
+        </button>
+        <button mat-button 
+                *ngIf="form.status === 'DRAFT'" 
+                (click)="publishForm(form)"
+                color="primary">
+          <mat-icon>publish</mat-icon>
+          Publish
+        </button>
+        <button mat-button color="warn" (click)="deleteForm(form.id!)">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <p>Loading forms...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && forms.length === 0">
+    <mat-icon class="empty-icon">description</mat-icon>
+    <h2>No forms yet</h2>
+    <p>Create your first form to get started</p>
+    <button mat-raised-button color="primary" (click)="createNewForm()">
+      Create Form
+    </button>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+<!-- src/app/components/field-palette/field-palette.component.html -->
+<div class="palette-container">
+  <h3>Field Types</h3>
+  <div 
+    cdkDropList 
+    id="palette-list"
+    cdkDropListSortingDisabled 
+    [cdkDropListData]="availableFields" 
+    cdkDropListConnectedTo="form-fields-list"
+    class="palette-list">
+    <div 
+      class="palette-field" 
+      cdkDrag 
+      *ngFor="let field of availableFields" 
+      [cdkDragData]="field">
+      <mat-icon>{{field.icon}}</mat-icon>
+      <span>{{field.label}}</span>
+      <!-- Drag preview -->
+      <div *cdkDragPreview class="drag-preview">
+        <mat-icon>{{field.icon}}</mat-icon>
+        <span>{{field.label}}</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,121 @@
+<!-- src/app/components/form-builder/form-builder.component.html -->
+<div class="form-builder-container">
+  <div class="builder-header">
+    <button mat-icon-button (click)="goBack()" class="back-btn">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 *ngIf="!isPreviewMode">{{formId ? 'Edit Form' : 'Create New Form'}}</h1>
+    <h1 *ngIf="isPreviewMode">Form Preview</h1>
+    <div class="header-actions">
+      <button mat-raised-button (click)="saveForm()" *ngIf="!isPreviewMode" color="primary">
+        <mat-icon>save</mat-icon>
+        Save
+      </button>
+      <button mat-raised-button 
+              (click)="publishForm()" 
+              *ngIf="!isPreviewMode && formId && currentForm?.status === 'DRAFT'"
+              color="accent">
+        <mat-icon>publish</mat-icon>
+        Publish
+      </button>
+    </div>
+  </div>
+
+  <!-- Form Settings -->
+  <mat-card class="form-settings" *ngIf="!isPreviewMode">
+    <mat-card-header>
+      <mat-card-title>Form Settings</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="formSettingsForm">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Form Name</mat-label>
+          <input matInput formControlName="name">
+          <mat-error *ngIf="formSettingsForm.get('name')?.hasError('required')">
+            Form name is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="2"></textarea>
+        </mat-form-field>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Builder Layout -->
+  <div class="builder-layout" *ngIf="!isPreviewMode">
+    <!-- Field Palette -->
+    <div class="palette-section">
+      <app-field-palette></app-field-palette>
+    </div>
+
+    <!-- Form Canvas -->
+    <div class="canvas-section">
+      <mat-card class="form-canvas">
+        <mat-card-header>
+          <mat-card-title>Form Fields</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div 
+            cdkDropList
+            id="form-fields-list"
+            [cdkDropListData]="formFields"
+            cdkDropListConnectedTo="palette-list"
+            (cdkDropListDropped)="onFieldDrop($event)"
+            class="field-list">
+            <div class="field-item" 
+                 cdkDrag 
+                 *ngFor="let field of formFields; let i = index">
+              <app-dynamic-field 
+                [field]="field"
+                [formGroup]="previewForm"
+                (fieldChange)="onFieldChange(i, $event)"
+                (removeField)="onRemoveField(i)">
+              </app-dynamic-field>
+            </div>
+            
+            <div class="empty-canvas" *ngIf="formFields.length === 0">
+              <mat-icon class="empty-icon">drag_indicator</mat-icon>
+              <p>Drag fields from the palette to build your form</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Preview Mode -->
+  <div class="preview-section" *ngIf="isPreviewMode">
+    <mat-card class="preview-card">
+      <mat-card-header>
+        <mat-card-title>{{currentForm?.name}}</mat-card-title>
+        <mat-card-subtitle>{{currentForm?.description}}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="previewForm" (ngSubmit)="submitPreview()">
+          <div *ngFor="let field of formFields">
+            <app-dynamic-field 
+              [field]="field"
+              [formGroup]="previewForm"
+              [isPreview]="true">
+            </app-dynamic-field>
+          </div>
+          
+          <div class="preview-actions">
+            <button mat-raised-button 
+                    type="submit" 
+                    color="primary"
+                    [disabled]="!previewForm.valid">
+              Submit
+            </button>
+            <button mat-button type="button" (click)="previewForm.reset()">
+              Reset
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

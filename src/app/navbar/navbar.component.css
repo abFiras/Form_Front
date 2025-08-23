@@ -400,3 +400,46 @@
     font-size: 12px !important;
   }
 }
+/* Logo styles for navbar */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  margin-left: 15px;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-image {
+  height: 40px; /* Adjust height as needed */
+  width: auto;
+  max-width: 150px; /* Prevent logo from being too wide */
+  object-fit: contain;
+  transition: opacity 0.3s ease;
+}
+
+.logo-image:hover {
+  opacity: 0.8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .logo-image {
+    height: 32px;
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-image {
+    height: 28px;
+    max-width: 100px;
+  }
+}
+
+/* Optional: Add cursor pointer if logo should be clickable */
+.brand-logo {
+  cursor: pointer;
+}

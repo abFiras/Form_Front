@@ -1,0 +1,107 @@
+.dynamic-field {
+  position: relative;
+  margin-bottom: 20px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 16px;
+  background: white;
+  transition: all 0.2s ease;
+
+  &:hover:not(.preview-mode) {
+    border-color: #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  &.cdk-drag-dragging {
+    transform: rotate(2deg);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  &.preview-mode {
+    border: none;
+    padding: 8px 0;
+    box-shadow: none;
+  }
+}
+
+.field-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  .dynamic-field:hover & {
+    opacity: 1;
+  }
+
+  button {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+  }
+}
+
+.field-editor {
+  border: 2px solid #2196f3;
+  border-radius: 8px;
+  padding: 20px;
+  background: #f3f8ff;
+
+  .mat-mdc-form-field {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .editor-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.radio-group, .checkbox-group {
+  margin-bottom: 16px;
+
+  .field-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: rgba(0,0,0,0.87);
+  }
+
+  mat-radio-button {
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  mat-checkbox {
+    display: block;
+    margin-bottom: 8px;
+  }
+}
+
+.file-upload {
+  margin-bottom: 16px;
+
+  .field-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: rgba(0,0,0,0.87);
+  }
+
+  .file-input {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+}

@@ -1,0 +1,156 @@
+<div class="dynamic-field" [class.preview-mode]="isPreview">
+  <!-- Edit Mode -->
+  <div class="field-editor" *ngIf="editMode && !isPreview">
+    <form [formGroup]="editForm">
+      <mat-form-field appearance="outline">
+        <mat-label>Label</mat-label>
+        <input matInput formControlName="label">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Placeholder</mat-label>
+        <input matInput formControlName="placeholder">
+      </mat-form-field>
+
+      <mat-checkbox formControlName="required">Required</mat-checkbox>
+
+      <mat-form-field appearance="outline" *ngIf="hasOptions()">
+        <mat-label>Options (one per line, format: label:value)</mat-label>
+        <textarea matInput formControlName="options" rows="4"></textarea>
+      </mat-form-field>
+
+      <div class="editor-actions">
+        <button mat-button (click)="saveChanges()" type="button">Save</button>
+        <button mat-button (click)="toggleEdit()" type="button">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Field Display -->
+  <div class="field-display" *ngIf="!editMode">
+    <div class="field-controls" *ngIf="!isPreview">
+      <button mat-icon-button (click)="toggleEdit()" class="edit-btn">
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button mat-icon-button (click)="remove()" class="delete-btn" color="warn">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+
+    <!-- Text Input -->
+    <mat-form-field appearance="outline" *ngIf="field.fieldType === 'text'" class="full-width">
+      <mat-label>{{field.label}}</mat-label>
+      <input matInput 
+             [placeholder]="field.placeholder || ''" 
+             [formControlName]="field.fieldName"
+             [required]="field.required">
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Textarea -->
+    <mat-form-field appearance="outline" *ngIf="field.fieldType === 'textarea'" class="full-width">
+      <mat-label>{{field.label}}</mat-label>
+      <textarea matInput 
+                [placeholder]="field.placeholder || ''" 
+                [formControlName]="field.fieldName"
+                [required]="field.required"
+                rows="4"></textarea>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Email -->
+    <mat-form-field appearance="outline" *ngIf="field.fieldType === 'email'" class="full-width">
+      <mat-label>{{field.label}}</mat-label>
+      <input matInput 
+             type="email"
+             [placeholder]="field.placeholder || ''" 
+             [formControlName]="field.fieldName"
+             [required]="field.required">
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('email')">
+        Please enter a valid email
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Number -->
+    <mat-form-field appearance="outline" *ngIf="field.fieldType === 'number'" class="full-width">
+      <mat-label>{{field.label}}</mat-label>
+      <input matInput 
+             type="number"
+             [placeholder]="field.placeholder || ''" 
+             [formControlName]="field.fieldName"
+             [required]="field.required">
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Date -->
+    <mat-form-field appearance="outline" *ngIf="field.fieldType === 'date'" class="full-width">
+      <mat-label>{{field.label}}</mat-label>
+      <input matInput 
+             [matDatepicker]="picker"
+             [formControlName]="field.fieldName"
+             [required]="field.required">
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Select -->
+    <mat-form-field appearance="outline" *ngIf="field.fieldType === 'select'" class="full-width">
+      <mat-label>{{field.label}}</mat-label>
+      <mat-select [formControlName]="field.fieldName" [required]="field.required">
+        <mat-option *ngFor="let option of field.options" [value]="option.value">
+          {{option.label}}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Radio -->
+    <div *ngIf="field.fieldType === 'radio'" class="radio-group">
+      <label class="field-label">{{field.label}}</label>
+      <mat-radio-group [formControlName]="field.fieldName" [required]="field.required">
+        <mat-radio-button *ngFor="let option of field.options" [value]="option.value">
+          {{option.label}}
+        </mat-radio-button>
+      </mat-radio-group>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
+    </div>
+
+    <!-- Checkbox -->
+    <div *ngIf="field.fieldType === 'checkbox'" class="checkbox-group">
+      <label class="field-label">{{field.label}}</label>
+      <div *ngFor="let option of field.options">
+        <mat-checkbox [value]="option.value">
+          {{option.label}}
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <!-- File Upload -->
+    <div *ngIf="field.fieldType === 'file'" class="file-upload">
+      <label class="field-label">{{field.label}}</label>
+      <input type="file" 
+             [formControlName]="field.fieldName"
+             [required]="field.required"
+             class="file-input">
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
+    </div>
+  </div>
+</div>
