@@ -52,16 +52,28 @@
     <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()" class="profile-form">
       <div class="form-grid">
         <div class="form-group">
-        <!-- <label class="form-label">Nom d'utilisateur</label>
+        <label class="form-label">Prenom </label>
           <input type="text"
-                 formControlName="username"
+                 formControlName="prenom"
                  class="form-input"
                  [readonly]="!isEditingProfile"
                  [class.readonly]="!isEditingProfile">
-          <div *ngIf="profileForm.get('username')?.errors && profileForm.get('username')?.touched"
+          <div *ngIf="profileForm.get('prenom')?.errors && profileForm.get('prenom')?.touched"
                class="form-error">
-            Le nom d'utilisateur est requis (min. 3 caractères)
-          </div>--> 
+            Le prenom est requis (min. 3 caractères)
+          </div>
+        </div>
+        <div class="form-group">
+        <label class="form-label">Nom </label>
+          <input type="text"
+                 formControlName="nom"
+                 class="form-input"
+                 [readonly]="!isEditingProfile"
+                 [class.readonly]="!isEditingProfile">
+          <div *ngIf="profileForm.get('nom')?.errors && profileForm.get('nom')?.touched"
+               class="form-error">
+            Le nom est requis (min. 3 caractères)
+          </div>
         </div>
 
         <div class="form-group">

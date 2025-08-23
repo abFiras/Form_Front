@@ -16,8 +16,11 @@ export class AppComponent {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
-      const excludedRoutes = ['/connexion', '/landingpage', '/']; // routes where navbar/sidebar should be hidden
-      this.showNavbarSidebar = !excludedRoutes.includes(event.urlAfterRedirects);
+            const currentPath = event.urlAfterRedirects.split('?')[0].split('#')[0];
+
+      const excludedRoutes = ['/connexion', '/landingpage', '/reset-password','/']; // routes where navbar/sidebar should be hidden
+            this.showNavbarSidebar = !excludedRoutes.includes(currentPath);
+
     });
   }
 }

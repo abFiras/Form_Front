@@ -17,7 +17,7 @@ export class UserProfileComponent implements OnInit {
 
   isEditingProfile = false;
   isChangingPassword = false;
-  profilePhotoUrl = 'assets/default-avatar.png'; // Image par défaut
+  profilePhotoUrl = 'assets/images/icon.png'; // Image par défaut
 
   loading = false;
   message = '';
@@ -29,7 +29,9 @@ export class UserProfileComponent implements OnInit {
     private authService: AuthService
   ) {
     this.profileForm = this.fb.group({
-      username: ['', [Validators.required, Validators.minLength(3)]],
+
+      prenom: ['', [Validators.required, Validators.minLength(3)]],
+      nom: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.pattern(/^[0-9]{8,15}$/)]]
     });
@@ -50,10 +52,11 @@ export class UserProfileComponent implements OnInit {
       next: (user) => {
         if (user) {
           this.user = user;
-          this.profilePhotoUrl = user.profilePhotoUrl || 'assets/default-avatar.png';
+          this.profilePhotoUrl = user.profilePhotoUrl || 'assets/images/icon.png';
 
           this.profileForm.patchValue({
-            username: user.username ?? '',
+            prenom: user.prenom ?? '',
+            nom: user.nom ?? '',
             email: user.email ?? '',
             phone: user.phone ?? ''
           });
@@ -110,7 +113,7 @@ export class UserProfileComponent implements OnInit {
         this.showMessage('Erreur lors de la mise à jour de la photo', 'error');
         this.loading = false;
         // Revenir à l'ancienne photo
-        this.profilePhotoUrl = this.user?.profilePhotoUrl || 'assets/default-avatar.png';
+        this.profilePhotoUrl = this.user?.profilePhotoUrl || 'assets/images/icon.png';
       }
     });
   }

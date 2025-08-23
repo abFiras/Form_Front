@@ -42,11 +42,12 @@
 
     <!-- Options -->
     <div class="form-options">
-      <label class="remember-me">
-        <input type="checkbox" [(ngModel)]="remember">
-        <span>Se souvenir de moi</span>
-      </label>
-      <a href="#" class="forgot-password">Mot de passe oublié ?</a>
+     <label class="remember-me">
+  <input type="checkbox" formControlName="rememberMe">
+  <span>Se souvenir de moi</span>
+</label>
+
+      <a routerLink="/reset-password" class="forgot-password">Mot de passe oublié ?</a>
     </div>
 
     <!-- Login button -->

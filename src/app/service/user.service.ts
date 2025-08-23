@@ -13,6 +13,8 @@ export interface Utilisateur {
   id?: number;
   username: string;
   email: string;
+  prenom:string,
+  nom:string,
   password?: string;
   phone: string;
   banned?: any;
@@ -62,22 +64,23 @@ export class UserService {
     });
   }
   // Nouvelles méthodes pour ban/unban/delete
-  banUser(email: string): Observable<string> {
-    return this.http.post<string>(`${this.baseUrl}/ban-user`, { email }, {
-      headers: this.getAuthHeaders(),
-      responseType: 'text' as 'json'
-    });
-  }
+ banUser(email: string): Observable<any> {
+  return this.http.post("http://localhost:8080/api/admin/banUser", email, {
+    headers: { 'Content-Type': 'text/plain' }, // très important
+    responseType: 'text'
+  });
+}
+
 
   unbanUser(email: string): Observable<string> {
-    return this.http.post<string>(`${this.baseUrl}/unban-user`, { email }, {
-      headers: this.getAuthHeaders(),
-      responseType: 'text' as 'json'
-    });
-  }
+  return this.http.post("http://localhost:8080/api/admin/unbanUser", email, {
+    headers: { 'Content-Type': 'text/plain' }, // très important
+    responseType: 'text'
+  });
+}
 
   deleteUser(email: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/delete-user`, {
+    return this.http.delete(`${this.baseUrl}/deleteUser`, {
       headers: this.getAuthHeaders(),
       body: { email }
     });
@@ -85,7 +88,7 @@ export class UserService {
 
   // Méthode de suspension existante (pour compatibilité)
   suspendUser(email: string): Observable<string> {
-    return this.http.post<string>(`${this.baseUrl}/suspend-user`, { email }, {
+    return this.http.post<string>(`${this.baseUrl}/suspendUser`, { email }, {
       headers: this.getAuthHeaders(),
       responseType: 'text' as 'json'
     });

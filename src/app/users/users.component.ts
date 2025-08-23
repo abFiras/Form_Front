@@ -23,6 +23,8 @@ export class UsersComponent implements OnInit {
   newUser: any = {
     username: '',
     email: '',
+    prenom:'',
+    nom:'',
     phone: '',
     password: '',
     suspended: false,

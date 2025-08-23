@@ -78,32 +78,25 @@ export class LoginComponent {
   private isAuthenticated: boolean = false;
 
   login() {
+  this.authService.login(this.loginFormGroup.value).subscribe(
+    (response) => {
+this.snackbar.open('Connexion réussie.', 'Fermer', { duration: 5000 });
+      this.router.navigate(['/ajouterform']);
+      console.log("avec succès");
+    },
+    (error) => {
+      console.error('Login error:', error);
 
-    // if (this.loginFormGroup.invalid) {
-    //   this.snackbar.open('Please fill all fields correctly.', 'close', {
-    //     duration: 5000,
-    //   });
-    //   return;
-    // }
-
-    this.authService.login(this.loginFormGroup.value).subscribe(
-      (response) => {
-        this.snackbar.open('Login successful.', 'close', { duration: 5000 });
-        this.router.navigate(['/ajouterform']);
-        console.log("avecc success");
-        // Redirection vers la page de profil après une connexion réussie
-      },
-      (error) => {
-        console.error('Login error:', error);
-        this.snackbar.open(
-          'Failed to log in. Please check your credentials.',
-          'close',
-          { duration: 5000 }
-        );
-        // Ne pas rediriger vers la page de profil en cas d'erreur
+      if (error.status === 403 && error.error?.error) {
+        // Message spécifique si utilisateur banni
+        this.snackbar.open(error.error.error, 'Fermer', { duration: 5000 });
+      } else {
+        // Message générique
+        this.snackbar.open('Échec de connexion. Vérifiez vos identifiants.', 'Fermer', { duration: 5000 });
       }
-    );
-  }
+    }
+  );
+}
 
 
 }

@@ -12,6 +12,7 @@ import { AddformComponent } from './addform/addform.component';
 import { HttpClientModule } from '@angular/common/http';
 import { UsersComponent } from './users/users.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
+import { ResetPasswordComponent } from './reset-password/reset-password.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { UserProfileComponent } from './user-profile/user-profile.component';
     SidebarComponent,
     AddformComponent,
     UsersComponent,
-    UserProfileComponent
+    UserProfileComponent,
+    ResetPasswordComponent
 
   ],
   imports: [

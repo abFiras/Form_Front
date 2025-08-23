@@ -28,6 +28,20 @@ getCurrentUser(): Observable<any> {
     headers: { Authorization: `Bearer ${token}` }
   });
 }
+getUserRoles(): string[] {
+  const token = this.getToken();
+  if (!token) return [];
+
+  const decodedToken = this.jwtHelper.decodeToken(token);
+
+  return decodedToken.roles || decodedToken.authorities || [];
+}
+
+isAdmin(): boolean {
+  console.log(this.getUserRoles().includes('ROLE_ADMIN'));
+
+  return this.getUserRoles().includes('ROLE_ADMIN');
+}
 
 
   // Méthode pour récupérer le token JWT depuis le localStorage
@@ -41,7 +55,6 @@ getCurrentUser(): Observable<any> {
           localStorage.setItem('accessToken', response.accessToken);
           console.log('Token retrieved and stored successfully:', response.accessToken);
           console.log(this.getUserIdFromToken());
-          console.log(this.getToken());
 
 
         } else {
@@ -57,13 +70,24 @@ getCurrentUser(): Observable<any> {
     );
   }
 
+  requestPasswordReset(email: string): Observable<any> {
+    return this.http.post(`http://localhost:8080/api/auth/reset-password-request`, { email });
+  }
+
+
+  resetPassword(token: string, password: string): Observable<any> {
+    return this.http.post(`http://localhost:8080/api/auth/reset-password`, {
+      token,
+      password
+    });
+  }
   logout() {
     console.log("Début de la déconnexion");
     if (localStorage.getItem('accessToken')) {
       localStorage.removeItem('accessToken');
       console.log("Jeton d'authentification supprimé avec succès");
     }
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
     console.log("Redirection vers la page de connexion après déconnexion");
   }
 

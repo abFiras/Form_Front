@@ -59,6 +59,18 @@
                 Utilisateur
               </span>
             </th>
+             <th class="table-header">
+              <span class="header-content">
+                <span class="header-icon">👤</span>
+                Prenom
+              </span>
+            </th>
+            <th class="table-header">
+              <span class="header-content">
+                <span class="header-icon">👤</span>
+                Nom
+              </span>
+            </th>
             <th class="table-header">
               <span class="header-content">
                 <span class="header-icon">📧</span>
@@ -107,6 +119,12 @@
               </div>
             </td>
             <td class="table-cell">
+              <span class="email-text">{{user.prenom}}</span>
+            </td>
+            <td class="table-cell">
+              <span class="email-text">{{user.nom}}</span>
+            </td>
+            <td class="table-cell">
               <span class="email-text">{{user.email}}</span>
             </td>
             <td class="table-cell">
@@ -121,27 +139,17 @@
               <div class="status-container">
                 <button
                   class="status-toggle"
-                  [class.active]="!user.suspended"
-                  [class.inactive]="user.suspended"
-                  (click)="toggleUserStatus(user)"
-                  [title]="user.suspended ? 'Activer' : 'Suspendre'">
+                  [class.active]="!user.banned"
+                  [class.inactive]="user.banned"
+                  (click)="user.banned ? unbanUser(user) : banUser(user)"
+                  [title]="user.banned ? 'Débannir' : 'Bannir'">
                   <span class="status-indicator"></span>
-                  <span class="status-text">{{user.suspended ? 'Suspendu' : 'Actif'}}</span>
+                  <span class="status-text">{{user.banned ? 'Banne' : 'Actif'}}</span>
                 </button>
               </div>
             </td>
             <td class="table-cell actions-cell">
               <div class="actions-container">
-                <!-- Bouton Toggle Suspension (seulement si pas banni) -->
-                <button
-                  *ngIf="!user.banned"
-                  class="action-btn toggle-btn"
-                  [class.active]="!user.suspended"
-                  [class.inactive]="user.suspended"
-                  (click)="toggleUserStatus(user)"
-                  [title]="user.suspended ? 'Réactiver' : 'Suspendre'">
-                  {{user.suspended ? '🔓' : '🔒'}}
-                </button>
 
                 <!-- Bouton Ban/Unban -->
                 <button
@@ -207,6 +215,24 @@
             class="form-input"
             [(ngModel)]="newUser.username"
             name="username"
+            required>
+        </div>
+           <div class="form-group">
+          <label class="form-label">Prenom</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="newUser.prenom"
+            name="prenom"
+            required>
+        </div>
+           <div class="form-group">
+          <label class="form-label">Nom</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="newUser.nom"
+            name="nom"
             required>
         </div>
 
@@ -296,6 +322,26 @@
             class="form-input"
             [(ngModel)]="selectedUser.username"
             name="username"
+            required>
+        </div>
+                <div class="form-group">
+
+            <label class="form-label">Prenom</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="selectedUser.prenom"
+            name="prenom"
+            required>
+        </div>
+                <div class="form-group">
+
+            <label class="form-label">Nom</label>
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="selectedUser.nom"
+            name="nom"
             required>
         </div>
 

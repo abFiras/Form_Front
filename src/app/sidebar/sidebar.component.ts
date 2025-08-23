@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { AuthService } from '../service/auth.service';
 
 interface MenuItem {
   id: string;
@@ -17,6 +18,16 @@ interface MenuItem {
 })
 export class SidebarComponent {
 @Input() isOpen = true;
+  isAdmin = false;
+
+
+    constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.isAdmin = this.authService.isAdmin();
+  }
+
+
 
   stats = {
     totalForms: 42,
@@ -141,7 +152,7 @@ export class SidebarComponent {
           menuItem.active = false;
         }
       });
-      
+
       // Toggle current item
       item.active = !item.active;
     }
