@@ -4,7 +4,7 @@
         <!-- Navigation principale -->
         <nav class="sidebar-nav">
           <div class="nav-section">
-            <h3 class="nav-title">Navigation</h3>
+            <h3 class="nav-title"></h3>
             <ul class="nav-list">
               <li *ngFor="let item of mainMenuItems"
                   class="nav-item"
@@ -31,6 +31,20 @@
                     </a>
                   </li>
                 </ul>
+
+              </li>
+            </ul>
+             <ul class="nav-list">
+              <li *ngFor="let item of toolsMenuItems"
+                  class="nav-item"
+                  [class.active]="item.active">
+                <a [routerLink]="item.route"
+                   class="nav-link"
+                   [class.active]="item.active">
+                  <span class="nav-icon">{{item.icon}}</span>
+                  <span class="nav-label">{{item.label}}</span>
+                  <span *ngIf="item.badge" class="nav-badge">{{item.badge}}</span>
+                </a>
               </li>
             </ul>
           </div>
@@ -51,9 +65,10 @@
                 </a>
               </li>
             </ul>
+
           </div>
 
-          <!-- Outils -->
+          <!-- Outils
           <div class="nav-section">
             <h3 class="nav-title">Outils</h3>
             <ul class="nav-list">
@@ -69,10 +84,13 @@
                 </a>
               </li>
             </ul>
-          </div>
+          </div>-->
         </nav>
+  <button href="#" class="sidebar-stats" (click)="logout()">
+          <span class="stats-title">⏻</span>
 
-        <!-- Statistiques rapides -->
+        </button>
+        <!-- Statistiques rapides
         <div class="sidebar-stats" *ngIf="isOpen">
           <h4 class="stats-title">Statistiques</h4>
           <div class="stats-grid">
@@ -85,7 +103,7 @@
               <div class="stat-label">En attente</div>
             </div>
           </div>
-        </div>
+        </div>-->
 
         <!-- Bouton de collapse -->
         <button class="collapse-btn" (click)="toggleSidebar()">

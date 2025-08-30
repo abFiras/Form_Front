@@ -37,7 +37,7 @@ export class FormService {
     return this.http.post<FormDTO>(this.API_URL, form, this.getAuthHeaders());
   }
 
-  
+
   updateForm(id: number, form: FormUpdateRequest): Observable<FormDTO> {
     return this.http.put<FormDTO>(`${this.API_URL}/${id}`, form, this.getAuthHeaders());
   }

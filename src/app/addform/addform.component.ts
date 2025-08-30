@@ -20,7 +20,7 @@ export class AddformComponent implements OnInit {
   formId?: number;
   isDraggedOver = false;
   expandedField: number | null = null;
-  draggedFieldType: string = '';
+  draggedtype: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -90,11 +90,11 @@ export class AddformComponent implements OnInit {
 
     // Add fields from loaded form
     form.fields.forEach((field, index) => {
-      this.addField(field.fieldType);
+      this.addField(field.type);
       const fieldGroup = this.fieldsArray.at(index) as FormGroup;
-      
+
       fieldGroup.patchValue({
-        fieldType: field.fieldType,
+        type: field.type,
         label: field.label,
         fieldName: field.fieldName,
         placeholder: field.placeholder,
@@ -127,16 +127,16 @@ export class AddformComponent implements OnInit {
   }
 
   // Drag and Drop Methods
-  onDragStart(event: DragEvent, fieldType: string): void {
-    this.draggedFieldType = fieldType;
+  onDragStart(event: DragEvent, type: string): void {
+    this.draggedtype = type;
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'copy';
-      event.dataTransfer.setData('text/plain', fieldType);
+      event.dataTransfer.setData('text/plain', type);
     }
   }
 
   onDragEnd(event: DragEvent): void {
-    this.draggedFieldType = '';
+    this.draggedtype = '';
   }
 
   onDragOver(event: DragEvent): void {
@@ -159,9 +159,9 @@ export class AddformComponent implements OnInit {
     event.stopPropagation();
     this.isDraggedOver = false;
 
-    const fieldType = event.dataTransfer?.getData('text/plain');
-    if (fieldType) {
-      this.addField(fieldType);
+    const type = event.dataTransfer?.getData('text/plain');
+    if (type) {
+      this.addField(type);
     }
   }
 
@@ -181,9 +181,9 @@ export class AddformComponent implements OnInit {
     this.updatePreviewForm();
   }
 
-  addField(fieldType?: string): void {
+  addField(type?: string): void {
     const fieldGroup = this.fb.group({
-      fieldType: [fieldType || '', Validators.required],
+      type: [type || '', Validators.required],
       label: ['', Validators.required],
       fieldName: ['', Validators.required],
       placeholder: [''],
@@ -197,12 +197,12 @@ export class AddformComponent implements OnInit {
     this.fieldsArray.push(fieldGroup);
 
     // Set default values based on field type
-    if (fieldType) {
-      this.setDefaultFieldValues(fieldGroup, fieldType);
+    if (type) {
+      this.setDefaultFieldValues(fieldGroup, type);
     }
 
     // Add default options for SELECT and RADIO fields
-    if (fieldType === 'SELECT' || fieldType === 'RADIO') {
+    if (type === 'SELECT' || type === 'RADIO') {
       const newFieldIndex = this.fieldsArray.length - 1;
       this.addOption(newFieldIndex);
       this.addOption(newFieldIndex);
@@ -214,7 +214,7 @@ export class AddformComponent implements OnInit {
     this.updatePreviewForm();
   }
 
-  private setDefaultFieldValues(fieldGroup: FormGroup, fieldType: string): void {
+  private setDefaultFieldValues(fieldGroup: FormGroup, type: string): void {
     const defaultValues: { [key: string]: any } = {
       'TEXT': {
         label: 'Text Input',
@@ -258,7 +258,7 @@ export class AddformComponent implements OnInit {
       }
     };
 
-    const defaults = defaultValues[fieldType];
+    const defaults = defaultValues[type];
     if (defaults) {
       fieldGroup.patchValue(defaults);
     }
@@ -268,7 +268,7 @@ export class AddformComponent implements OnInit {
     this.fieldsArray.removeAt(index);
     this.updateFieldOrders();
     this.updatePreviewForm();
-    
+
     // Reset expanded field if it was the removed one
     if (this.expandedField === index) {
       this.expandedField = null;
@@ -291,7 +291,7 @@ export class AddformComponent implements OnInit {
       this.fieldsArray.removeAt(index);
       this.fieldsArray.insert(index - 1, fieldToMove);
       this.updateFieldOrders();
-      
+
       // Update expanded field index
       if (this.expandedField === index) {
         this.expandedField = index - 1;
@@ -305,7 +305,7 @@ export class AddformComponent implements OnInit {
       this.fieldsArray.removeAt(index);
       this.fieldsArray.insert(index + 1, fieldToMove);
       this.updateFieldOrders();
-      
+
       // Update expanded field index
       if (this.expandedField === index) {
         this.expandedField = index + 1;
@@ -319,9 +319,9 @@ export class AddformComponent implements OnInit {
     });
   }
 
-  onFieldTypeChange(fieldIndex: number): void {
+  ontypeChange(fieldIndex: number): void {
     const field = this.fieldsArray.at(fieldIndex);
-    const fieldType = field.get('fieldType')?.value;
+    const type = field.get('type')?.value;
     const optionsArray = field.get('options') as FormArray;
 
     // Clear existing options
@@ -330,7 +330,7 @@ export class AddformComponent implements OnInit {
     }
 
     // Add default options for SELECT and RADIO fields
-    if (fieldType === 'SELECT' || fieldType === 'RADIO') {
+    if (type === 'SELECT' || type === 'RADIO') {
       this.addOption(fieldIndex);
       this.addOption(fieldIndex);
     }
@@ -374,7 +374,7 @@ export class AddformComponent implements OnInit {
   }
 
   // Helper methods for template
-  getFieldIcon(fieldType: string): string {
+  getFieldIcon(type: string): string {
     const icons: { [key: string]: string } = {
       'TEXT': 'fa fa-font',
       'EMAIL': 'fa fa-envelope',
@@ -385,10 +385,10 @@ export class AddformComponent implements OnInit {
       'CHECKBOX': 'fa fa-check-square',
       'DATE': 'fa fa-calendar'
     };
-    return icons[fieldType] || 'fa fa-question';
+    return icons[type] || 'fa fa-question';
   }
 
-  getFieldTypeName(fieldType: string): string {
+  gettypeName(type: string): string {
     const names: { [key: string]: string } = {
       'TEXT': 'Text Input',
       'EMAIL': 'Email',
@@ -399,14 +399,14 @@ export class AddformComponent implements OnInit {
       'CHECKBOX': 'Checkbox',
       'DATE': 'Date'
     };
-    return names[fieldType] || 'Unknown';
+    return names[type] || 'Unknown';
   }
 
   private updatePreviewForm(): void {
     const previewControls: { [key: string]: AbstractControl } = {};
 
     this.fieldsArray.controls.forEach((field, index) => {
-      const fieldType = field.get('fieldType')?.value;
+      const type = field.get('type')?.value;
       const required = field.get('required')?.value;
 
       let validators = [];
@@ -430,7 +430,7 @@ export class AddformComponent implements OnInit {
         }
       }
 
-      if (fieldType === 'EMAIL') {
+      if (type === 'EMAIL') {
         validators.push(Validators.email);
       }
 
@@ -469,10 +469,10 @@ export class AddformComponent implements OnInit {
 
   private prepareFormData(): any {
     const formValue = this.formBuilderForm.value;
-    
+
     // Process fields data
     const fields = formValue.fields.map((field: any, index: number) => ({
-      fieldType: field.fieldType,
+      type: field.type,
       label: field.label,
       fieldName: field.fieldName || this.generateFieldName(field.label),
       placeholder: field.placeholder,
@@ -501,7 +501,7 @@ export class AddformComponent implements OnInit {
   private saveFormData(formData: any): void {
     this.isLoading = true;
 
-    const request = this.isEditMode ? 
+    const request = this.isEditMode ?
       this.formService.updateForm(this.formId!, formData) :
       this.formService.createForm(formData);
 

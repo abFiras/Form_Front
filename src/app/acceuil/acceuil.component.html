@@ -1,0 +1,117 @@
+<div class="dashboard-container">
+  <h1 class="dashboard-title">Accueil</h1>
+
+  <div class="dashboard-grid">
+    <!-- Plateau SMTA Card -->
+    <div class="card plateau-card">
+      <div class="card-header">
+        <div class="icon-circle icon-dark-blue">
+          <span class="icon-text">{{dashboardData.plateauInfo.icon}}</span>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2>{{dashboardData.plateauInfo.title}}</h2>
+        <p>{{dashboardData.plateauInfo.subtitle}}</p>
+      </div>
+    </div>
+
+    <!-- Contract Date Card -->
+    <div class="card date-card">
+      <div class="card-header">
+        <div class="icon-circle icon-green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="white" stroke-width="2"/>
+            <line x1="16" y1="2" x2="16" y2="6" stroke="white" stroke-width="2"/>
+            <line x1="8" y1="2" x2="8" y2="6" stroke="white" stroke-width="2"/>
+            <line x1="3" y1="10" x2="21" y2="10" stroke="white" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2>{{dashboardData.contractEndDate.date}}</h2>
+        <p>{{dashboardData.contractEndDate.subtitle}}</p>
+      </div>
+    </div>
+
+    <!-- Parrainage Card -->
+    <div class="card sponsorship-card">
+      <div class="card-header">
+        <div class="icon-circle icon-yellow">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke="white" stroke-width="2" fill="white"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2>{{dashboardData.sponsorship.title}}</h2>
+      </div>
+    </div>
+
+    <!-- Users Card -->
+    <div class="card users-card">
+      <div class="card-header">
+        <div class="icon-circle icon-light-green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="white" stroke-width="2"/>
+            <circle cx="12" cy="7" r="4" stroke="white" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2>{{dashboardData.users.count}}</h2>
+        <p>{{dashboardData.users.subtitle}}</p>
+      </div>
+    </div>
+
+    <!-- Forms Card -->
+    <div class="card forms-card">
+      <div class="card-header">
+        <div class="icon-circle icon-dark-blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 11l3 3l8-8" stroke="white" stroke-width="2"/>
+            <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.67 0 3.23.46 4.57 1.25" stroke="white" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2>{{dashboardData.forms.count}}</h2>
+        <p>{{dashboardData.forms.subtitle}}</p>
+      </div>
+    </div>
+
+    <!-- Last Data Card -->
+    <div class="card time-card">
+      <div class="card-header">
+        <div class="icon-circle icon-light-green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
+            <polyline points="12,6 12,12 16,14" stroke="white" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2>{{dashboardData.lastData.days}}</h2>
+        <p>{{dashboardData.lastData.subtitle}}</p>
+      </div>
+    </div>
+
+    <!-- Total Data Card -->
+    <div class="card data-card">
+      <div class="card-header">
+        <div class="icon-circle icon-light-green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="white" stroke-width="2"/>
+            <polyline points="14,2 14,8 20,8" stroke="white" stroke-width="2"/>
+            <line x1="16" y1="13" x2="8" y2="13" stroke="white" stroke-width="2"/>
+            <line x1="16" y1="17" x2="8" y2="17" stroke="white" stroke-width="2"/>
+            <polyline points="10,9 9,9 8,9" stroke="white" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2>{{dashboardData.totalData.count}}</h2>
+        <p>{{dashboardData.totalData.subtitle}}</p>
+      </div>
+    </div>
+  </div>
+</div>

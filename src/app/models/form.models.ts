@@ -1,3 +1,5 @@
+// ✅ Interfaces TypeScript corrigées pour correspondre au backend
+
 export interface FormDTO {
   id?: number;
   name: string;
@@ -11,14 +13,14 @@ export interface FormDTO {
 
 export interface FormFieldDTO {
   id?: number;
-  fieldType: FieldType;
+  type: FieldType;
   label: string;
-  fieldName: string;
+  fieldName: string; // ✅ Ajouté fieldName
   placeholder?: string;
   required: boolean;
   order: number;
   cssClasses?: string;
-  options?: FieldOptionDTO[];
+  options?: FieldOptionDTO[]; // ✅ Type correct : tableau d'objets
   validationRules?: ValidationRule;
   attributes?: { [key: string]: string };
 }
@@ -37,21 +39,22 @@ export interface ValidationRule {
   email?: boolean;
 }
 
-export type FieldType = 
-  | 'text' 
-  | 'textarea' 
-  | 'email' 
-  | 'number' 
-  | 'date' 
-  | 'select' 
-  | 'radio' 
-  | 'checkbox' 
+export type FieldType =
+  | 'text'
+  | 'textarea'
+  | 'email'
+  | 'number'
+  | 'date'
+  | 'select'
+  | 'radio'
+  | 'checkbox'
   | 'file';
 
 export interface FormCreateRequest {
   name: string;
   description?: string;
   fields: FormFieldDTO[];
+  userId: number; // ✅ Ajouté userId pour la création
 }
 
 export interface FormUpdateRequest extends FormCreateRequest {

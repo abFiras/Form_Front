@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FieldType, FormDTO, FormFieldDTO, PaletteField } from '../models/form.models';
+import { FieldOptionDTO, FieldType, FormCreateRequest, FormDTO, FormFieldDTO, FormUpdateRequest, PaletteField } from '../models/form.models';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormService } from '../service/FormService';
@@ -20,7 +20,7 @@ export class FormBuilderComponent implements OnInit {
   currentForm?: FormDTO;
   formFields: FormFieldDTO[] = [];
   previewForm = new FormGroup({});
-  
+
   formSettingsForm = new FormGroup({
     name: new FormControl('', Validators.required),
     description: new FormControl('')
@@ -35,6 +35,8 @@ export class FormBuilderComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+      console.log('IsPreviewMode:', this.isPreviewMode); // Debug
+
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.formId = +params['id'];
@@ -73,50 +75,72 @@ export class FormBuilderComponent implements OnInit {
     }
   }
 
-  onFieldDrop(event: CdkDragDrop<any[]>): void {
-    console.log('Drop event:', event); // Debug log
-    
-    if (event.previousContainer === event.container) {
-      // Reordering within the same list
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+ // Remplacez votre méthode onFieldDrop actuelle par celle-ci dans votre composant TypeScript
+
+onFieldDrop(event: CdkDragDrop<any[]>): void {
+  console.log('Drop event:', event);
+  console.log('Previous container ID:', event.previousContainer.id);
+  console.log('Current container ID:', event.container.id);
+
+  if (event.previousContainer === event.container) {
+    // Reordering within the same list (canvas)
+    console.log('Reordering within canvas');
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+    this.updateFieldOrders();
+  } else if (event.previousContainer.id === 'palette-list') {
+    // Adding new field from palette - utiliser event.item.data au lieu de previousContainer.data
+    console.log('Adding from palette');
+    const dragData = event.item.data;
+    console.log('Drag data from palette:', dragData);
+
+    if (dragData && dragData.type && dragData.label) {
+      const paletteField: PaletteField = {
+        type: dragData.type as FieldType,
+        label: dragData.label,
+          icon: dragData.icon || '🔹' // mettre un emoji par défaut si dragData.icon est absent
+
+      };
+
+      const newField = this.createFieldFromPalette(paletteField);
+      console.log('Created new field:', newField);
+
+      // Insert at the correct position
+      this.formFields.splice(event.currentIndex, 0, newField);
       this.updateFieldOrders();
+      this.rebuildPreviewForm();
+
+      this.snackBar.open(`${dragData.label} ajouté`, 'Fermer', { duration: 2000 });
     } else {
-      // Moving from palette to form fields
-      const dragData = event.previousContainer.data[event.previousIndex];
-      console.log('Drag data:', dragData); // Debug log
-      
-      // Check if it's a PaletteField (from palette)
-      if (dragData && typeof dragData === 'object' && 'type' in dragData) {
-        const paletteField = dragData as PaletteField;
-        const newField = this.createFieldFromPalette(paletteField);
-        console.log('Created new field:', newField); // Debug log
-        
-        // Add the new field to the form fields at the dropped position
-        this.formFields.splice(event.currentIndex, 0, newField);
-        this.updateFieldOrders();
-        this.rebuildPreviewForm();
-        
-        this.snackBar.open(`${paletteField.label} field added`, 'Close', { duration: 2000 });
-      } else {
-        // Moving existing fields between containers
-        transferArrayItem(
-          event.previousContainer.data,
-          event.container.data,
-          event.previousIndex,
-          event.currentIndex
-        );
-        this.updateFieldOrders();
-        this.rebuildPreviewForm();
-      }
+      console.error('Invalid drag data:', dragData);
     }
+  } else {
+    // Moving existing fields between containers
+    console.log('Moving between containers');
+    transferArrayItem(
+      event.previousContainer.data,
+      event.container.data,
+      event.previousIndex,
+      event.currentIndex
+    );
+    this.updateFieldOrders();
+    this.rebuildPreviewForm();
   }
+
+  console.log('Final formFields:', this.formFields);
+}
+
+// Ajoutez aussi cette méthode pour gérer l'input du nom
+onFormNameChange(event: Event): void {
+  const target = event.target as HTMLInputElement;
+  this.formSettingsForm.get('name')?.setValue(target.value);
+}
 
   createFieldFromPalette(paletteField: PaletteField): FormFieldDTO {
     const timestamp = Date.now();
     const fieldName = `field_${timestamp}`;
-    
+
     const baseField: FormFieldDTO = {
-      fieldType: paletteField.type,
+      type: paletteField.type,
       label: paletteField.label,
       fieldName,
       placeholder: `Enter ${paletteField.label.toLowerCase()}...`,
@@ -160,90 +184,146 @@ export class FormBuilderComponent implements OnInit {
 
   rebuildPreviewForm(): void {
     const controls: { [key: string]: FormControl } = {};
-    
+
     this.formFields.forEach(field => {
       const validators = [];
-      
+
       if (field.required) {
         validators.push(Validators.required);
       }
-      
+
       // Add specific validators based on field type
-      if (field.fieldType === 'email') {
+      if (field.type === 'email') {
         validators.push(Validators.email);
       }
-      
+
       controls[field.fieldName] = new FormControl('', validators);
     });
-    
+
     this.previewForm = new FormGroup(controls);
   }
+// ✅ FormBuilder Component - saveForm() method corrigé
+
 saveForm(): void {
   if (!this.formSettingsForm.valid) {
     this.snackBar.open('Please fill in all required fields', 'Close', { duration: 3000 });
     return;
   }
 
-  // Prepare form data
-  const formData = {
-    name: this.formSettingsForm.value.name!,
-    description: this.formSettingsForm.value.description || '',
-    fields: this.formFields.map(f => ({
-      fieldType: f.fieldType,
-      label: f.label,
-      fieldName: f.fieldName,
-      placeholder: f.placeholder,
-      required: !!f.required,
-      order: Number(f.order) || 0,      // ensure numeric
-      options: f.options?.map(opt => ({
-        label: opt.label,
-        value: String(opt.value)         // ensure string
-      }))
-    }))
-  };
-
-  if (this.formId) {
-    // Update existing form
-    this.formService.updateForm(this.formId, formData).subscribe({
-      next: (form) => {
-        this.snackBar.open('Form updated successfully', 'Close', { duration: 3000 });
-        this.currentForm = form;
-      },
-      error: (error) => {
-        console.error('Error updating form:', error);
-        this.snackBar.open('Error updating form', 'Close', { duration: 3000 });
+  // Récupérer l'utilisateur actuel
+  this.authService.getCurrentUser().pipe(
+    switchMap(user => {
+      const numericUserId = Number(user.id);
+      if (isNaN(numericUserId)) {
+        console.error('User ID is not numeric:', user.id);
+        throw new Error('Invalid user ID');
       }
-    });
-  } else {
-    // Create new form
-    this.authService.getCurrentUser()
-      .pipe(
-        switchMap(user => {
-          const numericUserId = Number(user.id);
-          if (isNaN(numericUserId)) {
-            console.error('User ID is not numeric:', user.id);
-            throw new Error('Invalid user ID');
+
+      // Préparer les données du formulaire avec options nettoyées
+      const formData: FormCreateRequest | FormUpdateRequest = {
+        name: this.formSettingsForm.value.name!,
+        description: this.formSettingsForm.value.description || '',
+        userId: numericUserId,
+        fields: this.formFields.map(f => {
+          let cleanOptions: FieldOptionDTO[] | undefined = undefined;
+
+          if (f.options && Array.isArray(f.options) && f.options.length > 0) {
+            cleanOptions = f.options
+              .filter(opt => opt && opt.label && opt.label.trim() && opt.value && opt.value.trim())
+              .map(opt => ({
+                label: opt.label.trim(),
+                value: opt.value.trim()
+              }));
+
+            if (cleanOptions.length === 0) {
+              cleanOptions = undefined;
+            }
           }
 
-          const payload = { ...formData, userId: numericUserId };
-          console.log('Payload to send:', payload); // debug
-          return this.formService.createForm(payload);
+          return {
+            type: f.type,
+            label: f.label,
+            fieldName: f.fieldName || `field_${Date.now()}`,
+            placeholder: f.placeholder,
+            required: !!f.required,
+            order: Number(f.order) || 0,
+            options: cleanOptions
+          };
         })
-      )
-      .subscribe({
-        next: (form) => {
-          this.snackBar.open('Form created successfully', 'Close', { duration: 3000 });
-          this.router.navigate(['/forms', form.id, 'edit']);
-        },
-        error: (error) => {
-          console.error('Error creating form:', error);
-          this.snackBar.open('Error creating form', 'Close', { duration: 3000 });
-        }
-      });
+      };
+
+      // Si formId existe => update, sinon create
+      if (this.formId) {
+        const updatePayload: FormUpdateRequest = {
+          ...formData,
+          status: this.currentForm?.status || 'DRAFT' // ou garder l'ancien status
+        };
+        return this.formService.updateForm(this.formId, updatePayload);
+      } else {
+        return this.formService.createForm(formData);
+      }
+    })
+  ).subscribe({
+    next: (form) => {
+      const message = this.formId ? 'Form updated successfully' : 'Form created successfully';
+      this.snackBar.open(message, 'Close', { duration: 3000 });
+
+      // Mettre à jour l'état local et redirection si nécessaire
+      this.currentForm = form;
+      if (!this.formId) {
+        this.router.navigate(['/forms', form.id, 'edit']);
+      }
+    },
+    error: (error) => {
+      console.error('Error saving form:', error);
+      this.snackBar.open('Error saving form', 'Close', { duration: 3000 });
+    }
+  });
+}
+
+
+// ✅ Méthode helper pour ajouter une option à un champ select/radio
+addOption(fieldIndex: number): void {
+  if (!this.formFields[fieldIndex].options) {
+    this.formFields[fieldIndex].options = [];
+  }
+
+  this.formFields[fieldIndex].options!.push({
+    label: '',
+    value: ''
+  });
+}
+
+// ✅ Méthode helper pour supprimer une option
+removeOption(fieldIndex: number, optionIndex: number): void {
+  if (this.formFields[fieldIndex].options) {
+    this.formFields[fieldIndex].options!.splice(optionIndex, 1);
   }
 }
 
- 
+// ✅ Méthode helper pour valider les options avant sauvegarde
+validateFieldOptions(field: any): boolean {
+  if (['select', 'radio', 'checkbox'].includes(field.type)) {
+    if (!field.options || field.options.length === 0) {
+      this.snackBar.open(`Field "${field.label}" of type ${field.type} must have at least one option`, 'Close', { duration: 5000 });
+      return false;
+    }
+
+    const validOptions = field.options.filter((opt: any) =>
+      opt && opt.label && opt.label.trim() && opt.value && opt.value.trim()
+    );
+
+    if (validOptions.length === 0) {
+      this.snackBar.open(`Field "${field.label}" has no valid options (label and value are required)`, 'Close', { duration: 5000 });
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+
   publishForm(): void {
     if (this.formId) {
       this.formService.publishForm(this.formId).subscribe({
@@ -264,7 +344,7 @@ saveForm(): void {
       const submission = {
         data: this.previewForm.value
       };
-      
+
       this.formService.submitForm(this.formId, submission).subscribe({
         next: () => {
           this.snackBar.open('Form submitted successfully', 'Close', { duration: 3000 });
@@ -283,4 +363,65 @@ saveForm(): void {
   goBack(): void {
     this.router.navigate(['/forms']);
   }
+
+  // Ajoutez ces méthodes à votre classe FormBuilderComponent
+
+getCharacterCount(): number {
+  const nameValue = this.formSettingsForm.get('name')?.value || '';
+  return nameValue.length;
+}
+
+// Méthode pour basculer entre mode édition et preview
+togglePreviewMode(): void {
+  this.isPreviewMode = !this.isPreviewMode;
+  if (this.isPreviewMode) {
+    this.rebuildPreviewForm();
+  }
+}
+
+// Méthode pour créer un drag data avec une structure cohérente
+createDragData(type: string, label: string): any {
+  return {
+    type: type,
+    label: label,
+    icon: this.getFieldIcon(type)
+  };
+}
+
+// Méthode pour obtenir l'icône appropriée selon le type
+getFieldIcon(type: string): string {
+  const iconMap: { [key: string]: string } = {
+    'text': 'text_fields',
+    'textarea': 'notes',
+    'datetime': 'event',
+    'checkbox': 'check_box',
+    'slider': 'linear_scale',
+    'number': 'add',
+    'select': 'list',
+    'radio': 'radio_button_checked',
+    'geolocation': 'location_on',
+    'contact': 'contact_phone',
+    'address': 'home',
+    'reference': 'link',
+    'file': 'photo_camera',
+    'audio': 'mic',
+    'drawing': 'brush',
+    'schema': 'account_tree',
+    'attachment': 'attach_file',
+    'signature': 'gesture',
+    'barcode': 'qr_code_scanner',
+    'nfc': 'nfc',
+    'separator': 'remove',
+    'table': 'table_chart',
+    'fixed-text': 'text_snippet',
+    'image': 'image',
+    'file-fixed': 'description',
+    'calculation': 'calculate'
+  };
+
+  return iconMap[type] || 'help_outline';
+}
+get nameFormControl(): FormControl {
+  return this.formSettingsForm.get('name') as FormControl;
+}
 }

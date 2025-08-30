@@ -8,12 +8,12 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
   standalone: false,
   templateUrl: './dynamic-field.component.html',
   styleUrl: './dynamic-field.component.css' ,
-  
+
 })
 export class DynamicFieldComponent implements OnInit {
   @Input() field!: FormFieldDTO;
   @Input() isPreview = false;
-  @Input() formGroup?: FormGroup;
+@Input() formGroup!: FormGroup;
   @Output() fieldChange = new EventEmitter<FormFieldDTO>();
   @Output() removeField = new EventEmitter<void>();
 
@@ -43,7 +43,7 @@ export class DynamicFieldComponent implements OnInit {
 
   addControlToForm(): void {
     if (!this.formGroup) return;
-    
+
     const validators = this.field.required ? [Validators.required] : [];
     const control = new FormControl('', validators);
     this.formGroup.addControl(this.field.fieldName, control);
@@ -66,7 +66,7 @@ export class DynamicFieldComponent implements OnInit {
       };
 
       // Handle options for select/radio/checkbox
-      if (['select', 'radio', 'checkbox'].includes(this.field.fieldType)) {
+      if (['select', 'radio', 'checkbox'].includes(this.field.type)) {
         const optionsText = this.editForm.value.options || '';
         updatedField.options = optionsText
           .split('\n')
@@ -88,6 +88,6 @@ export class DynamicFieldComponent implements OnInit {
   }
 
   hasOptions(): boolean {
-    return ['select', 'radio', 'checkbox'].includes(this.field.fieldType);
+    return ['select', 'radio', 'checkbox'].includes(this.field.type);
   }
 }

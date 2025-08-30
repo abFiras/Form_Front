@@ -35,12 +35,12 @@ export class FormBuilderService {
   updateField(updatedField: FormFieldDTO): void {
     const currentFields = this.getFormFields();
     const index = currentFields.findIndex(field => field.order === updatedField.order);
-    
+
     if (index > -1) {
       const newFields = [...currentFields];
       newFields[index] = updatedField;
       this.setFormFields(newFields);
-      
+
       // Update selected field if it's the same one
       const currentSelected = this.selectedFieldSubject.value;
       if (currentSelected && currentSelected.order === updatedField.order) {
@@ -53,14 +53,14 @@ export class FormBuilderService {
   removeField(order: number): void {
     const currentFields = this.getFormFields();
     const newFields = currentFields.filter(field => field.order !== order);
-    
+
     // Reorder remaining fields
     newFields.forEach((field, index) => {
       field.order = index + 1;
     });
-    
+
     this.setFormFields(newFields);
-    
+
     // Clear selection if the removed field was selected
     const currentSelected = this.selectedFieldSubject.value;
     if (currentSelected && currentSelected.order === order) {
@@ -109,16 +109,16 @@ export class FormBuilderService {
       .replace(/[^a-z0-9]/g, '_')
       .replace(/_+/g, '_')
       .replace(/^_|_$/g, '');
-    
+
     const currentFields = this.getFormFields();
     let fieldName = baseName;
     let counter = 1;
-    
+
     while (currentFields.some(f => f.fieldName === fieldName)) {
       fieldName = `${baseName}_${counter}`;
       counter++;
     }
-    
+
     return fieldName;
   }
 
@@ -131,7 +131,7 @@ export class FormBuilderService {
   // Validate field name uniqueness
   isFieldNameUnique(fieldName: string, excludeOrder?: number): boolean {
     const currentFields = this.getFormFields();
-    return !currentFields.some(field => 
+    return !currentFields.some(field =>
       field.fieldName === fieldName && field.order !== excludeOrder
     );
   }

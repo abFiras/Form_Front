@@ -1,60 +1,105 @@
 <div class="form-list-container">
+  <!-- En-tête -->
   <div class="header">
-    <h1>My Forms</h1>
-    <button mat-raised-button color="primary" (click)="createNewForm()">
-      <mat-icon>add</mat-icon>
-      New Form
-    </button>
+    <h1><i class="fas fa-file-alt"></i> Mes formulaires</h1>
+    <div class="header-controls">
+      <button class="btn btn-primary" (click)="createNewForm()">
+        <i class="fas fa-plus"></i> Créer un formulaire
+      </button>
+      <button class="btn btn-secondary">
+        <i class="fas fa-exchange-alt"></i> Changement de propriétaire
+      </button>
+      <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="search-input" placeholder="Rechercher...">
+      </div>
+    </div>
   </div>
 
-  <div class="forms-grid" *ngIf="!loading">
-    <mat-card class="form-card" *ngFor="let form of forms">
-      <mat-card-header>
-        <mat-card-title>{{form.name}}</mat-card-title>
-        <mat-card-subtitle>
-          <span class="status-badge" [class.published]="form.status === 'PUBLISHED'">
-            {{form.status}}
-          </span>
-        </mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p>{{form.description || 'No description'}}</p>
-        <p class="field-count">{{form.fields.length}} fields</p>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-button (click)="editForm(form.id!)">
-          <mat-icon>edit</mat-icon>
-          Edit
-        </button>
-        <button mat-button (click)="previewForm(form.id!)">
-          <mat-icon>preview</mat-icon>
-          Preview
-        </button>
-        <button mat-button 
-                *ngIf="form.status === 'DRAFT'" 
-                (click)="publishForm(form)"
-                color="primary">
-          <mat-icon>publish</mat-icon>
-          Publish
-        </button>
-        <button mat-button color="warn" (click)="deleteForm(form.id!)">
-          <mat-icon>delete</mat-icon>
-          Delete
-        </button>
-      </mat-card-actions>
-    </mat-card>
+  <!-- Filtres -->
+  <div class="filters">
+    <label class="filter-label">
+      <input type="checkbox" checked> Afficher le groupe principal en premier
+    </label>
+    <span class="display-count">Afficher {{forms.length}} éléments</span>
+    <span style="margin-left: auto;">Rechercher :</span>
   </div>
 
+  <!-- Loading state -->
   <div class="loading" *ngIf="loading">
-    <p>Loading forms...</p>
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Chargement des formulaires...</p>
   </div>
 
+  <!-- Liste des formulaires -->
+  <div class="forms-table-container" *ngIf="!loading && forms.length > 0">
+
+    <!-- Section Brouillons -->
+    <div class="table-header">
+      <div class="section-title">
+        <button class="collapse-btn"><i class="fas fa-minus"></i></button>
+        Brouillons
+      </div>
+      <span>Enregistrements</span>
+    </div>
+
+    <ul class="forms-list">
+  <li class="form-item" *ngFor="let form of draftForms">
+        <div class="form-info">
+          <span class="form-name">{{form.name}}</span>
+          <span class="form-count status-draft">{{form.fields.length || 0}}</span>
+        </div>
+        <div class="form-actions">
+          <button class="action-btn btn-edit" (click)="editForm(form.id!)">
+            <i class="fas fa-edit"></i> Modifier
+          </button>
+          <button class="action-btn btn-rights" (click)="previewForm(form.id!)">
+            <i class="fas fa-users"></i> Droits
+          </button>
+          <button class="action-btn btn-copy">
+            <i class="fas fa-copy"></i> Copier
+          </button>
+        </div>
+      </li>
+    </ul>
+
+    <!-- Section Publiés -->
+<div class="table-header" *ngIf="publishedForms.length > 0">
+      <div class="section-title">
+        <button class="collapse-btn"><i class="fas fa-minus"></i></button>
+        Publiés
+      </div>
+      <span>Enregistrements</span>
+    </div>
+
+<ul class="forms-list" *ngIf="publishedForms.length > 0">
+  <li class="form-item" *ngFor="let form of publishedForms">
+        <div class="form-info">
+          <span class="form-name">{{form.name}}</span>
+<span class="form-count status-published">{{form.fields.length || 0}}</span>
+        </div>
+        <div class="form-actions">
+          <button class="action-btn btn-edit" (click)="editForm(form.id!)">
+            <i class="fas fa-edit"></i> Modifier
+          </button>
+          <button class="action-btn btn-rights" (click)="previewForm(form.id!)">
+            <i class="fas fa-users"></i> Droits
+          </button>
+          <button class="action-btn btn-copy">
+            <i class="fas fa-copy"></i> Copier
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Empty state -->
   <div class="empty-state" *ngIf="!loading && forms.length === 0">
-    <mat-icon class="empty-icon">description</mat-icon>
-    <h2>No forms yet</h2>
-    <p>Create your first form to get started</p>
-    <button mat-raised-button color="primary" (click)="createNewForm()">
-      Create Form
+    <i class="fas fa-file-alt"></i>
+    <h2>Aucun formulaire</h2>
+    <p>Créez votre premier formulaire pour commencer</p>
+    <button class="btn btn-primary" (click)="createNewForm()">
+       Créer un formulaire
     </button>
   </div>
 </div>

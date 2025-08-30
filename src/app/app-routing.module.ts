@@ -7,17 +7,20 @@ import { UsersComponent } from './users/users.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
 import { FormBuilderComponent } from './form-builder/form-builder.component';
 import { FormListComponent } from './form-list/form-list.component';
+import { AcceuilComponent } from './acceuil/acceuil.component';
 
 const routes: Routes = [
   { path: '', component: LandingPageComponent }, // default route
   { path: 'connexion', component: LoginComponent }, // default route
   { path: 'ajouterform', component: AddformComponent }, // default route
+    { path: 'dashboard', component: AcceuilComponent }, // default route
+
   { path: 'users', component: UsersComponent },
   { path: 'profil', component: UserProfileComponent },
 
 // NEW: Form Builder - Drag & Drop Interface
   { path: 'builder', component: FormBuilderComponent },
-  
+
  { path: 'forms', component: FormListComponent },
   { path: 'forms/new', component: FormBuilderComponent },
   { path: 'forms/:id/edit', component: FormBuilderComponent },

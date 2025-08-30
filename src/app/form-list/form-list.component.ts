@@ -12,7 +12,8 @@ import { Router } from '@angular/router';
 export class FormListComponent implements OnInit {
   forms: FormDTO[] = [];
   loading = false;
-
+  draftForms: FormDTO[] = [];
+  publishedForms: FormDTO[] = [];
   constructor(
     private formService: FormService,
     private router: Router
@@ -26,7 +27,9 @@ export class FormListComponent implements OnInit {
     this.loading = true;
     this.formService.getAllForms().subscribe({
       next: (forms) => {
-        this.forms = forms;
+      this.forms = forms;
+this.draftForms = this.forms.filter(f => f.status === 'DRAFT' || f.status === null);
+        this.publishedForms = this.forms.filter(f => f.status === 'PUBLISHED');
         this.loading = false;
       },
       error: (error) => {

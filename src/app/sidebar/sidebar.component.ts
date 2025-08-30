@@ -1,5 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { AuthService } from '../service/auth.service';
+import { FormDTO } from '../models/form.models';
+import { FormService } from '../service/FormService';
 
 interface MenuItem {
   id: string;
@@ -19,13 +21,35 @@ interface MenuItem {
 export class SidebarComponent {
 @Input() isOpen = true;
   isAdmin = false;
+ forms: FormDTO[] = [];
 
 
-    constructor(private authService: AuthService) {}
+    constructor(private authService: AuthService,private formService: FormService) {}
 
   ngOnInit(): void {
+    this.loadForms();
     this.isAdmin = this.authService.isAdmin();
   }
+ loadForms(): void {
+  this.formService.getAllForms().subscribe({
+    next: (forms) => {
+      this.forms = forms;
+      console.log(this.forms.length);
+
+      // mettre à jour le badge dans le menu
+      const formsMenu = this.mainMenuItems.find(m => m.id === 'forms');
+      if (formsMenu && formsMenu.children) {
+        const myFormsItem = formsMenu.children.find(c => c.id === 'my-forms');
+        if (myFormsItem) {
+          myFormsItem.badge = this.forms.length;
+        }
+      }
+    },
+    error: (error) => {
+      console.error('Error loading forms:', error);
+    }
+  });
+}
 
 
 
@@ -37,7 +61,7 @@ export class SidebarComponent {
   mainMenuItems: MenuItem[] = [
     {
       id: 'dashboard',
-      label: 'Tableau de bord',
+      label: 'Acceuil',
       icon: '📊',
       route: '/dashboard',
       active: true
@@ -46,51 +70,43 @@ export class SidebarComponent {
       id: 'forms',
       label: 'Formulaires',
       icon: '📝',
-      route: '/forms',
-      badge: 5,
       children: [
         {
           id: 'create-form',
           label: 'Créer un formulaire',
           icon: '➕',
-          route: '/forms/create'
+          route: '/forms/new'
         },
         {
           id: 'my-forms',
           label: 'Mes formulaires',
           icon: '📋',
-          route: '/forms/my-forms'
+          badge: this.forms.length,
+          route: '/forms'
         },
         {
           id: 'templates',
-          label: 'Modèles',
+          label: 'Bibliothèque',
           icon: '📄',
           route: '/forms/templates'
         }
       ]
     },
     {
-      id: 'validation',
-      label: 'Validation',
-      icon: '✅',
-      route: '/validation',
-      badge: 7
-    },
-    {
       id: 'exports',
-      label: 'Exports/Imports',
+      label: 'Listes externes',
       icon: '📤',
       route: '/exports',
       children: [
         {
           id: 'export-word',
-          label: 'Export Word',
+          label: 'Creer une Listes externes',
           icon: '📄',
           route: '/exports/word'
         },
         {
           id: 'import-excel',
-          label: 'Import Excel',
+          label: 'Mes Listes externes',
           icon: '📊',
           route: '/exports/excel'
         }
@@ -98,35 +114,14 @@ export class SidebarComponent {
     }
   ];
 
-  managementMenuItems: MenuItem[] = [
-    {
-      id: 'users',
-      label: 'Utilisateurs',
-      icon: '👥',
-      route: '/users'
-    },
-    {
-      id: 'permissions',
-      label: 'Permissions',
-      icon: '🔐',
-      route: '/permissions'
-    },
-    {
-      id: 'signatures',
-      label: 'Signatures',
-      icon: '✍️',
-      route: '/signatures'
-    }
-  ];
-
   toolsMenuItems: MenuItem[] = [
     {
       id: 'analytics',
-      label: 'Analyses',
+      label: 'Graphiques',
       icon: '📈',
       route: '/analytics'
     },
-    {
+    /*{
       id: 'reports',
       label: 'Rapports',
       icon: '📋',
@@ -137,8 +132,30 @@ export class SidebarComponent {
       label: 'Paramètres',
       icon: '⚙️',
       route: '/settings'
-    }
+    }*/
   ];
+
+  managementMenuItems: MenuItem[] = [
+    {
+      id: 'users',
+      label: 'Utilisateurs',
+      icon: '👥',
+      route: '/users'
+    },
+   /* {
+      id: 'permissions',
+      label: 'Permissions',
+      icon: '🔐',
+      route: '/permissions'
+    },
+    {
+      id: 'signatures',
+      label: 'Signatures',
+      icon: '✍️',
+      route: '/signatures'
+    }*/
+  ];
+
 
   toggleSidebar(): void {
     this.isOpen = !this.isOpen;
@@ -156,5 +173,9 @@ export class SidebarComponent {
       // Toggle current item
       item.active = !item.active;
     }
+  }
+
+    logout(): void {
+    this.authService.logout();
   }
 }

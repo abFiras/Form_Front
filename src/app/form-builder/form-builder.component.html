@@ -1,88 +1,383 @@
 <!-- src/app/components/form-builder/form-builder.component.html -->
 <div class="form-builder-container">
-  <div class="builder-header">
+  <!-- Builder Header -->
+  <div class="builder-header" *ngIf="!isPreviewMode">
     <button mat-icon-button (click)="goBack()" class="back-btn">
       <mat-icon>arrow_back</mat-icon>
     </button>
-    <h1 *ngIf="!isPreviewMode">{{formId ? 'Edit Form' : 'Create New Form'}}</h1>
-    <h1 *ngIf="isPreviewMode">Form Preview</h1>
+    <h1>{{formId ? 'Edit Form' : 'Create New Form'}}</h1>
     <div class="header-actions">
-      <button mat-raised-button (click)="saveForm()" *ngIf="!isPreviewMode" color="primary">
+      <button mat-raised-button (click)="saveForm()" color="primary">
         <mat-icon>save</mat-icon>
         Save
       </button>
-      <button mat-raised-button 
-              (click)="publishForm()" 
-              *ngIf="!isPreviewMode && formId && currentForm?.status === 'DRAFT'"
+      <button mat-raised-button
+              (click)="publishForm()"
+              *ngIf="formId && currentForm?.status === 'DRAFT'"
               color="accent">
         <mat-icon>publish</mat-icon>
         Publish
       </button>
+      <!--<button mat-icon-button class="action-btn" title="Aperçu" (click)="isPreviewMode = !isPreviewMode">
+        <mat-icon>visibility</mat-icon>
+      </button>-->
     </div>
   </div>
 
-  <!-- Form Settings -->
-  <mat-card class="form-settings" *ngIf="!isPreviewMode">
-    <mat-card-header>
-      <mat-card-title>Form Settings</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="formSettingsForm">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Form Name</mat-label>
-          <input matInput formControlName="name">
-          <mat-error *ngIf="formSettingsForm.get('name')?.hasError('required')">
-            Form name is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description</mat-label>
-          <textarea matInput formControlName="description" rows="2"></textarea>
-        </mat-form-field>
-      </form>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Builder Layout -->
-  <div class="builder-layout" *ngIf="!isPreviewMode">
-    <!-- Field Palette -->
-    <div class="palette-section">
-      <app-field-palette></app-field-palette>
+  <!-- Top Header with Form Name (New Design) -->
+  <div class="form-header" *ngIf="!isPreviewMode">
+    <div class="form-title-section">
+      <span class="form-label">Formulaire</span>
+      <input
+        class="form-name-input"
+        [value]="formSettingsForm.get('name')?.value || ''"
+        (input)="onFormNameChange($event)"
+        placeholder="Nommez votre formulaire">
     </div>
 
-    <!-- Form Canvas -->
-    <div class="canvas-section">
-      <mat-card class="form-canvas">
-        <mat-card-header>
-          <mat-card-title>Form Fields</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div 
-            cdkDropList
-            id="form-fields-list"
-            [cdkDropListData]="formFields"
-            cdkDropListConnectedTo="palette-list"
-            (cdkDropListDropped)="onFieldDrop($event)"
-            class="field-list">
-            <div class="field-item" 
-                 cdkDrag 
-                 *ngFor="let field of formFields; let i = index">
-              <app-dynamic-field 
-                [field]="field"
-                [formGroup]="previewForm"
-                (fieldChange)="onFieldChange(i, $event)"
-                (removeField)="onRemoveField(i)">
-              </app-dynamic-field>
-            </div>
-            
-            <div class="empty-canvas" *ngIf="formFields.length === 0">
-              <mat-icon class="empty-icon">drag_indicator</mat-icon>
-              <p>Drag fields from the palette to build your form</p>
+    <div class="form-actions">
+      <button mat-icon-button class="action-btn" title="Menu">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <button mat-icon-button class="action-btn" title="Collaborateurs">
+        <mat-icon>group</mat-icon>
+      </button>
+      <button mat-icon-button class="action-btn" title="Partager">
+        <mat-icon>share</mat-icon>
+      </button>
+      <button mat-icon-button class="action-btn" title="Paramètres">
+        <mat-icon>settings</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="character-count" *ngIf="!isPreviewMode">
+    <span>{{getCharacterCount()}} / 150</span>
+  </div>
+
+  <!-- Main Builder Layout -->
+  <div class="builder-main-layout" *ngIf="!isPreviewMode">
+    <!-- Form Canvas (Left Side) -->
+    <div class="canvas-area">
+      <div class="form-canvas">
+        <div
+          cdkDropList
+          id="form-fields-list"
+          [cdkDropListData]="formFields"
+          cdkDropListConnectedTo="palette-list"
+          (cdkDropListDropped)="onFieldDrop($event)"
+          class="drop-zone">
+
+          <div class="field-item"
+               cdkDrag
+               *ngFor="let field of formFields; let i = index"
+               [cdkDragData]="field">
+            <app-dynamic-field
+              [field]="field"
+              [formGroup]="previewForm"
+              (fieldChange)="onFieldChange(i, $event)"
+              (removeField)="onRemoveField(i)">
+            </app-dynamic-field>
+          </div>
+
+          <div class="empty-canvas" *ngIf="formFields.length === 0">
+            <div class="empty-content">
+              <mat-icon class="empty-icon">add_circle_outline</mat-icon>
+              <p>Cliquez ou glissez un élément ici pour commencer</p>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
+      </div>
+    </div>
+
+    <!-- Field Palette (Right Side) -->
+    <div class="palette-area">
+      <div class="field-palette">
+        <!-- Basic Fields -->
+        <div class="field-category"
+             cdkDropList
+             id="palette-list"
+             cdkDropListConnectedTo="form-fields-list"
+             [cdkDropListData]="[]">
+          <div class="field-row">
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'text', label: 'Champ de saisie'}"
+                 title="Champ de saisie">
+              <div class="field-icon text-field">
+                <mat-icon>text_fields</mat-icon>
+              </div>
+              <span>Champ de saisie</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'textarea', label: 'Zone de texte'}"
+                 title="Zone de texte">
+              <div class="field-icon textarea-field">
+                <mat-icon>notes</mat-icon>
+              </div>
+              <span>Zone de texte</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'datetime', label: 'Date et Heure'}"
+                 title="Date et Heure">
+              <div class="field-icon datetime-field">
+                <mat-icon>event</mat-icon>
+              </div>
+              <span>Date et Heure</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'checkbox', label: 'Case à cocher'}"
+                 title="Case à cocher">
+              <div class="field-icon checkbox-field">
+                <mat-icon>check_box</mat-icon>
+              </div>
+              <span>Case à cocher</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'slider', label: 'Slider'}"
+                 title="Slider">
+              <div class="field-icon slider-field">
+                <mat-icon>linear_scale</mat-icon>
+              </div>
+              <span>Slider</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'number', label: 'Compteur'}"
+                 title="Compteur">
+              <div class="field-icon counter-field">
+                <mat-icon>add</mat-icon>
+              </div>
+              <span>Compteur</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'select', label: 'Liste'}"
+                 title="Liste">
+              <div class="field-icon list-field">
+                <mat-icon>list</mat-icon>
+              </div>
+              <span>Liste</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'radio', label: 'Choix'}"
+                 title="Choix">
+              <div class="field-icon choice-field">
+                <mat-icon>radio_button_checked</mat-icon>
+              </div>
+              <span>Choix</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'geolocation', label: 'Géolocalisation'}"
+                 title="Géolocalisation">
+              <div class="field-icon geo-field">
+                <mat-icon>location_on</mat-icon>
+              </div>
+              <span>Géolocalisation</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'contact', label: 'Contact'}"
+                 title="Contact">
+              <div class="field-icon contact-field">
+                <mat-icon>contact_phone</mat-icon>
+              </div>
+              <span>Contact</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'address', label: 'Adresse'}"
+                 title="Adresse">
+              <div class="field-icon address-field">
+                <mat-icon>home</mat-icon>
+              </div>
+              <span>Adresse</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'reference', label: 'Référence'}"
+                 title="Référence">
+              <div class="field-icon reference-field">
+                <mat-icon>link</mat-icon>
+              </div>
+              <span>Référence</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'file', label: 'Photo'}"
+                 title="Photo">
+              <div class="field-icon photo-field">
+                <mat-icon>photo_camera</mat-icon>
+              </div>
+              <span>Photo</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'audio', label: 'Audio'}"
+                 title="Audio">
+              <div class="field-icon audio-field">
+                <mat-icon>mic</mat-icon>
+              </div>
+              <span>Audio</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'drawing', label: 'Dessin'}"
+                 title="Dessin">
+              <div class="field-icon drawing-field">
+                <mat-icon>brush</mat-icon>
+              </div>
+              <span>Dessin</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'schema', label: 'Schéma'}"
+                 title="Schéma">
+              <div class="field-icon schema-field">
+                <mat-icon>account_tree</mat-icon>
+              </div>
+              <span>Schéma</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'attachment', label: 'Pièce jointe'}"
+                 title="Pièce jointe">
+              <div class="field-icon attachment-field">
+                <mat-icon>attach_file</mat-icon>
+              </div>
+              <span>Pièce jointe</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'signature', label: 'Signature'}"
+                 title="Signature">
+              <div class="field-icon signature-field">
+                <mat-icon>gesture</mat-icon>
+              </div>
+              <span>Signature</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'barcode', label: 'Code-barres'}"
+                 title="Code-barres">
+              <div class="field-icon barcode-field">
+                <mat-icon>qr_code_scanner</mat-icon>
+              </div>
+              <span>Code-barres</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'nfc', label: 'Tag NFC'}"
+                 title="Tag NFC">
+              <div class="field-icon nfc-field">
+                <mat-icon>nfc</mat-icon>
+              </div>
+              <span>Tag NFC</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'separator', label: 'Séparateur'}"
+                 title="Séparateur">
+              <div class="field-icon separator-field">
+                <mat-icon>remove</mat-icon>
+              </div>
+              <span>Séparateur</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'table', label: 'Tableau'}"
+                 title="Tableau">
+              <div class="field-icon table-field">
+                <mat-icon>table_chart</mat-icon>
+              </div>
+              <span>Tableau</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'fixed-text', label: 'Texte fixe'}"
+                 title="Texte fixe">
+              <div class="field-icon fixed-text-field">
+                <mat-icon>text_snippet</mat-icon>
+              </div>
+              <span>Texte fixe</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'image', label: 'Image fixe'}"
+                 title="Image fixe">
+              <div class="field-icon image-field">
+                <mat-icon>image</mat-icon>
+              </div>
+              <span>Image fixe</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'file-fixed', label: 'Fichier fixe'}"
+                 title="Fichier fixe">
+              <div class="field-icon file-field">
+                <mat-icon>description</mat-icon>
+              </div>
+              <span>Fichier fixe</span>
+            </div>
+
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'calculation', label: 'Calcul'}"
+                 title="Calcul">
+              <div class="field-icon calc-field">
+                <mat-icon>calculate</mat-icon>
+              </div>
+              <span>Calcul</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -96,16 +391,16 @@
       <mat-card-content>
         <form [formGroup]="previewForm" (ngSubmit)="submitPreview()">
           <div *ngFor="let field of formFields">
-            <app-dynamic-field 
+            <app-dynamic-field
               [field]="field"
               [formGroup]="previewForm"
               [isPreview]="true">
             </app-dynamic-field>
           </div>
-          
+
           <div class="preview-actions">
-            <button mat-raised-button 
-                    type="submit" 
+            <button mat-raised-button
+                    type="submit"
                     color="primary"
                     [disabled]="!previewForm.valid">
               Submit

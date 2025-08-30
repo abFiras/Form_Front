@@ -81,7 +81,7 @@ export class LoginComponent {
   this.authService.login(this.loginFormGroup.value).subscribe(
     (response) => {
 this.snackbar.open('Connexion réussie.', 'Fermer', { duration: 5000 });
-      this.router.navigate(['/ajouterform']);
+      this.router.navigate(['/dashboard']);
       console.log("avec succès");
     },
     (error) => {

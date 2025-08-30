@@ -87,7 +87,7 @@
                     <div class="col-md-4">
                       <div class="form-group">
                         <label class="form-label">Field Type *</label>
-                        <select class="form-control" formControlName="fieldType" (change)="onFieldTypeChange(i)">
+                        <select class="form-control" formControlName="type" (change)="ontypeChange(i)">
                           <option value="">Select Type</option>
                           <option value="TEXT">Text</option>
                           <option value="EMAIL">Email</option>
@@ -138,7 +138,7 @@
                   </div>
 
                   <!-- Options for SELECT and RADIO fields -->
-                  <div *ngIf="field.get('fieldType')?.value === 'SELECT' || field.get('fieldType')?.value === 'RADIO'" class="form-group">
+                  <div *ngIf="field.get('type')?.value === 'SELECT' || field.get('type')?.value === 'RADIO'" class="form-group">
                     <label class="form-label">Options</label>
                     <div formArrayName="options">
                       <div *ngFor="let option of getOptionsArray(i).controls; let j = index" [formGroupName]="j" class="input-group mb-2">
@@ -158,19 +158,19 @@
                   <div class="form-group">
                     <label class="form-label">Validation Rules</label>
                     <div class="row">
-                      <div class="col-md-3" *ngIf="field.get('fieldType')?.value === 'TEXT' || field.get('fieldType')?.value === 'TEXTAREA'">
+                      <div class="col-md-3" *ngIf="field.get('type')?.value === 'TEXT' || field.get('type')?.value === 'TEXTAREA'">
                         <label class="form-label">Min Length</label>
                         <input type="number" class="form-control" (input)="updateValidationRule(i, 'minLength', $event)">
                       </div>
-                      <div class="col-md-3" *ngIf="field.get('fieldType')?.value === 'TEXT' || field.get('fieldType')?.value === 'TEXTAREA'">
+                      <div class="col-md-3" *ngIf="field.get('type')?.value === 'TEXT' || field.get('type')?.value === 'TEXTAREA'">
                         <label class="form-label">Max Length</label>
                         <input type="number" class="form-control" (input)="updateValidationRule(i, 'maxLength', $event)">
                       </div>
-                      <div class="col-md-3" *ngIf="field.get('fieldType')?.value === 'NUMBER'">
+                      <div class="col-md-3" *ngIf="field.get('type')?.value === 'NUMBER'">
                         <label class="form-label">Min Value</label>
                         <input type="number" class="form-control" (input)="updateValidationRule(i, 'min', $event)">
                       </div>
-                      <div class="col-md-3" *ngIf="field.get('fieldType')?.value === 'NUMBER'">
+                      <div class="col-md-3" *ngIf="field.get('type')?.value === 'NUMBER'">
                         <label class="form-label">Max Value</label>
                         <input type="number" class="form-control" (input)="updateValidationRule(i, 'max', $event)">
                       </div>
@@ -219,50 +219,50 @@
               </label>
 
               <!-- Text Input -->
-              <input 
-                *ngIf="field.get('fieldType')?.value === 'TEXT'"
-                type="text" 
-                class="form-control" 
+              <input
+                *ngIf="field.get('type')?.value === 'TEXT'"
+                type="text"
+                class="form-control"
                 [placeholder]="field.get('placeholder')?.value"
                 [formControlName]="'field_' + i"
               />
 
               <!-- Email Input -->
-              <input 
-                *ngIf="field.get('fieldType')?.value === 'EMAIL'"
-                type="email" 
-                class="form-control" 
+              <input
+                *ngIf="field.get('type')?.value === 'EMAIL'"
+                type="email"
+                class="form-control"
                 [placeholder]="field.get('placeholder')?.value"
                 [formControlName]="'field_' + i"
               />
 
               <!-- Number Input -->
-              <input 
-                *ngIf="field.get('fieldType')?.value === 'NUMBER'"
-                type="number" 
-                class="form-control" 
+              <input
+                *ngIf="field.get('type')?.value === 'NUMBER'"
+                type="number"
+                class="form-control"
                 [placeholder]="field.get('placeholder')?.value"
                 [formControlName]="'field_' + i"
               />
 
               <!-- Textarea -->
-              <textarea 
-                *ngIf="field.get('fieldType')?.value === 'TEXTAREA'"
-                class="form-control" 
+              <textarea
+                *ngIf="field.get('type')?.value === 'TEXTAREA'"
+                class="form-control"
                 rows="3"
                 [placeholder]="field.get('placeholder')?.value"
                 [formControlName]="'field_' + i"
               ></textarea>
 
               <!-- Select Dropdown -->
-              <select 
-                *ngIf="field.get('fieldType')?.value === 'SELECT'"
+              <select
+                *ngIf="field.get('type')?.value === 'SELECT'"
                 class="form-control"
                 [formControlName]="'field_' + i"
               >
                 <option value="">Choose an option</option>
-                <option 
-                  *ngFor="let option of getOptionsArray(i).controls" 
+                <option
+                  *ngFor="let option of getOptionsArray(i).controls"
                   [value]="option.get('value')?.value"
                 >
                   {{ option.get('label')?.value }}
@@ -270,11 +270,11 @@
               </select>
 
               <!-- Radio Buttons -->
-              <div *ngIf="field.get('fieldType')?.value === 'RADIO'">
+              <div *ngIf="field.get('type')?.value === 'RADIO'">
                 <div *ngFor="let option of getOptionsArray(i).controls; let j = index" class="form-check">
-                  <input 
-                    class="form-check-input" 
-                    type="radio" 
+                  <input
+                    class="form-check-input"
+                    type="radio"
                     [name]="'radio_' + i"
                     [value]="option.get('value')?.value"
                     [formControlName]="'field_' + i"
@@ -284,9 +284,9 @@
               </div>
 
               <!-- Checkbox -->
-              <div *ngIf="field.get('fieldType')?.value === 'CHECKBOX'" class="form-check">
-                <input 
-                  class="form-check-input" 
+              <div *ngIf="field.get('type')?.value === 'CHECKBOX'" class="form-check">
+                <input
+                  class="form-check-input"
                   type="checkbox"
                   [formControlName]="'field_' + i"
                 />
@@ -294,9 +294,9 @@
               </div>
 
               <!-- Date Input -->
-              <input 
-                *ngIf="field.get('fieldType')?.value === 'DATE'"
-                type="date" 
+              <input
+                *ngIf="field.get('type')?.value === 'DATE'"
+                type="date"
                 class="form-control"
                 [formControlName]="'field_' + i"
               />
