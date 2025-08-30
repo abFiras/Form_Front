@@ -2,26 +2,11 @@
 <div class="form-builder-container">
   <!-- Builder Header -->
   <div class="builder-header" *ngIf="!isPreviewMode">
-    <button mat-icon-button (click)="goBack()" class="back-btn">
+   <!-- <button mat-icon-button (click)="goBack()" class="back-btn">
       <mat-icon>arrow_back</mat-icon>
     </button>
-    <h1>{{formId ? 'Edit Form' : 'Create New Form'}}</h1>
-    <div class="header-actions">
-      <button mat-raised-button (click)="saveForm()" color="primary">
-        <mat-icon>save</mat-icon>
-        Save
-      </button>
-      <button mat-raised-button
-              (click)="publishForm()"
-              *ngIf="formId && currentForm?.status === 'DRAFT'"
-              color="accent">
-        <mat-icon>publish</mat-icon>
-        Publish
-      </button>
-      <!--<button mat-icon-button class="action-btn" title="Aperçu" (click)="isPreviewMode = !isPreviewMode">
-        <mat-icon>visibility</mat-icon>
-      </button>-->
-    </div>
+    <h1>{{formId ? 'Edit Form' : 'Create New Form'}}</h1>-->
+
   </div>
 
   <!-- Top Header with Form Name (New Design) -->
@@ -50,7 +35,22 @@
       </button>
     </div>
   </div>
-
+  <div class="header-actions">
+      <button mat-raised-button (click)="saveForm()" class="btn-save">
+        <mat-icon>save</mat-icon>
+        Enregistrer
+      </button>
+      <button mat-raised-button
+              (click)="publishForm()"
+              *ngIf="formId && currentForm?.status === 'DRAFT'"
+              color="accent">
+        <mat-icon>publish</mat-icon>
+        Publish
+      </button>
+      <!--<button mat-icon-button class="action-btn" title="Aperçu" (click)="isPreviewMode = !isPreviewMode">
+        <mat-icon>visibility</mat-icon>
+      </button>-->
+    </div>
   <div class="character-count" *ngIf="!isPreviewMode">
     <span>{{getCharacterCount()}} / 150</span>
   </div>

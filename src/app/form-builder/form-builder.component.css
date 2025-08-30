@@ -162,7 +162,7 @@
 
 /* Palette Area (Right) */
 .palette-area {
-  width: 400px;
+  width: 600px;
   background: white;
   border-left: 1px solid #e9ecef;
   padding: 24px;
@@ -335,4 +335,130 @@
     }
   }
 
+}
+/* Modification pour affichage horizontal des champs de palette */
+.field-item-palette {
+  display: flex;
+  flex-direction: row; /* Changé de column à row */
+  align-items: center;
+  justify-content: flex-start; /* Alignement à gauche */
+  padding: 12px 16px; /* Ajusté pour plus d'espace horizontal */
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background: white;
+  cursor: grab;
+  transition: all 0.2s ease;
+  text-align: left; /* Alignement du texte à gauche */
+  min-height: 48px; /* Réduit la hauteur minimale */
+  gap: 12px; /* Espace entre l'icône et le texte */
+
+  &:hover {
+    border-color: #dee2e6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  &.cdk-drag-preview {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-color: #2196f3;
+    transform: rotate(5deg);
+  }
+
+  &.cdk-drag-placeholder {
+    opacity: 0.4;
+    border: 2px dashed #ccc;
+  }
+
+  span {
+    font-size: 12px; /* Légèrement augmenté */
+    color: #495057;
+    margin-top: 0; /* Supprimé la marge du haut */
+    font-weight: 600;
+    line-height: 1.2;
+    flex: 1; /* Prend l'espace restant */
+  }
+}
+
+.field-icon {
+  width: 28px; /* Légèrement réduit */
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0; /* Supprimé la marge du bas */
+  flex-shrink: 0; /* Empêche l'icône de se rétrécir */
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: white;
+  }
+}
+
+/* Ajustement pour affichage sur 3 colonnes avec le nouveau style */
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Gardé à 3 colonnes */
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+  .field-row {
+    grid-template-columns: 1fr; /* Une seule colonne sur mobile */
+    gap: 8px;
+  }
+
+  .field-item-palette {
+    padding: 10px 12px;
+    min-height: 44px;
+
+    span {
+      font-size: 11px;
+    }
+  }
+
+  .field-icon {
+    width: 24px;
+    height: 24px;
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+.header-actions {
+  display: flex;
+  justify-content: flex-end; /* Aligne à droite */
+  gap: 12px; /* espace entre les boutons */
+  padding: 10px 20px;
+}
+.btn-save {
+  background-color: #e91e63 !important;
+  color: white !important;
+  font-weight: bold;
+  border-radius: 8px;
+}
+.header-actions button {
+  font-size: 16px;            /* texte un peu plus grand */
+  font-weight: 600;           /* texte gras */
+  border-radius: 8px;         /* coins arrondis */
+  padding: 10px 20px;         /* agrandir le bouton */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15); /* petite ombre élégante */
+  transition: all 0.3s ease;
+}
+
+.header-actions button:hover {
+  transform: translateY(-2px); /* petit effet au survol */
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+}
+
+.header-actions button mat-icon {
+  margin-right: 6px; /* espace entre icône et texte */
+  font-size: 20px;
 }

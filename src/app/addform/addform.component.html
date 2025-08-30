@@ -1,314 +1,96 @@
-<div class="form-particles">
-  <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
-  <div class="particle" style="left: 30%; animation-delay: -5s;"></div>
-  <div class="particle" style="left: 50%; animation-delay: -10s;"></div>
-  <div class="particle" style="left: 70%; animation-delay: -15s;"></div>
-  <div class="particle" style="left: 90%; animation-delay: -20s;"></div>
-</div>
+<!-- src/app/components/addform/addform.component.html -->
+<div class="addform-container">
+  <!-- Header -->
+  <div class="page-header">
+      <mat-icon class="title-icon">info</mat-icon>
 
-<div class="form-builder-container fade-in">
-  <button class="back-button" (click)="goBack()">
-    <i class="fa fa-arrow-left"></i>
-  </button>
-
-  <div class="builder-header">
-    <h1>Form Builder</h1>
-    <p>Create and customize your form with ease</p>
+    <h1 class="page-title">Créer un formulaire</h1>
   </div>
 
-  <div class="builder-content">
-    <div class="builder-row">
-      <!-- Form Builder Panel -->
-      <div class="builder-panel">
-        <form [formGroup]="formBuilderForm" (ngSubmit)="saveForm()">
-          <!-- Form Basic Info -->
-          <div class="form-section">
-            <h2 class="section-title"><i class="fa fa-info-circle"></i> Basic Information</h2>
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="formName" class="form-label">Form Name *</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="formName"
-                    formControlName="name"
-                    placeholder="Enter form name"
-                    [ngClass]="{'is-invalid': formBuilderForm.get('name')?.invalid && formBuilderForm.get('name')?.touched}"
-                  />
-                  <div *ngIf="formBuilderForm.get('name')?.invalid && formBuilderForm.get('name')?.touched" class="text-danger">
-                    Form name is required
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="formDescription" class="form-label">Description</label>
-                  <textarea
-                    class="form-control"
-                    id="formDescription"
-                    formControlName="description"
-                    rows="2"
-                    placeholder="Enter form description"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
+  <!-- Form Creation Options -->
+  <div class="form-options">
+    <div class="options-grid">
+
+      <!-- Option 1: Formulaire personnalisé -->
+      <div class="option-card"
+           [class.selected]="false"
+           (click)="onTemplateSelect('custom')">
+        <div class="card-content">
+          <div class="card-icon custom">
+            <mat-icon>add</mat-icon>
           </div>
-
-          <!-- Form Fields -->
-          <div class="form-section">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h2 class="section-title"><i class="fa fa-list"></i> Form Fields</h2>
-              <button type="button" class="btn btn-primary" (click)="addField()">
-                <i class="fa fa-plus"></i> Add Field
-              </button>
-            </div>
-
-            <!-- Fields List -->
-            <div formArrayName="fields">
-              <div *ngFor="let field of fieldsArray.controls; let i = index" [formGroupName]="i" class="field-card">
-                <div class="field-card-header">
-                  <span class="field-card-title">Field {{ i + 1 }}: {{ field.get('label')?.value || 'New Field' }}</span>
-                  <div class="field-card-actions">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="moveFieldUp(i)" [disabled]="i === 0">
-                      <i class="fa fa-arrow-up"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="moveFieldDown(i)" [disabled]="i === fieldsArray.length - 1">
-                      <i class="fa fa-arrow-down"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-danger" (click)="removeField(i)">
-                      <i class="fa fa-trash"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="field-card-body">
-                  <div class="row">
-                    <div class="col-md-4">
-                      <div class="form-group">
-                        <label class="form-label">Field Type *</label>
-                        <select class="form-control" formControlName="type" (change)="ontypeChange(i)">
-                          <option value="">Select Type</option>
-                          <option value="TEXT">Text</option>
-                          <option value="EMAIL">Email</option>
-                          <option value="NUMBER">Number</option>
-                          <option value="TEXTAREA">Textarea</option>
-                          <option value="SELECT">Select Dropdown</option>
-                          <option value="RADIO">Radio Buttons</option>
-                          <option value="CHECKBOX">Checkbox</option>
-                          <option value="DATE">Date</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="form-group">
-                        <label class="form-label">Label *</label>
-                        <input type="text" class="form-control" formControlName="label" placeholder="Field label">
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="form-group">
-                        <label class="form-label">Field Name *</label>
-                        <input type="text" class="form-control" formControlName="fieldName" placeholder="field_name">
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label class="form-label">Placeholder</label>
-                        <input type="text" class="form-control" formControlName="placeholder" placeholder="Enter placeholder">
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="form-group">
-                        <label class="form-label">Required</label>
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" formControlName="required">
-                          <label class="form-check-label">Is Required</label>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="form-group">
-                        <label class="form-label">CSS Classes</label>
-                        <input type="text" class="form-control" formControlName="cssClasses" placeholder="Additional CSS classes">
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Options for SELECT and RADIO fields -->
-                  <div *ngIf="field.get('type')?.value === 'SELECT' || field.get('type')?.value === 'RADIO'" class="form-group">
-                    <label class="form-label">Options</label>
-                    <div formArrayName="options">
-                      <div *ngFor="let option of getOptionsArray(i).controls; let j = index" [formGroupName]="j" class="input-group mb-2">
-                        <input type="text" class="form-control" formControlName="value" placeholder="Option value">
-                        <input type="text" class="form-control" formControlName="label" placeholder="Option label">
-                        <button type="button" class="btn btn-outline-danger" (click)="removeOption(i, j)">
-                          <i class="fa fa-times"></i>
-                        </button>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-primary" (click)="addOption(i)">
-                      <i class="fa fa-plus"></i> Add Option
-                    </button>
-                  </div>
-
-                  <!-- Validation Rules -->
-                  <div class="form-group">
-                    <label class="form-label">Validation Rules</label>
-                    <div class="row">
-                      <div class="col-md-3" *ngIf="field.get('type')?.value === 'TEXT' || field.get('type')?.value === 'TEXTAREA'">
-                        <label class="form-label">Min Length</label>
-                        <input type="number" class="form-control" (input)="updateValidationRule(i, 'minLength', $event)">
-                      </div>
-                      <div class="col-md-3" *ngIf="field.get('type')?.value === 'TEXT' || field.get('type')?.value === 'TEXTAREA'">
-                        <label class="form-label">Max Length</label>
-                        <input type="number" class="form-control" (input)="updateValidationRule(i, 'maxLength', $event)">
-                      </div>
-                      <div class="col-md-3" *ngIf="field.get('type')?.value === 'NUMBER'">
-                        <label class="form-label">Min Value</label>
-                        <input type="number" class="form-control" (input)="updateValidationRule(i, 'min', $event)">
-                      </div>
-                      <div class="col-md-3" *ngIf="field.get('type')?.value === 'NUMBER'">
-                        <label class="form-label">Max Value</label>
-                        <input type="number" class="form-control" (input)="updateValidationRule(i, 'max', $event)">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Form Actions -->
-            <div class="form-actions">
-              <div class="action-group">
-                <button type="button" class="btn btn-secondary" (click)="previewForm()">
-                  <i class="fa fa-eye"></i> Preview
-                </button>
-              </div>
-              <div class="action-group">
-                <button type="button" class="btn btn-outline-primary" (click)="saveDraft()">
-                  <i class="fa fa-save"></i> Save as Draft
-                </button>
-                <button type="submit" class="btn btn-success" [disabled]="formBuilderForm.invalid || isLoading">
-                  <i class="fa fa-check"></i> {{ isEditMode ? 'Update Form' : 'Create Form' }}
-                </button>
-              </div>
-            </div>
+          <div class="card-text">
+            <h3>{{formTemplates[0].title}}</h3>
           </div>
-        </form>
-      </div>
-
-      <!-- Preview Panel -->
-      <div class="preview-panel">
-        <div class="preview-container">
-          <h2 class="preview-title"><i class="fa fa-eye"></i> Form Preview</h2>
-          <div *ngIf="formBuilderForm.get('name')?.value" class="form-group">
-            <h3>{{ formBuilderForm.get('name')?.value }}</h3>
-            <p *ngIf="formBuilderForm.get('description')?.value" class="text-muted">
-              {{ formBuilderForm.get('description')?.value }}
-            </p>
-          </div>
-
-          <form [formGroup]="previewFormGroup">
-            <div *ngFor="let field of fieldsArray.controls; let i = index" class="form-group">
-              <label class="form-label">
-                {{ field.get('label')?.value }}
-                <span *ngIf="field.get('required')?.value" class="text-danger">*</span>
-              </label>
-
-              <!-- Text Input -->
-              <input
-                *ngIf="field.get('type')?.value === 'TEXT'"
-                type="text"
-                class="form-control"
-                [placeholder]="field.get('placeholder')?.value"
-                [formControlName]="'field_' + i"
-              />
-
-              <!-- Email Input -->
-              <input
-                *ngIf="field.get('type')?.value === 'EMAIL'"
-                type="email"
-                class="form-control"
-                [placeholder]="field.get('placeholder')?.value"
-                [formControlName]="'field_' + i"
-              />
-
-              <!-- Number Input -->
-              <input
-                *ngIf="field.get('type')?.value === 'NUMBER'"
-                type="number"
-                class="form-control"
-                [placeholder]="field.get('placeholder')?.value"
-                [formControlName]="'field_' + i"
-              />
-
-              <!-- Textarea -->
-              <textarea
-                *ngIf="field.get('type')?.value === 'TEXTAREA'"
-                class="form-control"
-                rows="3"
-                [placeholder]="field.get('placeholder')?.value"
-                [formControlName]="'field_' + i"
-              ></textarea>
-
-              <!-- Select Dropdown -->
-              <select
-                *ngIf="field.get('type')?.value === 'SELECT'"
-                class="form-control"
-                [formControlName]="'field_' + i"
-              >
-                <option value="">Choose an option</option>
-                <option
-                  *ngFor="let option of getOptionsArray(i).controls"
-                  [value]="option.get('value')?.value"
-                >
-                  {{ option.get('label')?.value }}
-                </option>
-              </select>
-
-              <!-- Radio Buttons -->
-              <div *ngIf="field.get('type')?.value === 'RADIO'">
-                <div *ngFor="let option of getOptionsArray(i).controls; let j = index" class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="radio"
-                    [name]="'radio_' + i"
-                    [value]="option.get('value')?.value"
-                    [formControlName]="'field_' + i"
-                  />
-                  <label class="form-check-label">{{ option.get('label')?.value }}</label>
-                </div>
-              </div>
-
-              <!-- Checkbox -->
-              <div *ngIf="field.get('type')?.value === 'CHECKBOX'" class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  [formControlName]="'field_' + i"
-                />
-                <label class="form-check-label">{{ field.get('label')?.value }}</label>
-              </div>
-
-              <!-- Date Input -->
-              <input
-                *ngIf="field.get('type')?.value === 'DATE'"
-                type="date"
-                class="form-control"
-                [formControlName]="'field_' + i"
-              />
-            </div>
-          </form>
+        </div>
+        <div class="card-footer">
+          <button mat-icon-button class="expand-btn">
+            <mat-icon>keyboard_arrow_down</mat-icon>
+          </button>
         </div>
       </div>
+
+      <!-- Option 2: Bibliothèque de modèles -->
+      <div class="option-card"
+           [class.selected]="false"
+           (click)="onTemplateSelect('library')">
+        <div class="card-content">
+          <div class="card-icon library">
+            <mat-icon>library_books</mat-icon>
+          </div>
+          <div class="card-text">
+            <h3>{{formTemplates[1].title}}</h3>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button mat-icon-button class="expand-btn">
+            <mat-icon>keyboard_arrow_down</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Option 3: IA Assistant -->
+      <div class="option-card ai-card"
+           [class.selected]="false"
+           (click)="onTemplateSelect('ai')">
+        <div class="beta-badge" *ngIf="formTemplates[2].isBeta">
+          <span>BETA</span>
+        </div>
+        <div class="card-content">
+          <div class="card-icon ai">
+            <mat-icon>auto_awesome</mat-icon>
+          </div>
+          <div class="card-text">
+            <h3>{{formTemplates[2].title}}</h3>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button mat-icon-button class="expand-btn">
+            <mat-icon>keyboard_arrow_down</mat-icon>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
 
-<!-- Loading Overlay -->
-<div *ngIf="isLoading" class="loading-overlay">
-  <div class="loading-spinner"></div>
+  <!-- Additional Information Section -->
+  <div class="info-section">
+    <mat-card class="info-card">
+      <mat-card-content>
+        <div class="info-content">
+          <mat-icon color="primary">info</mat-icon>
+          <div class="info-text">
+            <h4>Conseils pour créer un bon formulaire</h4>
+            <ul>
+              <li>Utilisez des libellés clairs et concis</li>
+              <li>Organisez les champs de manière logique</li>
+              <li>Marquez les champs obligatoires</li>
+              <li>Testez votre formulaire avant de le publier</li>
+            </ul>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>

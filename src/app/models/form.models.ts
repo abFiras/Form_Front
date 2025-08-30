@@ -45,10 +45,29 @@ export type FieldType =
   | 'email'
   | 'number'
   | 'date'
+  | 'datetime'
   | 'select'
   | 'radio'
   | 'checkbox'
-  | 'file';
+  | 'file'
+  | 'slider'
+  | 'geolocation'
+  | 'contact'
+  | 'address'
+  | 'reference'
+  | 'audio'
+  | 'drawing'
+  | 'schema'
+  | 'attachment'
+  | 'signature'
+  | 'barcode'
+  | 'nfc'
+  | 'separator'
+  | 'table'
+  | 'fixed-text'
+  | 'image'
+  | 'file-fixed'
+  | 'calculation';
 
 export interface FormCreateRequest {
   name: string;

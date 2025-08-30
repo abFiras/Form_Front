@@ -34,6 +34,14 @@ import { MatListModule } from '@angular/material/list';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { AcceuilComponent } from './acceuil/acceuil.component';
+import { MatSliderModule } from '@angular/material/slider';
+import { CreeListeExterneComponent } from './cree-liste-externe/cree-liste-externe.component';
+import { BibliothequeComponent } from './bibliotheque/bibliotheque.component';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule, MatSpinner } from '@angular/material/progress-spinner';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { LibraryFormDetailComponent } from './library-form-detail/library-form-detail.component';
 
 @NgModule({
   declarations: [
@@ -50,14 +58,17 @@ import { AcceuilComponent } from './acceuil/acceuil.component';
     FieldPaletteComponent,
     DynamicFieldComponent,
     FormListComponent,
-    AcceuilComponent
+    AcceuilComponent,
+    CreeListeExterneComponent,
+    BibliothequeComponent,
+    LibraryFormDetailComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     CommonModule,
     FormsModule,
-    ReactiveFormsModule, 
+    ReactiveFormsModule,
     HttpClientModule,
      CommonModule,
     ReactiveFormsModule,
@@ -75,7 +86,14 @@ import { AcceuilComponent } from './acceuil/acceuil.component';
     MatSidenavModule,
     MatListModule,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatSliderModule,
+    MatMenuModule,
+    MatChipsModule,
+    MatProgressSpinnerModule,
+    MatButtonToggleModule
+
+
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,0 +1,237 @@
+<div class="library-detail-container" *ngIf="!loading && formDetail">
+  <!-- Header avec navigation -->
+  <div class="detail-header">
+    <button mat-button class="back-button" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Précédent
+    </button>
+    <h1 class="page-title">Bibliothèque</h1>
+  </div>
+
+  <!-- Contenu principal en deux colonnes -->
+  <div class="detail-content">
+    <!-- Colonne gauche - Informations du formulaire -->
+    <div class="form-info-section">
+      <mat-card class="form-info-card">
+        <!-- En-tête avec logo Kizeo -->
+        <div class="kizeo-header" *ngIf="formDetail.origin === 'kizeo'">
+          <div class="kizeo-logo">
+            <mat-icon>library_books</mat-icon>
+            <span class="logo-text">kizeo<strong>Forms</strong></span>
+          </div>
+        </div>
+
+        <!-- Titre et badges -->
+        <div class="form-title-section">
+          <h2 class="form-title">
+            {{formDetail.name}}
+            <mat-icon *ngIf="formDetail.origin === 'kizeo'" class="verified-icon"
+                     matTooltip="Formulaire officiel Kizeo">
+              verified
+            </mat-icon>
+          </h2>
+
+          <div class="form-badges">
+            <mat-chip class="origin-badge" [class.kizeo-badge]="formDetail.origin === 'kizeo'">
+              <mat-icon>{{getOriginIcon(formDetail.origin)}}</mat-icon>
+              {{formDetail.origin === 'kizeo' ? 'Bibliothèque Kizeo' : 'Bibliothèque du compte'}}
+            </mat-chip>
+
+            <mat-chip class="language-badge" [style.background-color]="getLanguageColor(formDetail.language)">
+              {{formDetail.language.toUpperCase()}}
+            </mat-chip>
+
+            <mat-chip class="status-badge">
+              <mat-icon>check_circle</mat-icon>
+              DISPONIBLE
+            </mat-chip>
+          </div>
+        </div>
+
+        <!-- Action principale -->
+        <div class="main-action">
+          <button mat-raised-button color="primary" class="add-button" (click)="addToAccount()">
+            <mat-icon>add</mat-icon>
+            Ajouter à mon compte
+          </button>
+        </div>
+
+        <!-- Description -->
+        <div class="form-description">
+          <p>{{formDetail.description}}</p>
+        </div>
+
+        <!-- Métadonnées -->
+        <div class="form-metadata">
+          <div class="metadata-row">
+            <mat-icon>schedule</mat-icon>
+            <span>Créé le {{formatDate(formDetail.createdAt)}}</span>
+          </div>
+          <div class="metadata-row">
+            <mat-icon>update</mat-icon>
+            <span>Mis à jour le {{formatDate(formDetail.updatedAt)}}</span>
+          </div>
+          <div class="metadata-row">
+            <mat-icon>person</mat-icon>
+            <span>par {{formDetail.sharedBy}}</span>
+          </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="form-stats">
+          <div class="stat-item">
+            <mat-icon>visibility</mat-icon>
+            <span>Ce formulaire a été visualisé <strong>{{formDetail.viewCount}}</strong> fois.</span>
+          </div>
+          <div class="stat-item">
+            <mat-icon>download</mat-icon>
+            <span>Ce formulaire a été téléchargé <strong>{{formDetail.downloadCount}}</strong> fois.</span>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="form-tags" *ngIf="formDetail.tags">
+          <h4>Tags :</h4>
+          <mat-chip-listbox>
+            <mat-chip *ngFor="let tag of formDetail.tags.split(',')" class="tag-chip">
+              {{tag.trim()}}
+            </mat-chip>
+          </mat-chip-listbox>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Colonne droite - Aperçu et actions -->
+    <div class="preview-section">
+      <!-- Message de téléchargement -->
+      <div class="download-message">
+        <mat-icon class="download-icon">download</mat-icon>
+        <h3>Téléchargez ce formulaire pour le tester !</h3>
+      </div>
+
+      <!-- Aperçu du formulaire -->
+      <mat-card class="preview-card">
+        <mat-card-header class="preview-header">
+          <div class="preview-title-section">
+            <div class="kizeo-mini-logo" *ngIf="formDetail.origin === 'kizeo'">
+              <mat-icon>library_books</mat-icon>
+              <span><strong>{{formDetail.name}}</strong></span>
+              <mat-icon class="verified-mini">verified</mat-icon>
+            </div>
+            <div class="account-mini-header" *ngIf="formDetail.origin === 'account'">
+              <mat-icon>folder_shared</mat-icon>
+              <span><strong>{{formDetail.name}}</strong></span>
+            </div>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="preview-content">
+          <!-- Aperçu des champs du formulaire -->
+          <div class="fields-preview" *ngIf="formDetail.fields && formDetail.fields.length > 0">
+            <div *ngFor="let field of formDetail.fields.slice(0, 4)" class="field-preview">
+              <div class="field-header">
+                <mat-icon class="field-icon">{{getFieldTypeIcon(field.type)}}</mat-icon>
+                <span class="field-label">{{field.label}}</span>
+                <mat-chip *ngIf="field.required" class="required-chip">
+                  Obligatoire
+                </mat-chip>
+              </div>
+
+              <!-- Aperçu selon le type de champ -->
+              <div class="field-content" [ngSwitch]="field.type">
+                <!-- Champ texte -->
+                <div *ngSwitchCase="'text'" class="field-input-preview">
+                  <input type="text" [placeholder]="field.placeholder || field.label" disabled>
+                </div>
+
+                <!-- Champ email -->
+                <div *ngSwitchCase="'email'" class="field-input-preview">
+                  <input type="email" [placeholder]="field.placeholder || 'exemple@email.com'" disabled>
+                </div>
+
+                <!-- Zone de texte -->
+                <div *ngSwitchCase="'textarea'" class="field-textarea-preview">
+                  <textarea [placeholder]="field.placeholder || field.label" disabled rows="3"></textarea>
+                </div>
+
+                <!-- Select -->
+                <div *ngSwitchCase="'select'" class="field-select-preview">
+                  <select disabled>
+                    <option>{{field.placeholder || 'Sélectionnez une option'}}</option>
+                    <option *ngFor="let option of field.options?.slice(0, 3)">{{option}}</option>
+                  </select>
+                </div>
+
+                <!-- Radio buttons -->
+                <div *ngSwitchCase="'radio'" class="field-radio-preview">
+                  <div *ngFor="let option of field.options?.slice(0, 3)" class="radio-option">
+                    <input type="radio" [name]="field.fieldName" disabled>
+                    <label>{{option}}</label>
+                  </div>
+                </div>
+
+                <!-- Checkboxes -->
+                <div *ngSwitchCase="'checkbox'" class="field-checkbox-preview">
+                  <div *ngFor="let option of field.options?.slice(0, 3)" class="checkbox-option">
+                    <input type="checkbox" disabled>
+                    <label>{{option}}</label>
+                  </div>
+                </div>
+
+                <!-- Date -->
+                <div *ngSwitchCase="'date'" class="field-input-preview">
+                  <input type="date" disabled>
+                </div>
+
+                <!-- Date et heure -->
+                <div *ngSwitchCase="'datetime'" class="field-input-preview">
+                  <input type="datetime-local" disabled>
+                </div>
+
+                <!-- Défaut -->
+                <div *ngSwitchDefault class="field-input-preview">
+                  <input type="text" [placeholder]="field.placeholder || field.label" disabled>
+                </div>
+              </div>
+
+              <div class="field-type-info">
+                <span class="field-type-label">{{getFieldTypeLabel(field.type)}}</span>
+              </div>
+            </div>
+
+            <!-- Indicateur s'il y a plus de champs -->
+            <div *ngIf="formDetail.fields.length > 4" class="more-fields-indicator">
+              <mat-icon>more_horiz</mat-icon>
+              <span>Et {{formDetail.fields.length - 4}} autre(s) champ(s)...</span>
+            </div>
+          </div>
+
+          <!-- Si pas de champs disponibles -->
+          <div *ngIf="!formDetail.fields || formDetail.fields.length === 0" class="no-fields-preview">
+            <mat-icon>description</mat-icon>
+            <p>{{formDetail.fieldCount}} champ(s) dans ce formulaire</p>
+            <small>Aperçu détaillé disponible après téléchargement</small>
+          </div>
+        </mat-card-content>
+
+        <!-- Actions de téléchargement -->
+        <mat-card-actions class="preview-actions">
+          <button mat-stroked-button (click)="downloadForm('word')" class="download-btn">
+            <mat-icon>description</mat-icon>
+            Télécharger Word
+          </button>
+          <button mat-stroked-button (click)="downloadForm('excel')" class="download-btn">
+            <mat-icon>table_chart</mat-icon>
+            Télécharger Excel
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>
+
+<!-- Indicateur de chargement -->
+<div *ngIf="loading" class="loading-container">
+  <mat-spinner diameter="50"></mat-spinner>
+  <p>Chargement des détails du formulaire...</p>
+</div>

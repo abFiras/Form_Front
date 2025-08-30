@@ -55,25 +55,46 @@ export class FormBuilderComponent implements OnInit {
   });
   }
 
-  loadForm(): void {
-    if (this.formId) {
-      this.formService.getFormById(this.formId).subscribe({
-        next: (form) => {
-          this.currentForm = form;
-          this.formFields = [...form.fields].sort((a, b) => a.order - b.order);
-          this.formSettingsForm.patchValue({
-            name: form.name,
-            description: form.description
+loadForm(): void {
+  if (this.formId) {
+    this.formService.getFormById(this.formId).subscribe({
+      next: (form) => {
+        this.currentForm = form;
+
+        // Normalize options for all fields before using them
+        this.formFields = [...form.fields]
+          .sort((a, b) => a.order - b.order)
+          .map(field => {
+            // Ensure options is always an array
+            if (field.options) {
+              if (typeof field.options === 'string') {
+                try {
+                  field.options = JSON.parse(field.options);
+                } catch (e) {
+                  console.error('Error parsing field options:', e);
+                  field.options = [];
+                }
+              }
+              if (!Array.isArray(field.options)) {
+                field.options = [];
+              }
+            }
+            return field;
           });
-          this.rebuildPreviewForm();
-        },
-        error: (error) => {
-          console.error('Error loading form:', error);
-          this.snackBar.open('Error loading form', 'Close', { duration: 3000 });
-        }
-      });
-    }
+
+        this.formSettingsForm.patchValue({
+          name: form.name,
+          description: form.description
+        });
+        this.rebuildPreviewForm();
+      },
+      error: (error) => {
+        console.error('Error loading form:', error);
+        this.snackBar.open('Error loading form', 'Fermer', { duration: 3000 });
+      }
+    });
   }
+}
 
  // Remplacez votre méthode onFieldDrop actuelle par celle-ci dans votre composant TypeScript
 
@@ -179,7 +200,7 @@ onFormNameChange(event: Event): void {
     this.formFields.splice(index, 1);
     this.updateFieldOrders();
     this.rebuildPreviewForm();
-    this.snackBar.open(`${removedField.label} field removed`, 'Close', { duration: 2000 });
+    this.snackBar.open(`${removedField.label} field removed`, 'Fermer', { duration: 2000 });
   }
 
   rebuildPreviewForm(): void {
@@ -206,7 +227,7 @@ onFormNameChange(event: Event): void {
 
 saveForm(): void {
   if (!this.formSettingsForm.valid) {
-    this.snackBar.open('Please fill in all required fields', 'Close', { duration: 3000 });
+    this.snackBar.open('Veuillez remplir tous les champs obligatoires', 'Fermer', { duration: 3000 });
     return;
   }
 
@@ -265,8 +286,8 @@ saveForm(): void {
     })
   ).subscribe({
     next: (form) => {
-      const message = this.formId ? 'Form updated successfully' : 'Form created successfully';
-      this.snackBar.open(message, 'Close', { duration: 3000 });
+      const message = this.formId ? 'Formulaire mis à jour avec succès' : 'Formulaire créé avec succès';
+      this.snackBar.open(message, 'Fermer', { duration: 3000 });
 
       // Mettre à jour l'état local et redirection si nécessaire
       this.currentForm = form;
@@ -276,7 +297,7 @@ saveForm(): void {
     },
     error: (error) => {
       console.error('Error saving form:', error);
-      this.snackBar.open('Error saving form', 'Close', { duration: 3000 });
+      this.snackBar.open("Erreur lors de l'enregistrement du formulaire", 'Fermer', { duration: 3000 });
     }
   });
 }
@@ -305,7 +326,7 @@ removeOption(fieldIndex: number, optionIndex: number): void {
 validateFieldOptions(field: any): boolean {
   if (['select', 'radio', 'checkbox'].includes(field.type)) {
     if (!field.options || field.options.length === 0) {
-      this.snackBar.open(`Field "${field.label}" of type ${field.type} must have at least one option`, 'Close', { duration: 5000 });
+      this.snackBar.open(`Field "${field.label}" of type ${field.type} must have at least one option`, 'Fermer', { duration: 5000 });
       return false;
     }
 
@@ -314,7 +335,7 @@ validateFieldOptions(field: any): boolean {
     );
 
     if (validOptions.length === 0) {
-      this.snackBar.open(`Field "${field.label}" has no valid options (label and value are required)`, 'Close', { duration: 5000 });
+      this.snackBar.open(`Field "${field.label}" has no valid options (label and value are required)`, 'Fermer', { duration: 5000 });
       return false;
     }
   }
@@ -328,12 +349,12 @@ validateFieldOptions(field: any): boolean {
     if (this.formId) {
       this.formService.publishForm(this.formId).subscribe({
         next: (form) => {
-          this.snackBar.open('Form published successfully', 'Close', { duration: 3000 });
+          this.snackBar.open('Formulaire publié avec succès', 'Fermer', { duration: 3000 });
           this.currentForm = form;
         },
         error: (error) => {
           console.error('Error publishing form:', error);
-          this.snackBar.open('Error publishing form', 'Close', { duration: 3000 });
+          this.snackBar.open('Error publishing form', 'Fermer', { duration: 3000 });
         }
       });
     }
@@ -347,16 +368,16 @@ validateFieldOptions(field: any): boolean {
 
       this.formService.submitForm(this.formId, submission).subscribe({
         next: () => {
-          this.snackBar.open('Form submitted successfully', 'Close', { duration: 3000 });
+          this.snackBar.open('Formulaire soumis avec succès', 'Fermer', { duration: 3000 });
           this.previewForm.reset();
         },
         error: (error) => {
           console.error('Error submitting form:', error);
-          this.snackBar.open('Error submitting form', 'Close', { duration: 3000 });
+          this.snackBar.open('Error submitting form', 'Fermer', { duration: 3000 });
         }
       });
     } else {
-      this.snackBar.open('Please fill in all required fields', 'Close', { duration: 3000 });
+      this.snackBar.open('Veuillez remplir tous les champs obligatoires', 'Fermer', { duration: 3000 });
     }
   }
 

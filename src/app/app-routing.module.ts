@@ -8,6 +8,9 @@ import { UserProfileComponent } from './user-profile/user-profile.component';
 import { FormBuilderComponent } from './form-builder/form-builder.component';
 import { FormListComponent } from './form-list/form-list.component';
 import { AcceuilComponent } from './acceuil/acceuil.component';
+import { CreeListeExterneComponent } from './cree-liste-externe/cree-liste-externe.component';
+import { BibliothequeComponent } from './bibliotheque/bibliotheque.component';
+import { LibraryFormDetailComponent } from './library-form-detail/library-form-detail.component';
 
 const routes: Routes = [
   { path: '', component: LandingPageComponent }, // default route
@@ -24,7 +27,12 @@ const routes: Routes = [
  { path: 'forms', component: FormListComponent },
   { path: 'forms/new', component: FormBuilderComponent },
   { path: 'forms/:id/edit', component: FormBuilderComponent },
-  { path: 'forms/:id/preview', component: FormBuilderComponent }
+  { path: 'forms/:id/preview', component: FormBuilderComponent },
+
+   { path: 'creelisteexterne', component: CreeListeExterneComponent },
+   { path: 'bib', component: BibliothequeComponent },
+{ path: 'forms/:id', component: LibraryFormDetailComponent }
+
 
 ];
 

@@ -105,3 +105,284 @@
     border-radius: 4px;
   }
 }
+/* Styles pour les champs dynamiques */
+
+.dynamic-field {
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.field-controls {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  z-index: 10;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.field-label {
+  font-weight: 500;
+  color: rgba(0,0,0,0.87);
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.required-indicator {
+  color: #f44336;
+  margin-left: 4px;
+}
+
+/* Contact field styles */
+.contact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Address field styles */
+.address-field .address-details {
+  display: flex;
+  gap: 12px;
+}
+
+.address-field .address-details mat-form-field {
+  flex: 1;
+}
+
+/* Slider field styles */
+.slider-field {
+  padding: 16px 0;
+}
+
+.slider-field mat-slider {
+  width: 100%;
+}
+
+/* Geolocation field styles */
+.geolocation-field {
+  position: relative;
+}
+
+/* Audio field styles */
+.audio-field {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+  background-color: #fafafa;
+}
+
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Drawing field styles */
+.drawing-field {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.drawing-canvas {
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Schema field styles */
+.schema-field {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+/* Attachment field styles */
+.attachment-field {
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  padding: 16px;
+  text-align: center;
+}
+
+.file-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Signature field styles */
+.signature-field {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.signature-pad {
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  cursor: crosshair;
+}
+
+/* Barcode field styles */
+.barcode-field {
+  position: relative;
+}
+
+/* NFC field styles */
+.nfc-field {
+  text-align: center;
+}
+
+.nfc-reader {
+  background-color: #f0f8ff;
+  border-radius: 8px;
+  color: #1976d2;
+}
+
+.nfc-reader mat-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+}
+
+/* Separator field styles */
+.separator-field {
+  margin: 24px 0;
+  position: relative;
+  text-align: center;
+}
+
+.separator-label {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 0 16px;
+  color: rgba(0,0,0,0.6);
+  font-size: 12px;
+}
+
+/* Table field styles */
+.table-field {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.table-field table {
+  width: 100%;
+}
+
+/* Fixed text field styles */
+.fixed-text-field {
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  border-left: 4px solid #2196f3;
+}
+
+.fixed-text-content {
+  color: rgba(0,0,0,0.87);
+  line-height: 1.5;
+}
+
+/* Image field styles */
+.image-field {
+  text-align: center;
+}
+
+.image-placeholder {
+  color: rgba(0,0,0,0.6);
+  background-color: #f9f9f9;
+}
+
+.image-placeholder mat-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+}
+
+/* File fixed field styles */
+.file-fixed-field {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.file-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(0,0,0,0.87);
+}
+
+/* Calculation field styles */
+.calculation-field {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+  background-color: #fff3e0;
+}
+
+.calculation-field small {
+  color: rgba(0,0,0,0.6);
+  font-style: italic;
+}
+
+/* Radio group styles */
+.radio-group {
+  margin: 16px 0;
+}
+
+.radio-group mat-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Checkbox group styles */
+.checkbox-group {
+  margin: 16px 0;
+}
+
+.checkbox-group > div {
+  margin-bottom: 8px;
+}
+
+/* File upload styles */
+.file-upload {
+  margin: 16px 0;
+}
+
+/* Preview mode styles */
+.dynamic-field.preview-mode .field-controls {
+  display: none;
+}
+
+/* Editor styles */
+.field-editor {
+  background-color: #f5f5f5;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}

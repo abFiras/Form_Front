@@ -1,0 +1,481 @@
+/* ===== CONTAINER PRINCIPAL ===== */
+.library-detail-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin-top: 5vw;
+  margin-left: 18vw;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* ===== HEADER ===== */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.back-button {
+  color: #666;
+  font-weight: 500;
+}
+
+.back-button:hover {
+  background-color: rgba(0,0,0,0.04);
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #333;
+  margin: 0;
+}
+
+/* ===== LAYOUT PRINCIPAL ===== */
+.detail-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ===== SECTION INFORMATIONS FORMULAIRE ===== */
+.form-info-card {
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 24px;
+}
+
+.kizeo-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.kizeo-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #4caf50;
+  font-size: 1.2rem;
+}
+
+.kizeo-logo mat-icon {
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.logo-text {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+}
+
+.logo-text strong {
+  font-weight: 500;
+}
+
+/* ===== TITRE ET BADGES ===== */
+.form-title-section {
+  margin-bottom: 24px;
+}
+
+.form-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 16px 0;
+  line-height: 1.3;
+}
+
+.verified-icon {
+  color: #4caf50;
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.form-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.origin-badge {
+  background-color: #e0e0e0 !important;
+  color: #555 !important;
+  font-weight: 500 !important;
+}
+
+.origin-badge.kizeo-badge {
+  background-color: #e8f5e8 !important;
+  color: #2e7d32 !important;
+}
+
+.origin-badge mat-icon {
+  margin-right: 6px;
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.language-badge {
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+.status-badge {
+  background-color: #e8f5e8 !important;
+  color: #2e7d32 !important;
+  font-weight: 500 !important;
+}
+
+.status-badge mat-icon {
+  margin-right: 4px;
+  font-size: 0.9rem;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* ===== ACTION PRINCIPALE ===== */
+.main-action {
+  margin: 24px 0;
+  text-align: center;
+}
+
+.add-button {
+  padding: 12px 32px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.add-button:hover {
+  box-shadow: 0 6px 16px rgba(25, 118, 210, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ===== DESCRIPTION ===== */
+.form-description {
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 24px 0;
+  border-left: 4px solid #1976d2;
+}
+
+.form-description p {
+  margin: 0;
+  line-height: 1.6;
+  color: #555;
+}
+
+/* ===== MÉTADONNÉES ===== */
+.form-metadata {
+  margin: 24px 0;
+}
+
+.metadata-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.metadata-row mat-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+  color: #888;
+}
+
+/* ===== STATISTIQUES ===== */
+.form-stats {
+  background-color: #e3f2fd;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 24px 0;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #1976d2;
+  font-size: 0.95rem;
+}
+
+.stat-item:last-child {
+  margin-bottom: 0;
+}
+
+.stat-item mat-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.stat-item strong {
+  font-weight: 600;
+}
+
+/* ===== TAGS ===== */
+.form-tags h4 {
+  font-size: 1rem;
+  color: #333;
+  margin: 0 0 12px 0;
+  font-weight: 500;
+}
+
+.tag-chip {
+  background-color: #f0f0f0 !important;
+  color: #555 !important;
+  margin: 2px !important;
+  font-size: 0.8rem !important;
+}
+
+/* ===== SECTION APERÇU ===== */
+.preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.download-message {
+  text-align: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.download-icon {
+  font-size: 2rem;
+  width: 2rem;
+  height: 2rem;
+}
+
+.download-message h3 {
+  margin: 0;
+  font-weight: 400;
+  font-size: 1.1rem;
+}
+
+/* ===== CARTE APERÇU ===== */
+.preview-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.preview-header {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  padding: 16px 24px;
+}
+
+.preview-title-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.kizeo-mini-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+}
+
+.kizeo-mini-logo mat-icon {
+  font-size: 1.2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.verified-mini {
+  color: #4caf50;
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.account-mini-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+
+.account-mini-header mat-icon {
+  font-size: 1.2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* ===== APERÇU DES CHAMPS ===== */
+.preview-content {
+  padding: 24px;
+}
+
+.fields-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field-preview {
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+}
+
+.field-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.field-icon {
+  color: #1976d2;
+  font-size: 1.1rem;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.field-label {
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.required-chip {
+  background-color: #f44336 !important;
+  color: white !important;
+  font-size: 0.7rem !important;
+  padding: 2px 8px !important;
+  height: 20px !important;
+}
+
+/* ===== APERÇUS DES TYPES DE CHAMPS ===== */
+.field-content {
+  margin-bottom: 8px;
+}
+
+.field-input-preview input,
+.field-textarea-preview textarea,
+.field-select-preview select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  color: #666;
+  font-family: inherit;
+}
+
+.field-textarea-preview textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.field-select-preview select {
+  cursor: not-allowed;
+}
+
+.radio-option,
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.radio-option input,
+.checkbox-option input {
+  width: auto;
+  margin: 0;
+}
+
+.radio-option label,
+.checkbox-option label {
+  color: #666;
+  cursor: not-allowed;
+}
+
+.field-type-info {
+  text-align: right;
+}
+
+.field-type-label {
+  font-size: 0.8rem;
+  color: #888;
+  background-color: #e0e0e0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== INDICATEUR PLUS DE CHAMPS ===== */
+.more-fields-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: #666;
+  font-style: italic;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.more-fields-indicator mat-icon {
+  color: #888;
+}
+
+/* ===== AUCUN CHAMP DISPONIBLE ===== */
+.no-fields-preview {
+  text-align: center;
+  padding: 32px;
+  color: #666;
+}
+
+.no-fields-preview mat-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+.no-fields-preview p {
+  font-size: 1.1rem;
+  margin: 0 0 8px 0;
+}
+
+.no-fields-preview small {
+  color: #888;
+}

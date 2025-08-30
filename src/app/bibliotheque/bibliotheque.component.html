@@ -1,0 +1,333 @@
+<div class="bibliotheque-container">
+  <!-- En-tête de la page -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon>library_books</mat-icon>
+        Bibliothèque de formulaires
+      </h1>
+      <p class="page-subtitle">
+        Découvrez et réutilisez des formulaires prêts à l'emploi
+      </p>
+    </div>
+  </div>
+
+  <!-- Barre de filtres et recherche -->
+  <div class="filters-section">
+    <mat-card class="filters-card">
+      <div class="filters-row">
+        <!-- Recherche -->
+        <mat-form-field class="search-field" appearance="outline">
+          <mat-label>Rechercher un formulaire</mat-label>
+          <input matInput
+                 [(ngModel)]="filters.search"
+                 (keyup.enter)="applyFilters()"
+                 placeholder="Nom, description, tags...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <!-- Filtre Origine -->
+        <mat-form-field appearance="outline">
+          <mat-label>Origine</mat-label>
+          <mat-select [(ngModel)]="filters.origin" (selectionChange)="applyFilters()">
+            <mat-option *ngFor="let option of originOptions" [value]="option.value">
+              {{option.label}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Filtre Langue -->
+        <mat-form-field appearance="outline">
+          <mat-label>Langue</mat-label>
+          <mat-select [(ngModel)]="filters.language" (selectionChange)="applyFilters()">
+            <mat-option *ngFor="let option of languageOptions" [value]="option.value">
+              {{option.label}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Tri -->
+        <mat-form-field appearance="outline">
+          <mat-label>Trier par</mat-label>
+          <mat-select [(ngModel)]="filters.sortBy" (selectionChange)="onSortChange()">
+            <mat-option *ngFor="let option of sortOptions" [value]="option.value">
+              {{option.label}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Actions -->
+        <div class="filter-actions">
+          <button mat-raised-button color="primary" (click)="applyFilters()">
+            <mat-icon>search</mat-icon>
+            Rechercher
+          </button>
+          <button mat-stroked-button (click)="resetFilters()">
+            <mat-icon>clear</mat-icon>
+            Réinitialiser
+          </button>
+        </div>
+      </div>
+
+      <!-- Toggle mode d'affichage -->
+      <div class="view-controls">
+        <mat-button-toggle-group [(ngModel)]="viewMode" (change)="toggleViewMode()">
+          <mat-button-toggle value="grid">
+            <mat-icon>grid_view</mat-icon>
+            Grille
+          </mat-button-toggle>
+          <mat-button-toggle value="list">
+            <mat-icon>view_list</mat-icon>
+            Liste
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <span class="results-count">
+          {{filteredForms.length}} formulaire(s) trouvé(s)
+        </span>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Sections populaires et récents -->
+  <div class="highlights-section" *ngIf="!filters.search && !filters.origin && !filters.language">
+    <div class="highlights-row">
+      <!-- Formulaires populaires -->
+      <div class="highlight-section">
+        <h3>
+          <mat-icon>trending_up</mat-icon>
+          Populaires
+        </h3>
+        <div class="highlight-cards">
+          <mat-card *ngFor="let form of popularForms" class="highlight-card" (click)="previewForm(form)">
+            <mat-card-content>
+              <div class="card-header">
+                <h4>{{form.name}}</h4>
+                <mat-chip-listbox>box>>
+                  <mat-chip [style.background-color]="getLanguageColor(form.language)">
+                    {{form.language.toUpperCase()}}
+                  </mat-chip>
+                </mat-chip-listbox>>
+              </div>
+              <p class="card-description">{{form.description}}</p>
+              <div class="card-stats">
+                <span><mat-icon>visibility</mat-icon> {{form.viewCount}}</span>
+                <span><mat-icon>download</mat-icon> {{form.downloadCount}}</span>
+                <span><mat-icon>description</mat-icon> {{form.fieldCount}} champs</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+
+      <!-- Formulaires récents -->
+      <div class="highlight-section">
+        <h3>
+          <mat-icon>schedule</mat-icon>
+          Récents
+        </h3>
+        <div class="highlight-cards">
+          <mat-card *ngFor="let form of recentForms" class="highlight-card" (click)="previewForm(form)">
+            <mat-card-content>
+              <div class="card-header">
+                <h4>{{form.name}}</h4>
+                <mat-chip-listbox>>
+                  <mat-chip [style.background-color]="getLanguageColor(form.language)">
+                    {{form.language.toUpperCase()}}
+                  </mat-chip>
+                </mat-chip-listbox>>
+              </div>
+              <p class="card-description">{{form.description}}</p>
+              <div class="card-stats">
+                <span><mat-icon>visibility</mat-icon> {{form.viewCount}}</span>
+                <span><mat-icon>download</mat-icon> {{form.downloadCount}}</span>
+                <span><mat-icon>person</mat-icon> {{form.sharedBy}}</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Indicateur de chargement -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement des formulaires...</p>
+  </div>
+
+  <!-- Liste des formulaires - Mode Grille -->
+  <div *ngIf="!loading && viewMode === 'grid'" class="forms-grid">
+    <mat-card *ngFor="let form of filteredForms" class="form-card" [class.popular]="getTotalPopularity(form) > 50">
+      <mat-card-header>
+        <div class="card-header-content">
+          <div class="form-title-section">
+            <mat-card-title>{{form.name}}</mat-card-title>
+            <div class="form-badges">
+              <mat-chip-listbox>>
+                <mat-chip [style.background-color]="getLanguageColor(form.language)" class="language-chip">
+                  {{form.language.toUpperCase()}}
+                </mat-chip>
+                <mat-chip class="origin-chip">
+                  <mat-icon>{{getOriginIcon(form.origin)}}</mat-icon>
+                  {{form.origin === 'kizeo' ? 'Kizeo' : 'Compte'}}
+                </mat-chip>
+              </mat-chip-listbox>>
+            </div>
+          </div>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+        <p class="form-description">{{form.description}}</p>
+
+        <div class="form-meta">
+          <div class="meta-item">
+            <mat-icon>description</mat-icon>
+            <span>{{form.fieldCount}} champ(s)</span>
+          </div>
+          <div class="meta-item">
+            <mat-icon>person</mat-icon>
+            <span>Par {{form.sharedBy}}</span>
+          </div>
+          <div class="meta-item">
+            <mat-icon>schedule</mat-icon>
+            <span>{{formatDate(form.createdAt)}}</span>
+          </div>
+        </div>
+
+        <div class="form-stats">
+          <div class="stat-item">
+            <mat-icon>visibility</mat-icon>
+            <span>{{form.viewCount}} vues</span>
+          </div>
+          <div class="stat-item">
+            <mat-icon>download</mat-icon>
+            <span>{{form.downloadCount}} téléchargements</span>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div *ngIf="form.tags" class="form-tags">
+          <mat-chip-listbox>>
+            <mat-chip *ngFor="let tag of form.tags.split(',')" class="tag-chip">
+              {{tag.trim()}}
+            </mat-chip>
+          </mat-chip-listbox>>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions class="card-actions">
+        <button mat-button color="primary" (click)="previewForm(form)">
+          <mat-icon>visibility</mat-icon>
+          Prévisualiser
+        </button>
+        <button mat-raised-button color="accent" (click)="addToAccount(form)">
+          <mat-icon>add</mat-icon>
+          Ajouter au compte
+        </button>
+        <button mat-icon-button [matMenuTriggerFor]="menu" class="more-actions">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="downloadForm(form)">
+            <mat-icon>download</mat-icon>
+            Télécharger (Word/Excel)
+          </button>
+          <button mat-menu-item (click)="removeFromLibrary(form)" class="delete-action">
+            <mat-icon>delete</mat-icon>
+            Supprimer de la bibliothèque
+          </button>
+        </mat-menu>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Liste des formulaires - Mode Liste -->
+  <div *ngIf="!loading && viewMode === 'list'" class="forms-list">
+    <mat-card class="list-container">
+      <mat-list>
+        <mat-list-item *ngFor="let form of filteredForms; let i = index" class="form-list-item">
+          <div class="list-item-content">
+            <!-- Informations principales -->
+            <div class="list-item-main">
+              <div class="list-item-header">
+                <h3>{{form.name}}</h3>
+                <div class="list-badges">
+                  <mat-chip [style.background-color]="getLanguageColor(form.language)">
+                    {{form.language.toUpperCase()}}
+                  </mat-chip>
+                  <mat-chip>
+                    <mat-icon>{{getOriginIcon(form.origin)}}</mat-icon>
+                    {{form.origin === 'kizeo' ? 'Kizeo' : 'Compte'}}
+                  </mat-chip>
+                </div>
+              </div>
+              <p class="list-description">{{form.description}}</p>
+              <div class="list-meta">
+                <span><mat-icon>description</mat-icon> {{form.fieldCount}} champs</span>
+                <span><mat-icon>person</mat-icon> {{form.sharedBy}}</span>
+                <span><mat-icon>schedule</mat-icon> {{formatDate(form.createdAt)}}</span>
+              </div>
+            </div>
+
+            <!-- Statistiques -->
+            <div class="list-item-stats">
+              <div class="stat-column">
+                <span class="stat-number">{{form.viewCount}}</span>
+                <span class="stat-label">Vues</span>
+              </div>
+              <div class="stat-column">
+                <span class="stat-number">{{form.downloadCount}}</span>
+                <span class="stat-label">Téléchargements</span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="list-item-actions">
+              <button mat-button color="primary" (click)="previewForm(form)">
+                <mat-icon>visibility</mat-icon>
+                Prévisualiser
+              </button>
+              <button mat-raised-button color="accent" (click)="addToAccount(form)">
+                <mat-icon>add</mat-icon>
+                Ajouter
+              </button>
+              <button mat-icon-button [matMenuTriggerFor]="listMenu" class="more-actions">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #listMenu="matMenu">
+                <button mat-menu-item (click)="downloadForm(form)">
+                  <mat-icon>download</mat-icon>
+                  Télécharger
+                </button>
+                <button mat-menu-item (click)="removeFromLibrary(form)" class="delete-action">
+                  <mat-icon>delete</mat-icon>
+                  Supprimer
+                </button>
+              </mat-menu>
+            </div>
+          </div>
+          <mat-divider *ngIf="i < filteredForms.length - 1"></mat-divider>
+        </mat-list-item>
+      </mat-list>
+    </mat-card>
+  </div>
+
+  <!-- Message si aucun résultat -->
+  <div *ngIf="!loading && filteredForms.length === 0" class="no-results">
+    <mat-card class="no-results-card">
+      <mat-card-content>
+        <div class="no-results-content">
+          <mat-icon class="no-results-icon">search_off</mat-icon>
+          <h3>Aucun formulaire trouvé</h3>
+          <p>Essayez de modifier vos critères de recherche ou réinitialisez les filtres.</p>
+          <button mat-raised-button color="primary" (click)="resetFilters()">
+            <mat-icon>refresh</mat-icon>
+            Réinitialiser les filtres
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

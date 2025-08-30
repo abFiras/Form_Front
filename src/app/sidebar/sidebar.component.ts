@@ -62,7 +62,7 @@ export class SidebarComponent {
     {
       id: 'dashboard',
       label: 'Acceuil',
-      icon: '📊',
+      icon: '🏠',
       route: '/dashboard',
       active: true
     },
@@ -75,7 +75,7 @@ export class SidebarComponent {
           id: 'create-form',
           label: 'Créer un formulaire',
           icon: '➕',
-          route: '/forms/new'
+          route: '/ajouterform'
         },
         {
           id: 'my-forms',
@@ -88,7 +88,7 @@ export class SidebarComponent {
           id: 'templates',
           label: 'Bibliothèque',
           icon: '📄',
-          route: '/forms/templates'
+          route: '/bib'
         }
       ]
     },
@@ -102,12 +102,44 @@ export class SidebarComponent {
           id: 'export-word',
           label: 'Creer une Listes externes',
           icon: '📄',
-          route: '/exports/word'
+          route: '/creelisteexterne'
         },
         {
           id: 'import-excel',
           label: 'Mes Listes externes',
           icon: '📊',
+          route: '/exports/excel'
+        }
+      ]
+    },
+     {
+      id: 'exports',
+      label: 'Données',
+      icon: '📄',
+      route: '/exports',
+      children: [
+        {
+          id: 'Historique',
+          label: 'Historique',
+          icon: '📄',
+          route: '/exports/word'
+        },
+        {
+          id: 'import-excel',
+          label: 'Exporter',
+          icon: '📊',
+          route: '/exports/excel'
+        },
+                {
+          id: 'import-excel',
+          label: 'Saisir des données',
+          icon: '✍️',
+          route: '/exports/excel'
+        },
+                {
+          id: 'import-excel',
+          label: 'Planning',
+          icon: '📋',
           route: '/exports/excel'
         }
       ]
