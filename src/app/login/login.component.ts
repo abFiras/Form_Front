@@ -11,7 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  username = '';
+  email = '';
   password = '';
   remember = false;
   loading = false;
@@ -66,7 +66,7 @@ export class LoginComponent {
 
   ngOnInit(): void {
     this.loginFormGroup = this.fb.group({
-      username: [null, [Validators.required]],
+      email: [null, [Validators.required]],
       password: [null, [Validators.required]],
       rememberMe: [false], // Optionnel, selon si vous voulez implémenter cette fonctionnalité
     });
