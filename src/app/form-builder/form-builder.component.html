@@ -94,6 +94,15 @@
     <div class="palette-area">
       <div class="field-palette">
         <!-- Basic Fields -->
+        <div class="field-item-palette"
+     cdkDrag
+     [cdkDragData]="{type: 'external-list', label: 'Liste externe'}"
+     title="Liste externe">
+  <div class="field-icon external-list-field">
+    <mat-icon>list_alt</mat-icon>
+  </div>
+  <span>Liste externe</span>
+</div>
         <div class="field-category"
              cdkDropList
              id="palette-list"
@@ -131,15 +140,7 @@
             </div>
           </div>
           <!-- Ajoutez ce bloc dans une des field-row de votre palette existante -->
-<div class="field-item-palette"
-     cdkDrag
-     [cdkDragData]="{type: 'external-list', label: 'Liste externe'}"
-     title="Liste externe">
-  <div class="field-icon external-list-field">
-    <mat-icon>list_alt</mat-icon>
-  </div>
-  <span>Liste externe</span>
-</div>
+
 
           <div class="field-row">
             <div class="field-item-palette"
