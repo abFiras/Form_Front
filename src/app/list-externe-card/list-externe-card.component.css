@@ -1,0 +1,275 @@
+.liste-externe-container {
+  margin-top: 5vw;
+  margin-left: 15vw;
+  padding: 40px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+
+.header {
+  margin-bottom: 140px;
+}
+
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 400;
+  color: #333;
+  margin: 0;
+}
+
+
+.title-icon {
+  color: #6c757d;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+
+.content-area {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  justify-items: center;
+}
+
+
+.option-card {
+  position: relative;
+  width: 360px;     /* ⬅️ élargi la largeur */
+  height: 260px;    /* ⬅️ augmente la hauteur */
+  background: white;
+  border-radius: 16px;  /* arrondis un peu plus */
+  border: 2px solid #e9ecef;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+
+  &:hover {
+    border-color: #28a745;
+    box-shadow: 0 12px 28px rgba(40, 167, 69, 0.2);
+    transform: translateY(-6px) scale(1.02);
+  }
+}
+
+
+.card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 28px 28px; /* ⬅️ plus de padding */
+  text-align: center;
+}
+
+
+.icon-container {
+  width: 100px;   /* ⬅️ plus gros */
+  height: 100px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28px;
+  position: relative;
+
+
+  mat-icon {
+    font-size: 50px;   /* ⬅️ icône plus grande */
+    width: 50px;
+    height: 50px;
+    color: white;
+  }
+}
+
+
+.card-title {
+  font-size: 18px;   /* ⬅️ texte plus grand */
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 260px;
+}
+
+
+
+
+.beta-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #1a237e;
+  color: white;
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: bold;
+  clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+  z-index: 2;
+  min-width: 45px;
+}
+
+
+
+
+
+
+.icon-container {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  position: relative;
+
+
+  mat-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: white;
+  }
+}
+
+
+.create-icon {
+  background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+
+.excel-icon {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border: 2px solid #28a745;
+}
+
+
+.legacy-icon {
+  background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+
+.arrow-icon {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: #28a745;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: white;
+  }
+}
+
+
+
+
+.excel-text {
+  color: #28a745;
+}
+
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .options-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+
+  .option-card {
+    width: 260px;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .liste-externe-container {
+    padding: 20px;
+  }
+
+
+  .options-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+
+  .option-card {
+    width: 100%;
+    max-width: 320px;
+    height: 180px;
+  }
+
+
+  .title {
+    font-size: 20px;
+  }
+
+
+  .card-content {
+    padding: 24px 16px 16px;
+  }
+
+
+  .icon-container {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+
+
+    mat-icon {
+      font-size: 30px;
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+
+  .arrow-icon {
+    width: 20px;
+    height: 20px;
+    bottom: -6px;
+    right: -6px;
+
+
+    mat-icon {
+      font-size: 12px;
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+
+  .card-title {
+    font-size: 13px;
+  }
+}
+
+

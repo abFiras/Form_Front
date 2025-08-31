@@ -1,238 +1,437 @@
 /* src/app/components/cree-liste-externe/cree-liste-externe.component.css */
-.liste-externe-container {
+
+.external-lists-container {
   margin-top: 5vw;
   margin-left: 15vw;
-  padding: 40px;
-  background-color: #f8f9fa;
   min-height: 100vh;
+  background-color: #f5f5f5;
 }
 
-.header {
-  margin-bottom: 140px;
+.page-header {
+  background: white;
+  padding: 24px 32px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.title {
+.header-content {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 24px;
-  font-weight: 400;
-  color: #333;
+  gap: 16px;
+}
+
+.back-button {
+  color: #666;
+}
+
+.header-text h1 {
   margin: 0;
+  font-size: 28px;
+  font-weight: 500;
+  color: #333;
 }
 
-.title-icon {
-  color: #6c757d;
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
+.header-text p {
+  margin: 4px 0 0 0;
+  color: #666;
+  font-size: 14px;
 }
 
-.content-area {
-  max-width: 1200px;
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.content-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  padding: 24px 32px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-.options-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+/* Section principale */
+.main-content {
+  display: flex;
+  flex-direction: column;
   gap: 24px;
-  justify-items: center;
 }
 
-.option-card {
-  position: relative;
-  width: 360px;     /* ⬅️ élargi la largeur */
-  height: 260px;    /* ⬅️ augmente la hauteur */
-  background: white;
-  border-radius: 16px;  /* arrondis un peu plus */
-  border: 2px solid #e9ecef;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-
-  &:hover {
-    border-color: #28a745;
-    box-shadow: 0 12px 28px rgba(40, 167, 69, 0.2);
-    transform: translateY(-6px) scale(1.02);
-  }
-}
-
-.card-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 28px 28px; /* ⬅️ plus de padding */
-  text-align: center;
-}
-
-.icon-container {
-  width: 100px;   /* ⬅️ plus gros */
-  height: 100px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 28px;
-  position: relative;
-
-  mat-icon {
-    font-size: 50px;   /* ⬅️ icône plus grande */
-    width: 50px;
-    height: 50px;
-    color: white;
-  }
-}
-
-.card-title {
-  font-size: 18px;   /* ⬅️ texte plus grand */
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-  line-height: 1.5;
-  max-width: 260px;
-}
-
-
-.beta-badge {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: #1a237e;
-  color: white;
-  padding: 4px 12px;
-  font-size: 10px;
-  font-weight: bold;
-  clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
-  z-index: 2;
-  min-width: 45px;
-}
-
-
-
-.icon-container {
-  width: 80px;
-  height: 80px;
+.create-list-card,
+.import-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   border-radius: 12px;
+}
+
+.card-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-header-content mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.card-header-content mat-card-subtitle {
+  margin: 4px 0 0 0;
+  color: #666;
+}
+
+/* Formulaire */
+.form-section {
+  margin-bottom: 32px;
+}
+
+.form-section h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-row.full-width,
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.half-width {
+  /* Utilisé dans la grille 1fr 1fr */
+}
+
+.options-row {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.options-row mat-checkbox {
+  color: #333;
+}
+
+/* Section des éléments */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+.items-list {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 48px;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 0;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
-  position: relative;
-
-  mat-icon {
-    font-size: 40px;
-    width: 40px;
-    height: 40px;
-    color: white;
-  }
-}
-
-.create-icon {
-  background: linear-gradient(135deg, #28a745, #20c997);
-}
-
-.excel-icon {
-  background: linear-gradient(135deg, #28a745, #20c997);
-  border: 2px solid #28a745;
-}
-
-.legacy-icon {
-  background: linear-gradient(135deg, #28a745, #20c997);
-}
-
-.arrow-icon {
-  position: absolute;
-  bottom: -8px;
-  right: -8px;
-  width: 24px;
-  height: 24px;
-  background: #28a745;
+  width: 28px;
+  height: 28px;
+  background: #e3f2fd;
+  color: #1976d2;
   border-radius: 50%;
+  font-weight: 500;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.item-label,
+.item-value {
+  /* mat-form-field prend toute la largeur disponible */
+}
+
+.form-actions,
+.import-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Section d'importation */
+.import-card mat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.import-instructions {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #e3f2fd;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.import-instructions mat-icon {
+  color: #1976d2;
+  margin-top: 2px;
+}
+
+.import-instructions p {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+}
+
+.file-upload-section {
+  margin: 20px 0;
+}
+
+.file-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-select-btn {
+  align-self: flex-start;
+}
+
+.file-info {
   display: flex;
   align-items: center;
-  justify-content: center;
-
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    color: white;
-  }
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  border: 1px solid #ddd;
 }
 
-
-.excel-text {
-  color: #28a745;
+/* Sidebar */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .options-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+.my-lists-card,
+.help-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 12px;
+}
+
+.my-lists-card mat-card-title {
+  font-size: 18px;
+  color: #333;
+}
+
+/* Liste des listes existantes */
+.lists-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list-item {
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.list-item:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.list-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.list-description {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.list-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+.meta-item mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.list-date {
+  color: #999;
+  font-size: 12px;
+}
+
+/* État vide */
+.empty-lists {
+  text-align: center;
+  padding: 32px 16px;
+  color: #666;
+}
+
+.empty-lists mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+.empty-lists p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+/* Section d'aide */
+.help-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.help-item {
+  margin-bottom: 16px;
+}
+
+.help-item:last-child {
+  margin-bottom: 0;
+}
+
+.help-item h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.help-item p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .content-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
 
-  .option-card {
-    width: 260px;
+  .sidebar {
+    order: -1;
   }
 }
 
 @media (max-width: 768px) {
-  .liste-externe-container {
-    padding: 20px;
-  }
-
-  .options-grid {
-    grid-template-columns: 1fr;
+  .page-header {
+    padding: 16px 20px;
+    flex-direction: column;
+    align-items: stretch;
     gap: 16px;
   }
 
-  .option-card {
-    width: 100%;
-    max-width: 320px;
-    height: 180px;
+  .header-content {
+    justify-content: flex-start;
   }
 
-  .title {
-    font-size: 20px;
+  .header-actions {
+    justify-content: flex-end;
   }
 
-  .card-content {
-    padding: 24px 16px 16px;
+  .content-layout {
+    padding: 16px 20px;
   }
 
-  .icon-container {
-    width: 60px;
-    height: 60px;
-    margin-bottom: 16px;
-
-    mat-icon {
-      font-size: 30px;
-      width: 30px;
-      height: 30px;
-    }
+  .form-row {
+    grid-template-columns: 1fr;
   }
 
-  .arrow-icon {
-    width: 20px;
-    height: 20px;
-    bottom: -6px;
-    right: -6px;
-
-    mat-icon {
-      font-size: 12px;
-      width: 12px;
-      height: 12px;
-    }
+  .item-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
-  .card-title {
-    font-size: 13px;
+  .item-number {
+    justify-self: start;
+    margin-bottom: 8px;
+  }
+
+  .form-actions,
+  .import-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

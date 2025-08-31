@@ -1,0 +1,50 @@
+<div class="liste-externe-container">
+  <div class="header">
+    <h1 class="title">
+      <mat-icon class="title-icon">info</mat-icon>
+      Editeur de liste
+    </h1>
+  </div>
+
+
+  <div class="content-area">
+    <div class="options-grid">
+      <!-- Créer à partir d'une liste vierge -->
+      <div class="option-card" (click)="creelisteexterne()">
+        <div class="beta-badge">BETA</div>
+        <div class="card-content">
+          <div class="icon-container create-icon">
+            <mat-icon>add</mat-icon>
+          </div>
+          <h3 class="card-title">Créer à partir d'une liste vierge</h3>
+        </div>
+      </div>
+
+
+      <!-- Créer à partir d'un fichier Excel -->
+      <div class="option-card">
+        <div class="beta-badge">BETA</div>
+        <div class="card-content">
+          <div class="icon-container excel-icon">
+            <mat-icon>description</mat-icon>
+            <div class="arrow-icon">
+              <mat-icon>arrow_forward</mat-icon>
+            </div>
+          </div>
+          <h3 class="card-title ">Créer à partir d'un fichier Excel</h3>
+        </div>
+      </div>
+
+
+      <!-- Accéder à l'ancien éditeur de liste -->
+      <div class="option-card">
+        <div class="card-content">
+          <div class="icon-container legacy-icon">
+            <mat-icon>list_alt</mat-icon>
+          </div>
+          <h3 class="card-title">Accéder à l'ancien éditeur de liste</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

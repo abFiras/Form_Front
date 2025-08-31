@@ -146,7 +146,38 @@
         {{field.label}} is required
       </mat-error>
     </div>
+<!-- Ajoutez cette section dans votre dynamic-field.component.html existant -->
 
+<!-- Remplacez votre bloc externe par ceci -->
+<!-- External List Field - Utiliser *ngIf au lieu de *ngSwitchCase -->
+<div *ngIf="field.type === 'external-list'" class="field-wrapper">
+  <app-external-list-field
+    [label]="field.label"
+    [placeholder]="field.placeholder || 'Sélectionnez une valeur...'"
+    [required]="field.required"
+    [disabled]="isPreview ? false : false"
+    [externalListId]="field.externalListId"
+    [displayMode]="field.externalListDisplayMode || 'select'"
+    [formControl]="getFormControl()">
+  </app-external-list-field>
+
+  <!-- Configuration button (only in builder mode) -->
+  <div *ngIf="!isPreview" class="field-config">
+    <button mat-icon-button
+            (click)="onConfigureExternalList()"
+            class="config-btn"
+            matTooltip="Configurer la liste externe">
+      <mat-icon>settings</mat-icon>
+    </button>
+
+    <div class="external-list-info" *ngIf="field.externalListId">
+      <span class="info-label">Liste:</span>
+      <span class="info-value">ID {{ field.externalListId }}</span>
+      <span class="info-separator">|</span>
+      <span class="info-value">Mode: {{ field.externalListDisplayMode }}</span>
+    </div>
+  </div>
+</div>
     <!-- Contact -->
     <div *ngIf="field.type === 'contact'" class="contact-field">
       <mat-form-field appearance="outline" class="full-width">

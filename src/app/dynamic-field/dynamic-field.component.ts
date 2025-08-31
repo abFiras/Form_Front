@@ -1,12 +1,16 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormFieldDTO } from '../models/form.models';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { ExternalListConfigComponent } from '../external-list-config/external-list-config.component';
+import { MatDialog } from '@angular/material/dialog';
+import { ExternalListFieldComponent } from '../external-list-field/external-list-field.component';
 
 @Component({
   selector: 'app-dynamic-field',
   standalone: false,
   templateUrl: './dynamic-field.component.html',
   styleUrl: './dynamic-field.component.css',
+
 })
 export class DynamicFieldComponent implements OnInit {
   @Input() field!: FormFieldDTO;
@@ -22,6 +26,7 @@ export class DynamicFieldComponent implements OnInit {
     required: new FormControl(false),
     options: new FormControl('')
   });
+constructor(private dialog: MatDialog) {}
 
   ngOnInit(): void {
     // Ensure options is always an array
@@ -30,6 +35,16 @@ export class DynamicFieldComponent implements OnInit {
     if (this.formGroup && !this.formGroup.get(this.field.fieldName)) {
       this.addControlToForm();
     }
+  }
+   getFormControl(): FormControl {
+    const control = this.formGroup.get(this.field.fieldName) as FormControl;
+    if (!control) {
+      // Si le contrôle n'existe pas, le créer
+      const newControl = new FormControl('', this.field.required ? [Validators.required] : []);
+      this.formGroup.addControl(this.field.fieldName, newControl);
+      return newControl;
+    }
+    return control;
   }
 
   // NEW: Method to ensure options is always an array
@@ -144,6 +159,19 @@ export class DynamicFieldComponent implements OnInit {
   hasOptions(): boolean {
     return ['select', 'radio', 'checkbox'].includes(this.field.type);
   }
+  onConfigureExternalList(): void {
+  const dialogRef = this.dialog.open(ExternalListConfigComponent, {
+    width: '600px',
+    data: { field: this.field }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      // Émettre le champ mis à jour
+      this.fieldChange.emit(result);
+    }
+  });
+}
 
   // NEW: Getter to safely access options as array
   get safeOptions() {

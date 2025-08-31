@@ -102,13 +102,13 @@ export class SidebarComponent {
           id: 'export-word',
           label: 'Creer une Listes externes',
           icon: '📄',
-          route: '/creelisteexterne'
+          route: '/card'
         },
         {
           id: 'import-excel',
           label: 'Mes Listes externes',
           icon: '📊',
-          route: '/exports/excel'
+          route: '/listeexterne'
         }
       ]
     },

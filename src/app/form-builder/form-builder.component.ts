@@ -7,6 +7,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../service/auth.service';
+import { MatDialog } from '@angular/material/dialog';
+import { ExternalListConfigComponent } from '../external-list-config/external-list-config.component';
 
 @Component({
   selector: 'app-form-builder',
@@ -31,7 +33,9 @@ export class FormBuilderComponent implements OnInit {
     private router: Router,
     private formService: FormService,
     private snackBar: MatSnackBar,
-    private authService: AuthService
+    private authService: AuthService,
+      private dialog: MatDialog // ✅ Ajout du MatDialog
+
   ) {}
 
   ngOnInit(): void {
@@ -176,9 +180,31 @@ onFormNameChange(event: Event): void {
         { label: 'Option 2', value: 'option2' }
       ];
     }
-
+ if (paletteField.type === 'external-list') {
+    // Ouvrir immédiatement le dialog de configuration
+    this.openExternalListConfig(baseField);
     return baseField;
   }
+    return baseField;
+  }
+  // ✅ Nouvelle méthode pour ouvrir la configuration des listes externes
+openExternalListConfig(field: FormFieldDTO): void {
+  const dialogRef = this.dialog.open(ExternalListConfigComponent, {
+    width: '600px',
+    data: { field }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      // Mettre à jour le champ avec la configuration
+      const fieldIndex = this.formFields.findIndex(f => f.fieldName === field.fieldName);
+      if (fieldIndex >= 0) {
+        this.formFields[fieldIndex] = result;
+        this.rebuildPreviewForm();
+      }
+    }
+  });
+}
 
   hasOptions(fieldType: FieldType): boolean {
     return ['select', 'radio', 'checkbox'].includes(fieldType);
@@ -437,7 +463,9 @@ getFieldIcon(type: string): string {
     'fixed-text': 'text_snippet',
     'image': 'image',
     'file-fixed': 'description',
-    'calculation': 'calculate'
+    'calculation': 'calculate',
+    'external-list': 'list_alt' // ✅ Nouveau type
+
   };
 
   return iconMap[type] || 'help_outline';

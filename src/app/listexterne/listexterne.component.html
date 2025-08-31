@@ -1,0 +1,255 @@
+<!-- src/app/components/listexterne/listexterne.component.html -->
+<div class="external-lists-page">
+  <!-- En-tête de la page -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        Mes listes externes
+        <mat-icon class="info-icon" matTooltip="Créez et gérez vos listes de données pour vos formulaires">
+          info_outline
+        </mat-icon>
+      </h1>
+    </div>
+
+    <div class="header-actions">
+      <button mat-raised-button
+              color="primary"
+              (click)="createNewList()"
+              class="create-btn">
+        <mat-icon>add</mat-icon>
+        Nouvelle liste
+      </button>
+
+      <button mat-stroked-button class="owner-change-btn">
+        <mat-icon>swap_horiz</mat-icon>
+        Changement de propriétaire
+      </button>
+
+      <button mat-stroked-button class="rubriques-btn">
+        <mat-icon>view_list</mat-icon>
+        Rubriques
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtres et navigation -->
+  <div class="filters-section">
+    <div class="filter-tabs">
+      <button mat-flat-button
+              [class.active]="selectedFilter === 'mes-listes'"
+              (click)="onFilterChange('mes-listes')"
+              class="filter-tab">
+        <mat-icon>folder</mat-icon>
+        Mes listes
+      </button>
+
+      <button mat-flat-button
+              [class.active]="selectedFilter === 'autres-listes'"
+              (click)="onFilterChange('autres-listes')"
+              class="filter-tab">
+        <mat-icon>search</mat-icon>
+        Autres listes disponibles
+      </button>
+
+      <button mat-flat-button
+              [class.active]="selectedFilter === 'bibliotheque'"
+              (click)="onFilterChange('bibliotheque')"
+              class="filter-tab">
+        <mat-icon>library_books</mat-icon>
+        Bibliothèque
+      </button>
+    </div>
+  </div>
+
+  <!-- Barre de recherche et informations -->
+  <div class="search-info-section">
+    <div class="display-info">
+      <span class="display-text">Afficher</span>
+      <mat-form-field appearance="outline" class="page-size-select">
+        <mat-select [(value)]="pageSize" (selectionChange)="applyFilters()">
+          <mat-option value="10">10</mat-option>
+          <mat-option value="25">25</mat-option>
+          <mat-option value="50">50</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <span class="elements-text">éléments</span>
+    </div>
+
+    <div class="search-section">
+      <span class="search-label">Rechercher :</span>
+      <mat-form-field appearance="outline" class="search-field">
+        <input matInput
+               [(ngModel)]="searchQuery"
+               (input)="onSearch()"
+               placeholder="Nom de la liste...">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Tableau des listes -->
+  <div class="table-container">
+    <table class="lists-table">
+      <thead>
+        <tr>
+          <th class="actions-col"></th>
+          <th class="name-col">
+            <button class="sort-header">
+              Nom de la liste
+              <mat-icon>arrow_drop_up</mat-icon>
+            </button>
+          </th>
+          <th class="rubrique-col">
+            <button class="sort-header">
+              Rubrique
+              <mat-icon>unfold_more</mat-icon>
+            </button>
+          </th>
+          <th class="count-col">
+            <button class="sort-header">
+              Nombre d'éléments
+              <mat-icon>unfold_more</mat-icon>
+            </button>
+          </th>
+          <th class="type-col">
+            <button class="sort-header">
+              Type
+              <mat-icon>unfold_more</mat-icon>
+            </button>
+          </th>
+          <th class="advanced-col">Liste avancée</th>
+          <th class="filtered-col">Filtrée</th>
+          <th class="owner-col">Propriétaire</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let list of paginatedLists; let i = index" class="list-row">
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button mat-icon-button
+                      class="edit-btn"
+                      (click)="editList(list.id!)"
+                      matTooltip="Modifier">
+                <mat-icon>edit</mat-icon>
+              </button>
+
+              <span class="list-index">{{ ((currentPage - 1) * pageSize) + i + 1 }}</span>
+
+              <button mat-icon-button
+                      class="menu-btn"
+                      [matMenuTriggerFor]="listMenu"
+                      matTooltip="Plus d'options">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+
+              <mat-menu #listMenu="matMenu">
+                <button mat-menu-item (click)="viewListDetails(list.id!)">
+                  <mat-icon>visibility</mat-icon>
+                  <span>Voir les détails</span>
+                </button>
+                <button mat-menu-item (click)="duplicateList(list)">
+                  <mat-icon>content_copy</mat-icon>
+                  <span>Dupliquer</span>
+                </button>
+                <button mat-menu-item (click)="exportList(list)">
+                  <mat-icon>download</mat-icon>
+                  <span>Exporter</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="deleteList(list)" class="delete-item">
+                  <mat-icon>delete</mat-icon>
+                  <span>Supprimer</span>
+                </button>
+              </mat-menu>
+            </div>
+          </td>
+
+          <td class="name-cell">
+            <button class="list-name-btn" (click)="viewListDetails(list.id!)">
+              {{ list.name }}
+            </button>
+          </td>
+
+          <td class="rubrique-cell">
+            <span class="rubrique-text">{{ list.rubrique || '-' }}</span>
+          </td>
+
+          <td class="count-cell">
+            <span class="count-text">{{ list.itemCount || 0 }}</span>
+          </td>
+
+          <td class="type-cell">
+            <span class="type-text">{{ getListTypeLabel(list.listType) }}</span>
+          </td>
+
+          <td class="advanced-cell">
+            <mat-icon *ngIf="list.isAdvanced" class="check-icon">check</mat-icon>
+            <span *ngIf="!list.isAdvanced">-</span>
+          </td>
+
+          <td class="filtered-cell">
+            <mat-icon *ngIf="list.isFiltered" class="check-icon">check</mat-icon>
+            <span *ngIf="!list.isFiltered">-</span>
+          </td>
+
+          <td class="owner-cell">
+            <span class="owner-badge" [class.current-user]="list.createdBy === currentUserId">
+              {{ getOwnerLabel(list.createdBy!) }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- État vide -->
+    <div class="empty-state" *ngIf="displayedLists.length === 0 && !loading">
+      <mat-icon class="empty-icon">inbox</mat-icon>
+      <h3>Aucune liste trouvée</h3>
+      <p *ngIf="searchQuery">Aucune liste ne correspond à votre recherche "{{ searchQuery }}"</p>
+      <p *ngIf="!searchQuery && selectedFilter === 'mes-listes'">
+        Vous n'avez encore créé aucune liste externe.
+      </p>
+      <button mat-raised-button color="primary" (click)="createNewList()">
+        <mat-icon>add</mat-icon>
+        Créer ma première liste
+      </button>
+    </div>
+
+    <!-- Indicateur de chargement -->
+    <div class="loading-state" *ngIf="loading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Chargement des listes...</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-section" *ngIf="displayedLists.length > 0">
+    <div class="pagination-info">
+<span>
+  Affichage de l'élément
+  {{ ((currentPage - 1) * pageSize) + 1 }}
+  à {{ getMin(currentPage * pageSize, totalItems) }}
+  sur {{ totalItems }} éléments
+</span>
+    </div>
+
+    <div class="pagination-controls">
+      <button mat-button
+              [disabled]="currentPage === 1"
+              (click)="previousPage()"
+              class="pagination-btn">
+        Précédent
+      </button>
+
+      <span class="page-number current">{{ currentPage }}</span>
+
+      <button mat-button
+              [disabled]="currentPage >= totalPages"
+              (click)="nextPage()"
+              class="pagination-btn">
+        Suivant
+      </button>
+    </div>
+  </div>
+</div>

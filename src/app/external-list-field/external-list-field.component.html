@@ -1,0 +1,70 @@
+<div class="external-list-field" [class.disabled]="disabled">
+  <!-- Label -->
+  <label class="field-label">
+    {{ label }}
+    <span class="required-indicator" *ngIf="required">*</span>
+  </label>
+
+  <!-- Select Mode (Autocomplete) -->
+  <div *ngIf="displayMode === 'select'" class="select-container">
+    <mat-form-field appearance="outline" class="full-width">
+      <input
+        matInput
+        [placeholder]="placeholder"
+        [formControl]="control"
+        [matAutocomplete]="auto"
+        [disabled]="disabled">
+      <mat-icon matSuffix>arrow_drop_down</mat-icon>
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
+        <mat-option
+          *ngFor="let option of filteredOptions | async"
+          [value]="option"
+          (onSelectionChange)="onSelectionChange(option.value)">
+          {{ option.label }}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+  </div>
+
+  <!-- Radio Mode -->
+  <div *ngIf="displayMode === 'radio'" class="radio-container">
+    <mat-radio-group [formControl]="control" [disabled]="disabled">
+      <mat-radio-button
+        *ngFor="let item of listItems"
+        [value]="item.value"
+        class="radio-option">
+        {{ item.label }}
+      </mat-radio-button>
+    </mat-radio-group>
+  </div>
+
+  <!-- Checkbox Mode -->
+  <div *ngIf="displayMode === 'checkbox'" class="checkbox-container">
+    <mat-checkbox
+      *ngFor="let item of listItems"
+      [checked]="isChecked(item)"
+      [disabled]="disabled"
+      (change)="onCheckboxChange(item, $event.checked)"
+      class="checkbox-option">
+      {{ item.label }}
+    </mat-checkbox>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="listItems.length === 0 && externalList" class="empty-list">
+    <mat-icon>info_outline</mat-icon>
+    <span>Cette liste externe ne contient aucun élément</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="!externalList && externalListId" class="loading-list">
+    <mat-spinner diameter="20"></mat-spinner>
+    <span>Chargement de la liste...</span>
+  </div>
+
+  <!-- Configuration Needed -->
+  <div *ngIf="!externalListId" class="config-needed">
+    <mat-icon>settings</mat-icon>
+    <span>Configuration requise : sélectionnez une liste externe</span>
+  </div>
+</div>

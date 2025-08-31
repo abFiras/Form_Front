@@ -462,3 +462,81 @@
   margin-right: 6px; /* espace entre icône et texte */
   font-size: 20px;
 }
+
+
+/* Ajoutez ces styles à votre form-builder.component.css existant */
+
+/* External List Field Styles */
+.external-list-field {
+  background-color: #e3f2fd;
+  border: 2px solid #2196f3;
+  color: #1976d2;
+}
+
+.external-list-field:hover {
+  background-color: #bbdefb;
+  border-color: #1976d2;
+}
+
+/* Field Configuration Styles */
+.field-config {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.config-btn {
+  width: 32px;
+  height: 32px;
+  color: #6c757d;
+}
+
+.config-btn:hover {
+  color: #2c5aa0;
+  background-color: #e9ecef;
+}
+
+.external-list-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.info-label {
+  font-weight: 500;
+}
+
+.info-value {
+  color: #495057;
+}
+
+.info-separator {
+  color: #dee2e6;
+  margin: 0 4px;
+}
+
+/* Field Wrapper Styles */
+.field-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .field-config {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .external-list-info {
+    flex-wrap: wrap;
+  }
+}

@@ -1,48 +1,325 @@
 <!-- src/app/components/cree-liste-externe/cree-liste-externe.component.html -->
-<div class="liste-externe-container">
-  <div class="header">
-    <h1 class="title">
-      <mat-icon class="title-icon">info</mat-icon>
-      Editeur de liste
-    </h1>
+<div class="external-lists-container">
+  <!-- En-tête avec navigation -->
+  <div class="page-header">
+    <div class="header-content">
+      <button mat-icon-button routerLink="/card" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-text">
+        <h1>Mes listes externes</h1>
+        <p>Créez et gérez vos listes de données pour vos formulaires</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="toggleImportSection()" [disabled]="loading">
+        <mat-icon>upload_file</mat-icon>
+        Importer CSV
+      </button>
+    </div>
   </div>
 
-  <div class="content-area">
-    <div class="options-grid">
-      <!-- Créer à partir d'une liste vierge -->
-      <div class="option-card">
-        <div class="beta-badge">BETA</div>
-        <div class="card-content">
-          <div class="icon-container create-icon">
-            <mat-icon>add</mat-icon>
+  <div class="content-layout">
+    <!-- Section principale - Création de liste -->
+    <div class="main-content">
+      <mat-card class="create-list-card">
+        <mat-card-header>
+          <div class="card-header-content">
+            <mat-card-title>
+              <mat-icon>add_circle_outline</mat-icon>
+              Nouvelle liste externe
+            </mat-card-title>
+            <mat-card-subtitle>
+              Créez une liste d'éléments réutilisables dans vos formulaires
+            </mat-card-subtitle>
           </div>
-          <h3 class="card-title">Créer à partir d'une liste vierge</h3>
-        </div>
-      </div>
+        </mat-card-header>
 
-      <!-- Créer à partir d'un fichier Excel -->
-      <div class="option-card">
-        <div class="beta-badge">BETA</div>
-        <div class="card-content">
-          <div class="icon-container excel-icon">
-            <mat-icon>description</mat-icon>
-            <div class="arrow-icon">
-              <mat-icon>arrow_forward</mat-icon>
+        <mat-card-content>
+          <form [formGroup]="createListForm" (ngSubmit)="createList()">
+            <!-- Informations de base -->
+            <div class="form-section">
+              <h3>Informations générales</h3>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Nom de la liste</mat-label>
+                  <input matInput formControlName="name" placeholder="Ex: Liste des produits">
+                  <mat-error>{{ getErrorMessage('name') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Description</mat-label>
+                  <textarea matInput formControlName="description" rows="2"
+                            placeholder="Description optionnelle de votre liste"></textarea>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Type de liste</mat-label>
+                  <mat-select formControlName="listType">
+                    <mat-option value="STATIC">Statique</mat-option>
+                    <mat-option value="DYNAMIC">Dynamique</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Rubrique</mat-label>
+                  <mat-select formControlName="rubrique">
+                    <mat-option value="">Aucune rubrique</mat-option>
+                    <mat-option *ngFor="let rubrique of rubriques" [value]="rubrique">
+                      {{ rubrique }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-hint>Ou saisissez une nouvelle rubrique</mat-hint>
+                </mat-form-field>
+              </div>
+
+              <!-- Options avancées -->
+              <div class="form-row options-row">
+                <mat-checkbox formControlName="isAdvanced">Liste avancée</mat-checkbox>
+                <mat-checkbox formControlName="isFiltered">Liste filtrée</mat-checkbox>
+              </div>
+            </div>
+
+            <!-- Section des éléments -->
+            <div class="form-section">
+              <div class="section-header">
+                <h3>Éléments de la liste</h3>
+                <button mat-raised-button type="button" color="accent" (click)="addItem()">
+                  <mat-icon>add</mat-icon>
+                  Ajouter un élément
+                </button>
+              </div>
+
+              <div class="items-list" formArrayName="items">
+                <div *ngFor="let item of itemsFormArray.controls; let i = index"
+                     class="item-row" [formGroupName]="i">
+
+                  <div class="item-number">{{ i + 1 }}</div>
+
+                  <mat-form-field appearance="outline" class="item-label">
+                    <mat-label>Libellé</mat-label>
+                    <input matInput formControlName="label" placeholder="Nom affiché">
+                    <mat-error>{{ getErrorMessage('label', item ) }}</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="item-value">
+                    <mat-label>Valeur</mat-label>
+                    <input matInput formControlName="value" placeholder="Valeur technique">
+                    <mat-error>{{ getErrorMessage('value', item) }}</mat-error>
+                  </mat-form-field>
+
+                  <button mat-icon-button type="button" color="warn"
+                          (click)="removeItem(i)"
+                          [disabled]="itemsFormArray.length <= 1"
+                          matTooltip="Supprimer cet élément">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+              <button mat-raised-button type="button" (click)="resetForm()">
+                Réinitialiser
+              </button>
+              <button mat-raised-button type="submit" color="primary" [disabled]="!createListForm.valid || loading">
+                <mat-icon *ngIf="loading">hourglass_empty</mat-icon>
+                <mat-icon *ngIf="!loading">save</mat-icon>
+                {{ loading ? 'Création...' : 'Créer la liste' }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Section d'importation CSV -->
+      <mat-card class="import-card" *ngIf="showImportSection">
+        <mat-card-header>
+          <div class="card-header-content">
+            <mat-card-title>
+              <mat-icon>upload_file</mat-icon>
+              Importer depuis un fichier CSV
+            </mat-card-title>
+            <mat-card-subtitle>
+              Importez rapidement une liste depuis un fichier CSV
+            </mat-card-subtitle>
+          </div>
+          <button mat-icon-button (click)="toggleImportSection()" matTooltip="Fermer">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-card-header>
+
+        <mat-card-content>
+          <form [formGroup]="importForm" (ngSubmit)="importList()">
+            <div class="import-instructions">
+              <mat-icon>info</mat-icon>
+              <div>
+                <p><strong>Format attendu :</strong> Fichier CSV avec au minimum une colonne "Label"</p>
+                <p>Colonnes acceptées : Label, Value (optionnel), données supplémentaires</p>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Nom de la liste</mat-label>
+                <input matInput formControlName="name" placeholder="Nom de votre liste">
+                <mat-error>{{ getErrorMessage('name', importForm) }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Rubrique</mat-label>
+                <mat-select formControlName="rubrique">
+                  <mat-option value="">Aucune rubrique</mat-option>
+                  <mat-option *ngFor="let rubrique of rubriques" [value]="rubrique">
+                    {{ rubrique }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Description</mat-label>
+                <textarea matInput formControlName="description" rows="2"></textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="file-upload-section">
+              <div class="file-input-wrapper">
+                <input type="file"
+                       accept=".csv"
+                       (change)="onFileSelected($event)"
+                       #fileInput
+                       class="file-input">
+
+                <button mat-raised-button type="button" (click)="fileInput.click()" class="file-select-btn">
+                  <mat-icon>attach_file</mat-icon>
+                  Sélectionner un fichier CSV
+                </button>
+
+                <div class="file-info" *ngIf="selectedFile">
+                  <mat-icon>description</mat-icon>
+                  <span>{{ selectedFile.name }} ({{ (selectedFile.size / 1024).toFixed(2) }} KB)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="import-actions">
+              <button mat-raised-button type="button" (click)="toggleImportSection()">
+                Annuler
+              </button>
+              <button mat-raised-button type="submit" color="primary"
+                      [disabled]="!importForm.valid || !selectedFile || loading">
+                <mat-icon *ngIf="loading">hourglass_empty</mat-icon>
+                <mat-icon *ngIf="!loading">cloud_upload</mat-icon>
+                {{ loading ? 'Importation...' : 'Importer' }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Sidebar - Mes listes existantes -->
+    <div class="sidebar">
+      <mat-card class="my-lists-card">
+        <mat-card-header>
+          <mat-card-title>Mes listes ({{ myLists.length }})</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="lists-container" *ngIf="myLists.length > 0">
+            <div class="list-item" *ngFor="let list of myLists">
+              <div class="list-header">
+                <div class="list-info">
+                  <h4>{{ list.name }}</h4>
+                  <p class="list-description">{{ list.description || 'Aucune description' }}</p>
+                </div>
+
+                <div class="list-actions">
+                  <button mat-icon-button
+                          (click)="viewListDetails(list.id!)"
+                          matTooltip="Voir les détails">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button mat-icon-button
+                          (click)="editList(list.id!)"
+                          matTooltip="Modifier">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button
+                          color="warn"
+                          (click)="deleteList(list.id!)"
+                          matTooltip="Supprimer">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+
+              <div class="list-meta">
+                <div class="meta-item">
+                  <mat-icon>list</mat-icon>
+                  <span>{{ list.itemCount || 0 }} éléments</span>
+                </div>
+
+                <div class="meta-item" *ngIf="list.listType">
+                  <mat-icon>settings</mat-icon>
+                  <span>{{ getListTypeLabel(list.listType) }}</span>
+                </div>
+
+                <div class="meta-item" *ngIf="list.rubrique">
+                  <mat-icon>folder</mat-icon>
+                  <span>{{ list.rubrique }}</span>
+                </div>
+              </div>
+
+              <div class="list-date">
+                <small>Créé le {{ formatDate(list.createdAt!) }}</small>
+              </div>
             </div>
           </div>
-          <h3 class="card-title ">Créer à partir d'un fichier Excel</h3>
-        </div>
-      </div>
 
-      <!-- Accéder à l'ancien éditeur de liste -->
-      <div class="option-card">
-        <div class="card-content">
-          <div class="icon-container legacy-icon">
-            <mat-icon>list_alt</mat-icon>
+          <div class="empty-lists" *ngIf="myLists.length === 0">
+            <mat-icon>inbox</mat-icon>
+            <p>Vous n'avez encore créé aucune liste externe.</p>
+            <p>Commencez par créer votre première liste !</p>
           </div>
-          <h3 class="card-title">Accéder à l'ancien éditeur de liste</h3>
-        </div>
-      </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Aide et conseils -->
+      <mat-card class="help-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>help_outline</mat-icon>
+            Conseils
+          </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="help-item">
+            <h4>Listes statiques</h4>
+            <p>Parfaites pour des données fixes comme une liste de produits ou de services.</p>
+          </div>
+
+          <div class="help-item">
+            <h4>Importation CSV</h4>
+            <p>Formatez votre CSV avec une colonne "Label" et optionnellement "Value".</p>
+          </div>
+
+          <div class="help-item">
+            <h4>Utilisation</h4>
+            <p>Vos listes peuvent être utilisées dans les champs de type "Liste" de vos formulaires.</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
     </div>
   </div>
 </div>

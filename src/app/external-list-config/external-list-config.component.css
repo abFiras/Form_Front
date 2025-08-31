@@ -1,0 +1,141 @@
+/* Dialog Container */
+.config-dialog {
+  width: 100%;
+  max-width: 600px;
+}
+
+.dialog-content {
+  padding: 20px 0;
+  min-height: 400px;
+}
+
+/* Form Styles */
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.config-form ::ng-deep .mat-form-field-infix {
+  padding: 12px 0;
+  border-top: none;
+}
+
+.config-form ::ng-deep .mat-form-field-wrapper {
+  padding-bottom: 0;
+}
+
+/* List Info */
+.list-info {
+  color: #6c757d;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+/* Checkbox Field */
+.checkbox-field {
+  margin: 12px 0;
+}
+
+.checkbox-field ::ng-deep .mat-checkbox-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+}
+
+/* Preview Section */
+.preview-section {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.preview-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.preview-container {
+  background-color: white;
+  padding: 16px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+/* Preview Styles */
+.preview-select {
+  width: 100%;
+}
+
+.preview-select ::ng-deep .mat-form-field {
+  width: 100%;
+}
+
+.preview-radio {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-radio ::ng-deep .mat-radio-button {
+  margin-bottom: 8px;
+}
+
+.preview-checkbox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-checkbox ::ng-deep .mat-checkbox {
+  margin-bottom: 8px;
+}
+
+/* Loading Container */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Dialog Actions */
+.dialog-actions {
+  padding: 16px 0;
+  border-top: 1px solid #e9ecef;
+  margin-top: 20px;
+}
+
+.dialog-actions button {
+  margin-left: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .config-dialog {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+  }
+
+  .preview-section {
+    margin-top: 16px;
+    padding: 12px;
+  }
+
+  .preview-container {
+    padding: 12px;
+  }
+}

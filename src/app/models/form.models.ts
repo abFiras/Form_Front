@@ -23,6 +23,8 @@ export interface FormFieldDTO {
   options?: FieldOptionDTO[]; // ✅ Type correct : tableau d'objets
   validationRules?: ValidationRule;
   attributes?: { [key: string]: string };
+  externalListId?: number; // ID de la liste externe à utiliser
+  externalListDisplayMode?: 'select' | 'radio' | 'checkbox'; // Mode d'affichage
 }
 
 export interface FieldOptionDTO {
@@ -67,7 +69,9 @@ export type FieldType =
   | 'fixed-text'
   | 'image'
   | 'file-fixed'
-  | 'calculation';
+  | 'calculation'
+  | 'external-list'; // ✅ Nouveau type ajouté
+
 
 export interface FormCreateRequest {
   name: string;

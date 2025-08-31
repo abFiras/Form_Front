@@ -42,6 +42,11 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule, MatSpinner } from '@angular/material/progress-spinner';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { LibraryFormDetailComponent } from './library-form-detail/library-form-detail.component';
+import { ListexterneComponent } from './listexterne/listexterne.component';
+import { ExternalListConfigComponent } from './external-list-config/external-list-config.component';
+import { ExternalListModule } from './external-list/external-list.module';
+import { ExternalListFieldComponent } from './external-list-field/external-list-field.component';
+import { ListExterneCardComponent } from './list-externe-card/list-externe-card.component';
 
 @NgModule({
   declarations: [
@@ -61,7 +66,9 @@ import { LibraryFormDetailComponent } from './library-form-detail/library-form-d
     AcceuilComponent,
     CreeListeExterneComponent,
     BibliothequeComponent,
-    LibraryFormDetailComponent
+    LibraryFormDetailComponent,
+    ListExterneCardComponent,
+
   ],
   imports: [
     BrowserModule,
@@ -91,7 +98,9 @@ import { LibraryFormDetailComponent } from './library-form-detail/library-form-d
     MatMenuModule,
     MatChipsModule,
     MatProgressSpinnerModule,
-    MatButtonToggleModule
+    MatButtonToggleModule,
+    ExternalListModule
+
 
 
   ],
