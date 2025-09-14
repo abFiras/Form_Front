@@ -13,6 +13,7 @@ import { BibliothequeComponent } from './bibliotheque/bibliotheque.component';
 import { LibraryFormDetailComponent } from './library-form-detail/library-form-detail.component';
 import { ListexterneComponent } from './listexterne/listexterne.component';
 import { ListExterneCardComponent } from './list-externe-card/list-externe-card.component';
+import { ExternalListDetailComponent } from './external-list-detail/external-list-detail.component';
 
 const routes: Routes = [
   { path: '', component: LandingPageComponent }, // default route
@@ -35,6 +36,9 @@ const routes: Routes = [
 
    { path: 'creelisteexterne', component: CreeListeExterneComponent },
       { path: 'listeexterne', component: ListexterneComponent },
+ { path: 'external-lists/:id', component: ExternalListDetailComponent  }, // Voir détails
+  { path: 'external-lists/:id/edit', component: CreeListeExterneComponent }, // Éditer
+
 
    { path: 'bib', component: BibliothequeComponent },
 { path: 'forms/:id', component: LibraryFormDetailComponent }

@@ -47,6 +47,8 @@ import { ExternalListConfigComponent } from './external-list-config/external-lis
 import { ExternalListModule } from './external-list/external-list.module';
 import { ExternalListFieldComponent } from './external-list-field/external-list-field.component';
 import { ListExterneCardComponent } from './list-externe-card/list-externe-card.component';
+import { MatColumnDef, MatTableModule } from '@angular/material/table';
+import { ExternalListDetailComponent } from './external-list-detail/external-list-detail.component';
 
 @NgModule({
   declarations: [
@@ -68,6 +70,7 @@ import { ListExterneCardComponent } from './list-externe-card/list-externe-card.
     BibliothequeComponent,
     LibraryFormDetailComponent,
     ListExterneCardComponent,
+    ExternalListDetailComponent,
 
   ],
   imports: [
@@ -99,7 +102,8 @@ import { ListExterneCardComponent } from './list-externe-card/list-externe-card.
     MatChipsModule,
     MatProgressSpinnerModule,
     MatButtonToggleModule,
-    ExternalListModule
+    ExternalListModule,
+    MatTableModule
 
 
 

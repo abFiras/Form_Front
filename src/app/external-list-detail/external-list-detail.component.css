@@ -1,0 +1,132 @@
+  .external-list-detail-container {
+      padding: 20px;
+      max-width: 1200px;
+      margin-top: 5vw;
+      margin-left:15vw
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .header-text h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+    }
+
+    .header-text p {
+      margin: 5px 0 0 0;
+      color: #666;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .content-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .info-card, .items-card {
+      margin-bottom: 20px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .info-item strong {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .info-item span {
+      font-size: 16px;
+    }
+
+    .items-table-container {
+      overflow-x: auto;
+    }
+
+    .items-table {
+      width: 100%;
+    }
+
+    .value-code {
+      background-color: #f5f5f5;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+
+    .empty-items {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+
+    .empty-items mat-icon {
+      font-size: 48px;
+      height: 48px;
+      width: 48px;
+      color: #ccc;
+      margin-bottom: 15px;
+    }
+
+    .loading-container, .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .error-container mat-icon {
+      font-size: 64px;
+      height: 64px;
+      width: 64px;
+      color: #f44336;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }

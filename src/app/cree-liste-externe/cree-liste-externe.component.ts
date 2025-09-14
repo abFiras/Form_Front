@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, AbstractControl } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import {
   ExternalListService,
   ExternalListDTO,
@@ -24,14 +24,20 @@ export class CreeListeExterneComponent implements OnInit {
   selectedFile: File | null = null;
   showImportSection = false;
   loading = false;
-  currentUserId: number = 1; // À récupérer depuis le service d'authentification
+  currentUserId: number = 1;
+
+  // Variables pour la gestion de l'édition
+  isEditMode = false;
+  editingListId: number | null = null;
+  currentList: ExternalListDTO | null = null;
 
   constructor(
     private fb: FormBuilder,
     private externalListService: ExternalListService,
     private authService: AuthService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.createListForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -52,9 +58,20 @@ export class CreeListeExterneComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Détecter si on est en mode édition
+    this.route.params.subscribe(params => {
+      if (params['id']) {
+        this.isEditMode = true;
+        this.editingListId = +params['id'];
+        this.loadListForEditing(this.editingListId);
+      } else {
+        this.isEditMode = false;
+        this.addDefaultItems();
+      }
+    });
+
     this.loadMyLists();
     this.loadRubriques();
-    this.addDefaultItems();
 
     // Récupérer l'utilisateur actuel
     this.authService.getCurrentUser().subscribe({
@@ -67,13 +84,62 @@ export class CreeListeExterneComponent implements OnInit {
     });
   }
 
+  // Charger une liste pour édition
+  loadListForEditing(id: number): void {
+    this.loading = true;
+    this.externalListService.getExternalListById(id).subscribe({
+      next: (list) => {
+        this.currentList = list;
+        this.populateFormForEditing(list);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement de la liste:', error);
+        this.snackBar.open('Erreur lors du chargement de la liste', 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        this.loading = false;
+        this.router.navigate(['/creelisteexterne']);
+      }
+    });
+  }
+
+  // Remplir le formulaire avec les données existantes
+  populateFormForEditing(list: ExternalListDTO): void {
+    this.createListForm.patchValue({
+      name: list.name,
+      description: list.description || '',
+      listType: list.listType,
+      rubrique: list.rubrique || '',
+      isAdvanced: list.isAdvanced || false,
+      isFiltered: list.isFiltered || false
+    });
+
+    // Vider le FormArray existant
+    while (this.itemsFormArray.length !== 0) {
+      this.itemsFormArray.removeAt(0);
+    }
+
+    // Ajouter les items existants
+    if (list.items && list.items.length > 0) {
+      list.items.forEach(item => {
+        this.addItem(item.label, item.value);
+      });
+    } else {
+      this.addDefaultItems();
+    }
+  }
+
   get itemsFormArray(): FormArray {
     return this.createListForm.get('items') as FormArray;
   }
 
   addDefaultItems(): void {
-    this.addItem('Option 1', 'option1');
-    this.addItem('Option 2', 'option2');
+    if (!this.isEditMode) {
+      this.addItem('Option 1', 'option1');
+      this.addItem('Option 2', 'option2');
+    }
   }
 
   addItem(label: string = '', value: string = ''): void {
@@ -107,6 +173,7 @@ export class CreeListeExterneComponent implements OnInit {
     }
   }
 
+  // Gérer création ET mise à jour
   createList(): void {
     if (this.createListForm.valid) {
       this.loading = true;
@@ -127,18 +194,36 @@ export class CreeListeExterneComponent implements OnInit {
         }))
       };
 
-      this.externalListService.createExternalList(request, this.currentUserId).subscribe({
+      const operation$ = this.isEditMode
+        ? this.externalListService.updateExternalList(this.editingListId!, request)
+        : this.externalListService.createExternalList(request, this.currentUserId);
+
+      const successMessage = this.isEditMode
+        ? 'Liste externe mise à jour avec succès!'
+        : 'Liste externe créée avec succès!';
+
+      operation$.subscribe({
         next: (list) => {
-          this.snackBar.open('Liste externe créée avec succès!', 'Fermer', {
+          this.snackBar.open(successMessage, 'Fermer', {
             duration: 3000,
             panelClass: ['success-snackbar']
           });
-          this.resetForm();
+
+          if (this.isEditMode) {
+            this.router.navigate(['/listeexterne']);
+          } else {
+            this.resetForm();
+          }
+
           this.loadMyLists();
         },
         error: (error) => {
-          console.error('Erreur lors de la création:', error);
-          this.snackBar.open('Erreur lors de la création de la liste', 'Fermer', {
+          console.error('Erreur lors de l\'opération:', error);
+          const errorMessage = this.isEditMode
+            ? 'Erreur lors de la mise à jour de la liste'
+            : 'Erreur lors de la création de la liste';
+
+          this.snackBar.open(errorMessage, 'Fermer', {
             duration: 3000,
             panelClass: ['error-snackbar']
           });
@@ -211,12 +296,10 @@ export class CreeListeExterneComponent implements OnInit {
   }
 
   editList(id: number): void {
-    // Navigation vers une page d'édition ou ouverture d'un dialog
     this.router.navigate(['/external-lists', id, 'edit']);
   }
 
   viewListDetails(id: number): void {
-    // Afficher les détails de la liste
     this.router.navigate(['/external-lists', id]);
   }
 
@@ -254,8 +337,10 @@ export class CreeListeExterneComponent implements OnInit {
       this.itemsFormArray.removeAt(0);
     }
 
-    // Ajouter les items par défaut
-    this.addDefaultItems();
+    // Ajouter les items par défaut seulement en mode création
+    if (!this.isEditMode) {
+      this.addDefaultItems();
+    }
   }
 
   resetImportForm(): void {
@@ -268,6 +353,15 @@ export class CreeListeExterneComponent implements OnInit {
     this.showImportSection = !this.showImportSection;
     if (!this.showImportSection) {
       this.resetImportForm();
+    }
+  }
+
+  // Méthode pour annuler l'édition
+  cancelEdit(): void {
+    if (this.isEditMode) {
+      this.router.navigate(['/creelisteexterne']);
+    } else {
+      this.resetForm();
     }
   }
 
@@ -290,20 +384,19 @@ export class CreeListeExterneComponent implements OnInit {
     });
   }
 
-getErrorMessage(fieldName: string, formGroup?: AbstractControl): string {
-  const group = (formGroup as FormGroup) || this.createListForm;
-  const control = group.get(fieldName);
+  getErrorMessage(fieldName: string, formGroup?: AbstractControl): string {
+    const group = (formGroup as FormGroup) || this.createListForm;
+    const control = group.get(fieldName);
 
-  if (control?.hasError('required')) {
-    return 'Ce champ est requis';
+    if (control?.hasError('required')) {
+      return 'Ce champ est requis';
+    }
+    if (control?.hasError('minlength')) {
+      return `Minimum ${control.errors?.['minlength'].requiredLength} caractères`;
+    }
+
+    return '';
   }
-  if (control?.hasError('minlength')) {
-    return `Minimum ${control.errors?.['minlength'].requiredLength} caractères`;
-  }
-
-  return '';
-}
-
 
   // Méthodes utilitaires pour le template
   formatDate(dateString: string): string {
@@ -322,5 +415,18 @@ getErrorMessage(fieldName: string, formGroup?: AbstractControl): string {
       case 'DYNAMIC': return 'Dynamique';
       default: return type;
     }
+  }
+
+  // Getter pour le titre de la page
+  get pageTitle(): string {
+    return this.isEditMode ? 'Modifier la liste externe' : 'Nouvelle liste externe';
+  }
+
+  // Getter pour le texte du bouton
+  get submitButtonText(): string {
+    if (this.loading) {
+      return this.isEditMode ? 'Mise à jour...' : 'Création...';
+    }
+    return this.isEditMode ? 'Mettre à jour la liste' : 'Créer la liste';
   }
 }

@@ -57,35 +57,61 @@ export class ExternalListConfigComponent implements OnInit {
     });
   }
 
-  initializeForm(): void {
-    if (this.data.field) {
-      this.configForm.patchValue({
-        label: this.data.field.label,
-        fieldName: this.data.field.fieldName,
-        placeholder: this.data.field.placeholder || '',
-        required: this.data.field.required,
-        externalListId: this.data.field.externalListId?.toString() || '',
-        displayMode: this.data.field.externalListDisplayMode || 'select'
-      });
-    }
-  }
+ initializeForm(): void {
+  if (this.data.field) {
+    // ✅ Récupérer externalListId depuis attributes OU propriétés directes
+    const externalListId = this.data.field.externalListId ||
+                          this.data.field.attributes?.['externalListId'];
 
-  onSave(): void {
-    if (this.configForm.valid) {
-      const formValue = this.configForm.value;
-      const updatedField: FormFieldDTO = {
-        ...this.data.field,
-        label: formValue.label!,
-        fieldName: formValue.fieldName!,
-        placeholder: formValue.placeholder || '',
-        required: !!formValue.required,
-        externalListId: parseInt(formValue.externalListId!),
-        externalListDisplayMode: formValue.displayMode as 'select' | 'radio' | 'checkbox'
-      };
+    const displayMode = this.data.field.externalListDisplayMode ||
+                       this.data.field.attributes?.['externalListDisplayMode'] ||
+                       'select';
 
-      this.dialogRef.close(updatedField);
-    }
+    console.log('Initializing form with:', {
+      externalListId,
+      displayMode,
+      field: this.data.field
+    });
+
+    this.configForm.patchValue({
+      label: this.data.field.label,
+      fieldName: this.data.field.fieldName,
+      placeholder: this.data.field.placeholder || '',
+      required: this.data.field.required,
+      externalListId: externalListId?.toString() || '',
+      displayMode: displayMode
+    });
   }
+}
+
+onSave(): void {
+  if (this.configForm.valid) {
+    const formValue = this.configForm.value;
+
+    // ✅ Créer une copie complète du field avec tous les attributs
+    const updatedField: FormFieldDTO = {
+      ...this.data.field,
+      label: formValue.label!,
+      fieldName: formValue.fieldName!,
+      placeholder: formValue.placeholder || '',
+      required: !!formValue.required,
+
+      // ✅ CORRECTION: Stocker AUSSI dans les attributs pour la persistance
+      attributes: {
+        ...this.data.field.attributes,
+        externalListId: formValue.externalListId!,
+        externalListDisplayMode: formValue.displayMode!
+      },
+
+      // ✅ Propriétés directes pour compatibilité
+      externalListId: parseInt(formValue.externalListId!),
+      externalListDisplayMode: formValue.displayMode as 'select' | 'radio' | 'checkbox'
+    };
+
+    console.log('Saving external list config:', updatedField); // Debug
+    this.dialogRef.close(updatedField);
+  }
+}
 
   onCancel(): void {
     this.dialogRef.close();

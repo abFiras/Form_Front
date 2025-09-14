@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FieldOptionDTO, FieldType, FormCreateRequest, FormDTO, FormFieldDTO, FormUpdateRequest, PaletteField } from '../models/form.models';
+import { FieldOptionDTO, FieldType, FormCreateRequest, FormDTO, FormFieldCreateDTO, FormFieldDTO, FormUpdateRequest, PaletteField } from '../models/form.models';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormService } from '../service/FormService';
@@ -39,6 +39,7 @@ export class FormBuilderComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+
       console.log('IsPreviewMode:', this.isPreviewMode); // Debug
 
     this.route.params.subscribe(params => {
@@ -59,17 +60,20 @@ export class FormBuilderComponent implements OnInit {
   });
   }
 
+
 loadForm(): void {
   if (this.formId) {
     this.formService.getFormById(this.formId).subscribe({
       next: (form) => {
         this.currentForm = form;
 
-        // Normalize options for all fields before using them
+        // Normalize options AND attributes for all fields before using them
         this.formFields = [...form.fields]
           .sort((a, b) => a.order - b.order)
           .map(field => {
-            // Ensure options is always an array
+            console.log('Processing field from server:', field); // Debug
+
+            // ✅ Normaliser les options
             if (field.options) {
               if (typeof field.options === 'string') {
                 try {
@@ -83,13 +87,72 @@ loadForm(): void {
                 field.options = [];
               }
             }
+
+            // ✅ Normaliser les attributs avec gestion spéciale pour external-list
+            if (field.attributes) {
+              if (typeof field.attributes === 'string') {
+                try {
+                  field.attributes = JSON.parse(field.attributes);
+                } catch (e) {
+                  console.error('Error parsing field attributes:', e);
+                  field.attributes = {};
+                }
+              }
+              if (typeof field.attributes !== 'object' || field.attributes === null) {
+                field.attributes = {};
+              }
+            } else {
+              field.attributes = {};
+            }
+
+            // ✅ CORRECTION SPÉCIALE pour external-list
+            if (field.type === 'external-list') {
+              console.log('Processing external-list field:', field);
+              console.log('Field attributes:', field.attributes);
+
+              // Récupérer les valeurs depuis les attributes
+              const externalListId = field.attributes['externalListId'];
+              const displayMode = field.attributes['externalListDisplayMode'] || 'select';
+
+              // Convertir et assigner aux propriétés du field
+              if (externalListId) {
+                field.externalListId = parseInt(externalListId.toString());
+              }
+              field.externalListDisplayMode = displayMode;
+
+              // Autres propriétés optionnelles
+              field.externalListUrl = field.attributes['externalListUrl'] || '';
+              field.externalListParams = field.attributes['externalListParams'] || {};
+
+              console.log('External-list field after processing:', {
+                externalListId: field.externalListId,
+                displayMode: field.externalListDisplayMode,
+                url: field.externalListUrl,
+                params: field.externalListParams
+              });
+            }
+
+            // ✅ Autres types de champs avec attributs spéciaux
+            else if (field.type === 'calculation') {
+              // Pas de changement nécessaire
+            }
+            else if (field.type === 'image') {
+              // Pas de changement nécessaire
+            }
+            else if (field.type === 'table') {
+              // Pas de changement nécessaire
+            }
+
             return field;
           });
+
+        console.log('All processed fields:', this.formFields); // Debug
 
         this.formSettingsForm.patchValue({
           name: form.name,
           description: form.description
         });
+
         this.rebuildPreviewForm();
       },
       error: (error) => {
@@ -160,33 +223,114 @@ onFormNameChange(event: Event): void {
   this.formSettingsForm.get('name')?.setValue(target.value);
 }
 
-  createFieldFromPalette(paletteField: PaletteField): FormFieldDTO {
-    const timestamp = Date.now();
-    const fieldName = `field_${timestamp}`;
+// ✅ Méthode corrigée dans form-builder.component.ts
+// ✅ Méthode createFieldFromPalette() corrigée avec notation entre crochets
 
-    const baseField: FormFieldDTO = {
-      type: paletteField.type,
-      label: paletteField.label,
-      fieldName,
-      placeholder: `Enter ${paletteField.label.toLowerCase()}...`,
-      required: false,
-      order: this.formFields.length
-    };
+createFieldFromPalette(paletteField: PaletteField): FormFieldDTO {
+  const timestamp = Date.now();
+  const fieldName = `field_${timestamp}`;
 
-    // Add default options for fields that need them
-    if (this.hasOptions(paletteField.type)) {
+  const baseField: FormFieldDTO = {
+    type: paletteField.type,
+    label: paletteField.label,
+    fieldName,
+    placeholder: `Enter ${paletteField.label.toLowerCase()}...`,
+    required: false,
+    order: this.formFields.length,
+    attributes: {} // ✅ Initialiser les attributs
+  };
+
+  // Configuration spécifique selon le type de champ
+  switch (paletteField.type) {
+    case 'external-list':
+      // ✅ Configuration par défaut pour external-list avec notation correcte
+      baseField.placeholder = 'Sélectionnez une valeur...';
+      baseField.attributes = {};
+      baseField.attributes['externalListId'] = null;
+      baseField.attributes['externalListDisplayMode'] = 'select';
+      baseField.attributes['externalListUrl'] = '';
+      baseField.attributes['externalListParams'] = {};
+
+      // Programmer l'ouverture du dialog après l'ajout du champ
+      setTimeout(() => {
+        this.openExternalListConfig(baseField);
+      }, 100);
+      break;
+
+    case 'select':
+    case 'radio':
+    case 'checkbox':
       baseField.options = [
         { label: 'Option 1', value: 'option1' },
         { label: 'Option 2', value: 'option2' }
       ];
-    }
- if (paletteField.type === 'external-list') {
-    // Ouvrir immédiatement le dialog de configuration
-    this.openExternalListConfig(baseField);
-    return baseField;
+      break;
+
+    case 'calculation':
+      baseField.placeholder = 'Résultat calculé automatiquement';
+      baseField.attributes = {};
+      baseField.attributes['formula'] = '';
+      break;
+
+    case 'signature':
+      baseField.placeholder = 'Signature électronique';
+      baseField.attributes = {};
+      baseField.attributes['signatureType'] = 'canvas';
+      break;
+
+    case 'image':
+      baseField.placeholder = 'Image fixe';
+      baseField.attributes = {};
+      baseField.attributes['imageUrl'] = '';
+      baseField.attributes['imageAlt'] = baseField.label;
+      baseField.attributes['imageWidth'] = 'auto';
+      baseField.attributes['imageHeight'] = 'auto';
+      break;
+
+    case 'table':
+      baseField.placeholder = 'Tableau de données';
+      baseField.attributes = {};
+      baseField.attributes['columns'] = JSON.stringify(['Colonne 1', 'Colonne 2']);
+      baseField.attributes['rows'] = JSON.stringify([
+        { 'Colonne 1': '', 'Colonne 2': '' },
+        { 'Colonne 1': '', 'Colonne 2': '' }
+      ]);
+      break;
+
+    case 'fixed-text':
+      baseField.placeholder = 'Texte fixe à afficher';
+      baseField.attributes = {};
+      baseField.attributes['content'] = 'Texte à configurer...';
+      break;
+
+    case 'file-fixed':
+      baseField.placeholder = 'Fichier fixe à télécharger';
+      baseField.attributes = {};
+      baseField.attributes['fileUrl'] = '';
+      baseField.attributes['fileName'] = '';
+      baseField.attributes['fileType'] = '';
+      break;
+
+    case 'drawing':
+      baseField.placeholder = 'Zone de dessin';
+      baseField.attributes = {};
+      baseField.attributes['canvasWidth'] = '400';
+      baseField.attributes['canvasHeight'] = '200';
+      break;
+
+    case 'schema':
+      baseField.placeholder = 'Définissez votre schéma...';
+      baseField.attributes = {};
+      baseField.attributes['schemaType'] = 'json';
+      break;
+
+    default:
+      // Autres types de champs - configuration par défaut
+      break;
   }
-    return baseField;
-  }
+
+  return baseField;
+}
   // ✅ Nouvelle méthode pour ouvrir la configuration des listes externes
 openExternalListConfig(field: FormFieldDTO): void {
   const dialogRef = this.dialog.open(ExternalListConfigComponent, {
@@ -251,6 +395,10 @@ openExternalListConfig(field: FormFieldDTO): void {
   }
 // ✅ FormBuilder Component - saveForm() method corrigé
 
+// ✅ Méthode saveForm() corrigée dans form-builder.component.ts
+
+// ✅ Méthode saveForm() corrigée dans form-builder.component.ts
+
 saveForm(): void {
   if (!this.formSettingsForm.valid) {
     this.snackBar.open('Veuillez remplir tous les champs obligatoires', 'Fermer', { duration: 3000 });
@@ -266,14 +414,16 @@ saveForm(): void {
         throw new Error('Invalid user ID');
       }
 
-      // Préparer les données du formulaire avec options nettoyées
+      // ✅ Préparer les données du formulaire avec gestion complète des attributs
       const formData: FormCreateRequest | FormUpdateRequest = {
         name: this.formSettingsForm.value.name!,
         description: this.formSettingsForm.value.description || '',
         userId: numericUserId,
         fields: this.formFields.map(f => {
-          let cleanOptions: FieldOptionDTO[] | undefined = undefined;
+          console.log('Processing field for save:', f); // Debug log
 
+          // Nettoyage des options
+          let cleanOptions: FieldOptionDTO[] | undefined = undefined;
           if (f.options && Array.isArray(f.options) && f.options.length > 0) {
             cleanOptions = f.options
               .filter(opt => opt && opt.label && opt.label.trim() && opt.value && opt.value.trim())
@@ -287,23 +437,75 @@ saveForm(): void {
             }
           }
 
-          return {
+          // ✅ Préparation complète des attributs
+          let cleanAttributes: { [key: string]: any } | undefined = undefined;
+          if (f.attributes && Object.keys(f.attributes).length > 0) {
+            cleanAttributes = { ...f.attributes };
+          }
+
+          // ✅ Traitement spécialisé pour external-list
+          if (f.type === 'external-list') {
+            // Construire les attributs spécifiques
+            if (!cleanAttributes) cleanAttributes = {};
+
+            // Priorité aux propriétés directes, sinon utiliser les attributs existants
+            cleanAttributes['externalListId'] = f.externalListId?.toString() ||
+                                               f.attributes?.['externalListId'] ||
+                                               cleanAttributes['externalListId'];
+
+            cleanAttributes['externalListDisplayMode'] = f.externalListDisplayMode ||
+                                                        f.attributes?.['externalListDisplayMode'] ||
+                                                        'select';
+
+            cleanAttributes['externalListUrl'] = f.externalListUrl ||
+                                                f.attributes?.['externalListUrl'] || '';
+
+            cleanAttributes['externalListParams'] = f.externalListParams ||
+                                                   f.attributes?.['externalListParams'] || {};
+
+            console.log('External list attributes for save:', cleanAttributes); // Debug log
+          }
+
+          // ✅ Autres types de champs avec attributs spéciaux
+          else if (f.type === 'calculation' && f.attributes?.['formula']) {
+            if (!cleanAttributes) cleanAttributes = {};
+            cleanAttributes['formula'] = f.attributes['formula'];
+          }
+          else if (f.type === 'image' && (f.attributes?.['imageUrl'] || f.attributes?.['imageAlt'])) {
+            if (!cleanAttributes) cleanAttributes = {};
+            if (f.attributes['imageUrl']) cleanAttributes['imageUrl'] = f.attributes['imageUrl'];
+            if (f.attributes['imageAlt']) cleanAttributes['imageAlt'] = f.attributes['imageAlt'];
+          }
+          else if (f.type === 'table' && (f.attributes?.['columns'] || f.attributes?.['rows'])) {
+            if (!cleanAttributes) cleanAttributes = {};
+            if (f.attributes['columns']) cleanAttributes['columns'] = f.attributes['columns'];
+            if (f.attributes['rows']) cleanAttributes['rows'] = f.attributes['rows'];
+          }
+
+          // Construire l'objet field final
+          const fieldData: FormFieldCreateDTO = {
             type: f.type,
             label: f.label,
             fieldName: f.fieldName || `field_${Date.now()}`,
             placeholder: f.placeholder,
             required: !!f.required,
             order: Number(f.order) || 0,
-            options: cleanOptions
+            options: cleanOptions,
+            attributes: cleanAttributes
           };
+
+          console.log('Final field data for save:', fieldData); // Debug log
+          return fieldData;
         })
       };
+
+      console.log('Complete form data for save:', formData); // Debug log
 
       // Si formId existe => update, sinon create
       if (this.formId) {
         const updatePayload: FormUpdateRequest = {
           ...formData,
-          status: this.currentForm?.status || 'DRAFT' // ou garder l'ancien status
+          status: this.currentForm?.status || 'DRAFT'
         };
         return this.formService.updateForm(this.formId, updatePayload);
       } else {
@@ -314,6 +516,8 @@ saveForm(): void {
     next: (form) => {
       const message = this.formId ? 'Formulaire mis à jour avec succès' : 'Formulaire créé avec succès';
       this.snackBar.open(message, 'Fermer', { duration: 3000 });
+
+      console.log('Form saved successfully:', form); // Debug log
 
       // Mettre à jour l'état local et redirection si nécessaire
       this.currentForm = form;

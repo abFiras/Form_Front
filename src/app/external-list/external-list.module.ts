@@ -30,7 +30,8 @@ import { ExternalListFieldComponent } from '../external-list-field/external-list
   declarations: [
     ListexterneComponent,
     ExternalListConfigComponent,
-    ExternalListFieldComponent  // ✅ Ajout du composant manquant
+    ExternalListFieldComponent  ,
+    
   ],
   imports: [
     CommonModule,

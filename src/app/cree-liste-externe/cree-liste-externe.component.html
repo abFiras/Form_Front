@@ -7,31 +7,45 @@
         <mat-icon>arrow_back</mat-icon>
       </button>
       <div class="header-text">
-        <h1>Mes listes externes</h1>
-        <p>Créez et gérez vos listes de données pour vos formulaires</p>
+        <!-- ✅ MODIFIÉ: Titre dynamique selon le mode -->
+        <h1>{{ isEditMode ? 'Modifier la liste externe' : 'Mes listes externes' }}</h1>
+        <p>{{ isEditMode ? 'Modifiez les informations de votre liste externe' : 'Créez et gérez vos listes de données pour vos formulaires' }}</p>
       </div>
     </div>
 
     <div class="header-actions">
-      <button mat-raised-button color="primary" (click)="toggleImportSection()" [disabled]="loading">
+      <!-- ✅ MODIFIÉ: Masquer le bouton import en mode édition -->
+      <button mat-raised-button color="primary"
+              (click)="toggleImportSection()"
+              [disabled]="loading"
+              *ngIf="!isEditMode">
         <mat-icon>upload_file</mat-icon>
         Importer CSV
+      </button>
+
+      <!-- ✅ NOUVEAU: Bouton annuler en mode édition -->
+      <button mat-raised-button
+              (click)="cancelEdit()"
+              *ngIf="isEditMode">
+        <mat-icon>cancel</mat-icon>
+        Annuler
       </button>
     </div>
   </div>
 
   <div class="content-layout">
-    <!-- Section principale - Création de liste -->
+    <!-- Section principale - Création/Modification de liste -->
     <div class="main-content">
       <mat-card class="create-list-card">
         <mat-card-header>
           <div class="card-header-content">
             <mat-card-title>
-              <mat-icon>add_circle_outline</mat-icon>
-              Nouvelle liste externe
+              <!-- ✅ MODIFIÉ: Icône et titre dynamiques -->
+              <mat-icon>{{ isEditMode ? 'edit' : 'add_circle_outline' }}</mat-icon>
+              {{ pageTitle }}
             </mat-card-title>
             <mat-card-subtitle>
-              Créez une liste d'éléments réutilisables dans vos formulaires
+              {{ isEditMode ? 'Modifiez les informations et éléments de votre liste' : 'Créez une liste d\'éléments réutilisables dans vos formulaires' }}
             </mat-card-subtitle>
           </div>
         </mat-card-header>
@@ -126,100 +140,16 @@
 
             <!-- Actions -->
             <div class="form-actions">
-              <button mat-raised-button type="button" (click)="resetForm()">
-                Réinitialiser
+              <!-- ✅ MODIFIÉ: Bouton annuler dynamique -->
+              <button mat-raised-button type="button" (click)="isEditMode ? cancelEdit() : resetForm()">
+                {{ isEditMode ? 'Annuler' : 'Réinitialiser' }}
               </button>
+
+              <!-- ✅ MODIFIÉ: Texte du bouton dynamique -->
               <button mat-raised-button type="submit" color="primary" [disabled]="!createListForm.valid || loading">
                 <mat-icon *ngIf="loading">hourglass_empty</mat-icon>
-                <mat-icon *ngIf="!loading">save</mat-icon>
-                {{ loading ? 'Création...' : 'Créer la liste' }}
-              </button>
-            </div>
-          </form>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Section d'importation CSV -->
-      <mat-card class="import-card" *ngIf="showImportSection">
-        <mat-card-header>
-          <div class="card-header-content">
-            <mat-card-title>
-              <mat-icon>upload_file</mat-icon>
-              Importer depuis un fichier CSV
-            </mat-card-title>
-            <mat-card-subtitle>
-              Importez rapidement une liste depuis un fichier CSV
-            </mat-card-subtitle>
-          </div>
-          <button mat-icon-button (click)="toggleImportSection()" matTooltip="Fermer">
-            <mat-icon>close</mat-icon>
-          </button>
-        </mat-card-header>
-
-        <mat-card-content>
-          <form [formGroup]="importForm" (ngSubmit)="importList()">
-            <div class="import-instructions">
-              <mat-icon>info</mat-icon>
-              <div>
-                <p><strong>Format attendu :</strong> Fichier CSV avec au minimum une colonne "Label"</p>
-                <p>Colonnes acceptées : Label, Value (optionnel), données supplémentaires</p>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <mat-form-field appearance="outline" class="half-width">
-                <mat-label>Nom de la liste</mat-label>
-                <input matInput formControlName="name" placeholder="Nom de votre liste">
-                <mat-error>{{ getErrorMessage('name', importForm) }}</mat-error>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="half-width">
-                <mat-label>Rubrique</mat-label>
-                <mat-select formControlName="rubrique">
-                  <mat-option value="">Aucune rubrique</mat-option>
-                  <mat-option *ngFor="let rubrique of rubriques" [value]="rubrique">
-                    {{ rubrique }}
-                  </mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-
-            <div class="form-row">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Description</mat-label>
-                <textarea matInput formControlName="description" rows="2"></textarea>
-              </mat-form-field>
-            </div>
-
-            <div class="file-upload-section">
-              <div class="file-input-wrapper">
-                <input type="file"
-                       accept=".csv"
-                       (change)="onFileSelected($event)"
-                       #fileInput
-                       class="file-input">
-
-                <button mat-raised-button type="button" (click)="fileInput.click()" class="file-select-btn">
-                  <mat-icon>attach_file</mat-icon>
-                  Sélectionner un fichier CSV
-                </button>
-
-                <div class="file-info" *ngIf="selectedFile">
-                  <mat-icon>description</mat-icon>
-                  <span>{{ selectedFile.name }} ({{ (selectedFile.size / 1024).toFixed(2) }} KB)</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="import-actions">
-              <button mat-raised-button type="button" (click)="toggleImportSection()">
-                Annuler
-              </button>
-              <button mat-raised-button type="submit" color="primary"
-                      [disabled]="!importForm.valid || !selectedFile || loading">
-                <mat-icon *ngIf="loading">hourglass_empty</mat-icon>
-                <mat-icon *ngIf="!loading">cloud_upload</mat-icon>
-                {{ loading ? 'Importation...' : 'Importer' }}
+                <mat-icon *ngIf="!loading">{{ isEditMode ? 'save' : 'save' }}</mat-icon>
+                {{ submitButtonText }}
               </button>
             </div>
           </form>
@@ -227,8 +157,8 @@
       </mat-card>
     </div>
 
-    <!-- Sidebar - Mes listes existantes -->
-    <div class="sidebar">
+    <!-- Sidebar - Mes listes existantes (masquée en mode édition) -->
+    <div class="sidebar" *ngIf="!isEditMode">
       <mat-card class="my-lists-card">
         <mat-card-header>
           <mat-card-title>Mes listes ({{ myLists.length }})</mat-card-title>
@@ -321,5 +251,168 @@
         </mat-card-content>
       </mat-card>
     </div>
+
+    <!-- ✅ NOUVEAU: Sidebar d'informations en mode édition -->
+    <div class="sidebar" *ngIf="isEditMode && currentList">
+      <mat-card class="edit-info-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>info</mat-icon>
+            Informations de la liste
+          </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="info-item">
+            <strong>Nom actuel :</strong>
+            <p>{{ currentList.name }}</p>
+          </div>
+
+          <div class="info-item" *ngIf="currentList.description">
+            <strong>Description :</strong>
+            <p>{{ currentList.description }}</p>
+          </div>
+
+          <div class="info-item">
+            <strong>Type :</strong>
+            <p>{{ getListTypeLabel(currentList.listType!) }}</p>
+          </div>
+
+          <div class="info-item" *ngIf="currentList.rubrique">
+            <strong>Rubrique :</strong>
+            <p>{{ currentList.rubrique }}</p>
+          </div>
+
+          <div class="info-item">
+            <strong>Nombre d'éléments :</strong>
+            <p>{{ currentList.itemCount || 0 }} éléments</p>
+          </div>
+
+          <div class="info-item" *ngIf="currentList.createdAt">
+            <strong>Créée le :</strong>
+            <p>{{ formatDate(currentList.createdAt) }}</p>
+          </div>
+
+          <div class="info-item" *ngIf="currentList.updatedAt">
+            <strong>Dernière modification :</strong>
+            <p>{{ formatDate(currentList.updatedAt) }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Aide pour l'édition -->
+      <mat-card class="edit-help-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>help_outline</mat-icon>
+            Aide à l'édition
+          </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="help-item">
+            <h4>Modification des éléments</h4>
+            <p>Vous pouvez ajouter, modifier ou supprimer des éléments de votre liste.</p>
+          </div>
+
+          <div class="help-item">
+            <h4>Attention</h4>
+            <p>Si cette liste est utilisée dans des formulaires existants, les modifications peuvent affecter ces formulaires.</p>
+          </div>
+
+          <div class="help-item">
+            <h4>Sauvegarde</h4>
+            <p>N'oubliez pas de cliquer sur "Mettre à jour la liste" pour enregistrer vos modifications.</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
   </div>
 </div>
+
+      <!-- Section d'importation CSV - masquée en mode édition -->
+      <mat-card class="import-card" *ngIf="showImportSection && !isEditMode">
+        <mat-card-header>
+          <div class="card-header-content">
+            <mat-card-title>
+              <mat-icon>upload_file</mat-icon>
+              Importer depuis un fichier CSV
+            </mat-card-title>
+            <mat-card-subtitle>
+              Importez rapidement une liste depuis un fichier CSV
+            </mat-card-subtitle>
+          </div>
+          <button mat-icon-button (click)="toggleImportSection()" matTooltip="Fermer">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-card-header>
+
+        <mat-card-content>
+          <form [formGroup]="importForm" (ngSubmit)="importList()">
+            <div class="import-instructions">
+              <mat-icon>info</mat-icon>
+              <div>
+                <p><strong>Format attendu :</strong> Fichier CSV avec au minimum une colonne "Label"</p>
+                <p>Colonnes acceptées : Label, Value (optionnel), données supplémentaires</p>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Nom de la liste</mat-label>
+                <input matInput formControlName="name" placeholder="Nom de votre liste">
+                <mat-error>{{ getErrorMessage('name', importForm) }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Rubrique</mat-label>
+                <mat-select formControlName="rubrique">
+                  <mat-option value="">Aucune rubrique</mat-option>
+                  <mat-option *ngFor="let rubrique of rubriques" [value]="rubrique">
+                    {{ rubrique }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Description</mat-label>
+                <textarea matInput formControlName="description" rows="2"></textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="file-upload-section">
+              <div class="file-input-wrapper">
+                <input type="file"
+                       accept=".csv"
+                       (change)="onFileSelected($event)"
+                       #fileInput
+                       class="file-input">
+
+                <button mat-raised-button type="button" (click)="fileInput.click()" class="file-select-btn">
+                  <mat-icon>attach_file</mat-icon>
+                  Sélectionner un fichier CSV
+                </button>
+
+                <div class="file-info" *ngIf="selectedFile">
+                  <mat-icon>description</mat-icon>
+                  <span>{{ selectedFile.name }} ({{ (selectedFile.size / 1024).toFixed(2) }} KB)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="import-actions">
+              <button mat-raised-button type="button" (click)="toggleImportSection()">
+                Annuler
+              </button>
+              <button mat-raised-button type="submit" color="primary"
+                      [disabled]="!importForm.valid || !selectedFile || loading">
+                <mat-icon *ngIf="loading">hourglass_empty</mat-icon>
+                <mat-icon *ngIf="!loading">cloud_upload</mat-icon>
+                {{ loading ? 'Importation...' : 'Importer' }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>

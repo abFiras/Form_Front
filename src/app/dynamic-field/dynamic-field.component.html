@@ -14,10 +14,80 @@
 
       <mat-checkbox formControlName="required">Required</mat-checkbox>
 
+      <!-- Options pour les champs avec choix -->
       <mat-form-field appearance="outline" *ngIf="hasOptions()">
         <mat-label>Options (one per line, format: label:value)</mat-label>
         <textarea matInput formControlName="options" rows="4"></textarea>
       </mat-form-field>
+
+      <!-- Configuration spéciale pour le calcul -->
+      <mat-form-field appearance="outline" *ngIf="field.type === 'calculation'">
+        <mat-label>Formule de calcul</mat-label>
+        <input matInput formControlName="calculationFormula"
+               placeholder="Ex: field_123 + field_456">
+        <mat-hint>Utilisez les noms des champs (field_xxx) pour référencer d'autres champs numériques</mat-hint>
+      </mat-form-field>
+
+      <!-- Configuration spéciale pour l'image -->
+      <div *ngIf="field.type === 'image'">
+        <mat-form-field appearance="outline">
+          <mat-label>URL de l'image</mat-label>
+          <input matInput formControlName="imageUrl"
+                 placeholder="https://example.com/image.jpg">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Texte alternatif</mat-label>
+          <input matInput formControlName="imageAlt"
+                 placeholder="Description de l'image">
+        </mat-form-field>
+
+      <!-- REMPLACEZ la section file upload d'image dans le field-editor par ceci : -->
+<div class="file-upload-section">
+  <button mat-raised-button type="button" (click)="triggerImageUpload()">
+    <mat-icon>upload</mat-icon>
+    Télécharger une image
+  </button>
+  <input #imageUpload
+         type="file"
+         accept="image/*"
+         (change)="uploadImage($event)"
+         style="display: none;">
+</div>
+      </div>
+
+      <!-- Configuration spéciale pour le tableau -->
+      <mat-form-field appearance="outline" *ngIf="field.type === 'table'">
+        <mat-label>Colonnes (séparées par des virgules)</mat-label>
+        <input matInput formControlName="tableColumns"
+               placeholder="Nom, Email, Téléphone">
+        <mat-hint>Les lignes peuvent être ajoutées/supprimées dans la vue du champ</mat-hint>
+      </mat-form-field>
+
+      <!-- Configuration pour texte fixe -->
+      <mat-form-field appearance="outline" *ngIf="field.type === 'fixed-text'">
+        <mat-label>Contenu du texte</mat-label>
+        <textarea matInput formControlName="fixedText" rows="3"
+                  placeholder="Saisissez le texte à afficher"></textarea>
+      </mat-form-field>
+
+      <!-- Configuration pour fichier fixe -->
+      <div *ngIf="field.type === 'file-fixed'">
+        <mat-form-field appearance="outline">
+          <mat-label>Nom du fichier</mat-label>
+          <input matInput formControlName="fileName"
+                 placeholder="Document.pdf">
+        </mat-form-field>
+
+        <div class="file-upload-section">
+          <button mat-raised-button type="button" onclick="document.getElementById('fixedFileUpload').click()">
+            <mat-icon>upload</mat-icon>
+            Télécharger un fichier
+          </button>
+          <input type="file" id="fixedFileUpload"
+                 (change)="uploadFixedFile($event)" style="display: none;">
+        </div>
+      </div>
 
       <div class="editor-actions">
         <button mat-button (click)="saveChanges()" type="button">Save</button>
@@ -27,7 +97,7 @@
   </div>
 
   <!-- Field Display -->
-  <div class="field-display" *ngIf="!editMode"  [formGroup]="formGroup">
+  <div class="field-display" *ngIf="!editMode" [formGroup]="formGroup">
     <div class="field-controls" *ngIf="!isPreview">
       <button mat-icon-button (click)="toggleEdit()" class="edit-btn">
         <mat-icon>edit</mat-icon>
@@ -92,38 +162,148 @@
     </mat-form-field>
 
     <!-- Date -->
-    <mat-form-field appearance="outline" *ngIf="field.type === 'date'" class="full-width">
-      <mat-label>{{field.label}}</mat-label>
+<!-- ✅ DATE CORRIGÉE - Remplacez la section Date dans le template -->
+<mat-form-field appearance="outline" *ngIf="field.type === 'date'" class="full-width">
+  <mat-label>{{field.label}}</mat-label>
+  <input matInput
+         [matDatepicker]="datePicker"
+         [placeholder]="field.placeholder || 'jj/mm/aaaa'"
+         [formControlName]="field.fieldName"
+         [required]="field.required"
+         (dateInput)="onDateChange($event)"
+         (dateChange)="onDateChange($event)">
+  <mat-hint>Cliquez sur l'icône pour le calendrier ou saisissez directement</mat-hint>
+  <mat-datepicker-toggle matSuffix [for]="datePicker">
+    <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
+  </mat-datepicker-toggle>
+  <mat-datepicker #datePicker
+                  [touchUi]="isMobile()"
+                  [startView]="'month'"
+                  >
+  </mat-datepicker>
+  <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+    {{field.label}} est requis
+  </mat-error>
+  <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('matDatepickerParse')">
+    Format de date invalide
+  </mat-error>
+</mat-form-field>
+
+<!-- ✅ DATETIME CORRIGÉE - Remplacez la section DateTime dans le template -->
+<div *ngIf="field.type === 'datetime'" class="datetime-field">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>{{field.label}} - Date</mat-label>
+    <input matInput
+           [matDatepicker]="dateTimePicker"
+           [placeholder]="'Sélectionnez une date'"
+           [formControlName]="field.fieldName + '_date'"
+           [required]="field.required"
+           (dateInput)="onDateTimeChange()"
+           (dateChange)="onDateTimeChange()">
+    <mat-datepicker-toggle matSuffix [for]="dateTimePicker">
+      <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
+    </mat-datepicker-toggle>
+    <mat-datepicker #dateTimePicker
+                    [touchUi]="isMobile()"
+                    [startView]="'month'">
+    </mat-datepicker>
+  </mat-form-field>
+
+  <div class="datetime-time-section">
+    <mat-form-field appearance="outline">
+      <mat-label>Heure</mat-label>
       <input matInput
-             [matDatepicker]="picker"
-             [formControlName]="field.fieldName"
-             [required]="field.required">
-      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-datepicker #picker></mat-datepicker>
-      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
-        {{field.label}} is required
-      </mat-error>
+             type="time"
+             [placeholder]="'HH:mm'"
+             [formControlName]="field.fieldName + '_time'"
+             [required]="field.required"
+             (input)="onDateTimeChange()">
+      <mat-icon matSuffix>access_time</mat-icon>
     </mat-form-field>
 
-    <!-- DateTime -->
-    <mat-form-field appearance="outline" *ngIf="field.type === 'datetime'" class="full-width">
-      <mat-label>{{field.label}}</mat-label>
+    <mat-form-field appearance="outline">
+      <mat-label>Saisie manuelle complète</mat-label>
       <input matInput
              type="datetime-local"
-             [placeholder]="field.placeholder || ''"
+             [placeholder]="field.placeholder || 'jj/mm/aaaa HH:mm'"
              [formControlName]="field.fieldName"
-             [required]="field.required">
+             [required]="field.required"
+             (input)="onManualDateTimeChange($event)">
+      <mat-icon matSuffix>edit</mat-icon>
+      <mat-hint>Format: AAAA-MM-JJTHH:mm</mat-hint>
+    </mat-form-field>
+  </div>
+
+  <div class="datetime-preview" *ngIf="getDateTimePreview()">
+    <mat-icon>info</mat-icon>
+    <span>Aperçu: {{getDateTimePreview()}}</span>
+  </div>
+
+  <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+    {{field.label}} est requis
+  </mat-error>
+  <mat-error *ngIf="hasDateTimeError()">
+    Format de date/heure invalide
+  </mat-error>
+</div>
+
+    <!-- Select -->
+    <mat-form-field appearance="outline" *ngIf="field.type === 'select'" class="full-width">
+      <mat-label>{{field.label}}</mat-label>
+      <mat-select [formControlName]="field.fieldName" [required]="field.required">
+        <mat-option *ngFor="let option of safeOptions" [value]="option.value">
+          {{option.label}}
+        </mat-option>
+      </mat-select>
       <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
         {{field.label}} is required
       </mat-error>
     </mat-form-field>
 
-    <!-- Slider -->
+    <!-- Radio -->
+    <div *ngIf="field.type === 'radio'" class="radio-group">
+      <label class="field-label">{{field.label}}</label>
+      <mat-radio-group [formControlName]="field.fieldName" [required]="field.required">
+        <mat-radio-button *ngFor="let option of safeOptions" [value]="option.value">
+          {{option.label}}
+        </mat-radio-button>
+      </mat-radio-group>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
+    </div>
+
+    <!-- Checkbox -->
+    <div *ngIf="field.type === 'checkbox'" class="checkbox-group">
+      <label class="field-label">{{field.label}}</label>
+      <div *ngFor="let option of safeOptions">
+        <mat-checkbox [value]="option.value">
+          {{option.label}}
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <!-- File Upload -->
+    <div *ngIf="field.type === 'file'" class="file-upload">
+      <label class="field-label">{{field.label}}</label>
+      <input type="file"
+             [formControlName]="field.fieldName"
+             [required]="field.required"
+             class="file-input">
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
+    </div>
+
+    <!-- ✅ SLIDER CORRIGÉ -->
     <div *ngIf="field.type === 'slider'" class="slider-field">
       <label class="field-label">{{field.label}}</label>
-      <mat-slider min="0" max="100" step="1" discrete>
+      <mat-slider min="0" max="100" step="1" discrete class="full-width">
         <input matSliderThumb [formControlName]="field.fieldName" [required]="field.required">
       </mat-slider>
+      <div class="slider-value">
+        Valeur: {{formGroup.get(field.fieldName)?.value || 0}}
+      </div>
       <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
         {{field.label}} is required
       </mat-error>
@@ -138,7 +318,8 @@
                [formControlName]="field.fieldName"
                [required]="field.required"
                readonly>
-        <button mat-icon-button matSuffix type="button" (click)="getLocation()">
+        <button mat-icon-button matSuffix type="button" (click)="getLocation()"
+                matTooltip="Obtenir ma position">
           <mat-icon>my_location</mat-icon>
         </button>
       </mat-form-field>
@@ -146,38 +327,35 @@
         {{field.label}} is required
       </mat-error>
     </div>
-<!-- Ajoutez cette section dans votre dynamic-field.component.html existant -->
 
-<!-- Remplacez votre bloc externe par ceci -->
-<!-- External List Field - Utiliser *ngIf au lieu de *ngSwitchCase -->
-<div *ngIf="field.type === 'external-list'" class="field-wrapper">
-  <app-external-list-field
-    [label]="field.label"
-    [placeholder]="field.placeholder || 'Sélectionnez une valeur...'"
-    [required]="field.required"
-    [disabled]="isPreview ? false : false"
-    [externalListId]="field.externalListId"
-    [displayMode]="field.externalListDisplayMode || 'select'"
-    [formControl]="getFormControl()">
-  </app-external-list-field>
+    <!-- ✅ EXTERNAL LIST FIELD CORRIGÉ -->
+    <div *ngIf="field.type === 'external-list'" class="field-wrapper">
+      <app-external-list-field
+        [label]="field.label"
+        [placeholder]="field.placeholder || 'Sélectionnez une valeur...'"
+        [required]="field.required"
+        [externalListId]="field.externalListId"
+        [displayMode]="field.externalListDisplayMode || 'select'"
+        [formControl]="getFormControl()">
+      </app-external-list-field>
 
-  <!-- Configuration button (only in builder mode) -->
-  <div *ngIf="!isPreview" class="field-config">
-    <button mat-icon-button
-            (click)="onConfigureExternalList()"
-            class="config-btn"
-            matTooltip="Configurer la liste externe">
-      <mat-icon>settings</mat-icon>
-    </button>
+      <div *ngIf="!isPreview" class="field-config">
+        <button mat-icon-button
+                (click)="onConfigureExternalList()"
+                class="config-btn"
+                matTooltip="Configurer la liste externe">
+          <mat-icon>settings</mat-icon>
+        </button>
 
-    <div class="external-list-info" *ngIf="field.externalListId">
-      <span class="info-label">Liste:</span>
-      <span class="info-value">ID {{ field.externalListId }}</span>
-      <span class="info-separator">|</span>
-      <span class="info-value">Mode: {{ field.externalListDisplayMode }}</span>
+        <div class="external-list-info" *ngIf="field.externalListId">
+          <span class="info-label">Liste:</span>
+          <span class="info-value">ID {{ field.externalListId }}</span>
+          <span class="info-separator">|</span>
+          <span class="info-value">Mode: {{ field.externalListDisplayMode }}</span>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+
     <!-- Contact -->
     <div *ngIf="field.type === 'contact'" class="contact-field">
       <mat-form-field appearance="outline" class="full-width">
@@ -232,20 +410,60 @@
     <div *ngIf="field.type === 'audio'" class="audio-field">
       <label class="field-label">{{field.label}}</label>
       <div class="audio-controls">
-        <button mat-raised-button type="button">
+        <button mat-raised-button type="button" color="primary">
           <mat-icon>mic</mat-icon>
           Enregistrer
         </button>
         <span *ngIf="field.required" class="required-indicator">*</span>
       </div>
+      <div class="audio-player" *ngIf="formGroup?.get(field.fieldName)?.value">
+        <audio controls>
+          <source [src]="formGroup.get(field.fieldName)?.value" type="audio/mpeg">
+          Votre navigateur ne supporte pas l'audio.
+        </audio>
+      </div>
     </div>
 
-    <!-- Drawing -->
+    <!-- ✅ DESSIN CORRIGÉ -->
     <div *ngIf="field.type === 'drawing'" class="drawing-field">
       <label class="field-label">{{field.label}}</label>
-      <div class="drawing-canvas" style="border: 1px solid #ccc; height: 200px; display: flex; align-items: center; justify-content: center;">
-        <span>Zone de dessin</span>
+      <div class="drawing-container">
+        <div class="drawing-toolbar">
+          <mat-button-toggle-group>
+            <mat-button-toggle value="black" (click)="setDrawingColor('#000000')">
+              <div style="width: 16px; height: 16px; background: black; border-radius: 50%;"></div>
+            </mat-button-toggle>
+            <mat-button-toggle value="red" (click)="setDrawingColor('#f44336')">
+              <div style="width: 16px; height: 16px; background: #f44336; border-radius: 50%;"></div>
+            </mat-button-toggle>
+            <mat-button-toggle value="blue" (click)="setDrawingColor('#2196f3')">
+              <div style="width: 16px; height: 16px; background: #2196f3; border-radius: 50%;"></div>
+            </mat-button-toggle>
+            <mat-button-toggle value="green" (click)="setDrawingColor('#4caf50')">
+              <div style="width: 16px; height: 16px; background: #4caf50; border-radius: 50%;"></div>
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+        <canvas #drawingCanvas
+                width="500"
+                height="300"
+                style="border: 2px solid #ddd; cursor: crosshair; background: white; border-radius: 4px;">
+          Votre navigateur ne supporte pas les canvas.
+        </canvas>
+        <div class="drawing-actions">
+          <button mat-raised-button type="button" (click)="clearDrawing()" color="warn">
+            <mat-icon>clear</mat-icon>
+            Effacer
+          </button>
+          <div class="drawing-status" *ngIf="formGroup?.get(field.fieldName)?.value">
+            <mat-icon color="primary">check_circle</mat-icon>
+            <span>Dessin capturé</span>
+          </div>
+        </div>
       </div>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
     </div>
 
     <!-- Schema -->
@@ -259,6 +477,9 @@
                   rows="6"
                   placeholder="Définissez votre schéma..."></textarea>
       </mat-form-field>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} is required
+      </mat-error>
     </div>
 
     <!-- Attachment -->
@@ -274,35 +495,98 @@
       </mat-error>
     </div>
 
-    <!-- Signature -->
+    <!-- ✅ SIGNATURE CORRIGÉE -->
     <div *ngIf="field.type === 'signature'" class="signature-field">
       <label class="field-label">{{field.label}}</label>
-      <div class="signature-pad" style="border: 1px solid #ccc; height: 150px; display: flex; align-items: center; justify-content: center;">
-        <span>Zone de signature</span>
+      <div class="signature-container">
+        <canvas #signatureCanvas
+                width="400"
+                height="200"
+                style="border: 2px solid #ddd; cursor: crosshair; background: white; border-radius: 4px;">
+          Votre navigateur ne supporte pas les canvas.
+        </canvas>
+        <div class="signature-actions">
+          <button mat-raised-button type="button" (click)="clearSignature()" color="warn">
+            <mat-icon>clear</mat-icon>
+            Effacer
+          </button>
+          <div class="signature-status" *ngIf="formGroup?.get(field.fieldName)?.value">
+            <mat-icon color="primary">check_circle</mat-icon>
+            <span>Signature capturée</span>
+          </div>
+        </div>
       </div>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required') && !formGroup?.get(field.fieldName)?.value">
+        {{field.label}} est requis
+      </mat-error>
     </div>
 
-    <!-- Barcode -->
+    <!-- ✅ CODE-BARRES CORRIGÉ -->
     <div *ngIf="field.type === 'barcode'" class="barcode-field">
       <label class="field-label">{{field.label}}</label>
       <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Code-barres</mat-label>
         <input matInput
                [placeholder]="field.placeholder || 'Scanner ou saisir le code'"
                [formControlName]="field.fieldName"
                [required]="field.required">
-        <button mat-icon-button matSuffix type="button">
-          <mat-icon>qr_code_scanner</mat-icon>
+        <button mat-icon-button
+                matSuffix
+                type="button"
+                (click)="startBarcodeScanning()"
+                [disabled]="isScanning"
+                matTooltip="Scanner avec la caméra">
+          <mat-icon *ngIf="!isScanning">qr_code_scanner</mat-icon>
+          <mat-spinner *ngIf="isScanning" diameter="24"></mat-spinner>
         </button>
       </mat-form-field>
+      <div class="barcode-status" *ngIf="formGroup?.get(field.fieldName)?.value">
+        <mat-icon color="primary">check_circle</mat-icon>
+        <span>Code scanné: {{formGroup.get(field.fieldName)?.value}}</span>
+      </div>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} est requis
+      </mat-error>
     </div>
 
-    <!-- NFC -->
+    <!-- ✅ TAG NFC CORRIGÉ -->
     <div *ngIf="field.type === 'nfc'" class="nfc-field">
       <label class="field-label">{{field.label}}</label>
-      <div class="nfc-reader" style="border: 1px solid #ccc; padding: 20px; text-align: center;">
-        <mat-icon>nfc</mat-icon>
-        <p>Approchez le tag NFC</p>
+      <div class="nfc-container">
+        <div class="nfc-reader"
+             style="border: 2px dashed #ddd; padding: 30px; text-align: center; border-radius: 8px;">
+          <mat-icon style="font-size: 48px; color: #2196f3;">nfc</mat-icon>
+          <h3>Lecture NFC</h3>
+          <p *ngIf="!nfcSupported" style="color: #ff9800;">
+            NFC non supporté sur cet appareil
+          </p>
+          <p *ngIf="nfcSupported" style="color: #666;">
+            Cliquez pour activer la lecture NFC
+          </p>
+        </div>
+
+        <button mat-raised-button
+                (click)="readNFCTag()"
+                [disabled]="!nfcSupported"
+                color="primary"
+                style="margin-top: 16px;">
+          <mat-icon>nfc</mat-icon>
+          {{nfcSupported ? 'Lire le tag NFC' : 'NFC non disponible'}}
+        </button>
+
+        <mat-form-field appearance="outline" class="full-width" style="margin-top: 16px;">
+          <mat-label>Données NFC</mat-label>
+          <input matInput
+                 [formControlName]="field.fieldName"
+                 [required]="field.required"
+                 readonly
+                 placeholder="Les données du tag apparaîtront ici">
+          <mat-icon matSuffix>nfc</mat-icon>
+        </mat-form-field>
       </div>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} est requis
+      </mat-error>
     </div>
 
     <!-- Separator -->
@@ -311,107 +595,173 @@
       <span class="separator-label" *ngIf="field.label">{{field.label}}</span>
     </div>
 
-    <!-- Table -->
+    <!-- ✅ TABLEAU CORRIGÉ -->
     <div *ngIf="field.type === 'table'" class="table-field">
       <label class="field-label">{{field.label}}</label>
-      <table mat-table class="full-width">
-        <ng-container matColumnDef="col1">
-          <th mat-header-cell *matHeaderCellDef>Colonne 1</th>
-          <td mat-cell *matCellDef="let element">{{element.col1}}</td>
-        </ng-container>
-        <ng-container matColumnDef="col2">
-          <th mat-header-cell *matHeaderCellDef>Colonne 2</th>
-          <td mat-cell *matCellDef="let element">{{element.col2}}</td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="['col1', 'col2']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['col1', 'col2'];"></tr>
-      </table>
+
+      <div class="table-container" style="margin-top: 16px;">
+        <div class="table-wrapper" style="overflow-x: auto;">
+          <table mat-table [dataSource]="tableData" class="full-width" style="min-width: 500px;">
+            <!-- Colonnes dynamiques -->
+            <ng-container *ngFor="let column of tableColumns; let colIndex = index"
+                          [matColumnDef]="column">
+              <th mat-header-cell *matHeaderCellDef class="table-header-cell">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span>{{column}}</span>
+                  <button mat-icon-button
+                          *ngIf="!isPreview && tableColumns.length > 1"
+                          (click)="removeTableColumn(colIndex)"
+                          class="remove-column-btn"
+                          color="warn"
+                          matTooltip="Supprimer cette colonne">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </th>
+              <td mat-cell *matCellDef="let element; let rowIndex = index" class="table-data-cell">
+                <mat-form-field appearance="outline"
+                                *ngIf="!isPreview; else readOnlyCell"
+                                style="width: 100%;">
+                  <input matInput
+                         [value]="element[column] || ''"
+                         (input)="onTableCellChange(rowIndex, column, $any($event.target).value)"
+                         [placeholder]="'Saisir ' + column.toLowerCase()">
+                </mat-form-field>
+                <ng-template #readOnlyCell>
+                  <span>{{element[column] || '-'}}</span>
+                </ng-template>
+              </td>
+            </ng-container>
+
+            <!-- Colonne d'actions -->
+            <ng-container matColumnDef="actions" *ngIf="!isPreview">
+              <th mat-header-cell *matHeaderCellDef style="width: 80px;">Actions</th>
+              <td mat-cell *matCellDef="let element; let rowIndex = index">
+                <button mat-icon-button
+                        (click)="removeTableRow(rowIndex)"
+                        color="warn"
+                        [disabled]="tableData.length <= 1"
+                        matTooltip="Supprimer cette ligne">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="getTableDisplayedColumns()"></tr>
+            <tr mat-row *matRowDef="let row; columns: getTableDisplayedColumns();"></tr>
+          </table>
+        </div>
+
+        <div class="table-actions" *ngIf="!isPreview" style="margin-top: 16px; display: flex; gap: 8px;">
+          <button mat-raised-button (click)="addTableRow()">
+            <mat-icon>add</mat-icon>
+            Ajouter une ligne
+          </button>
+          <button mat-raised-button (click)="addTableColumn()">
+            <mat-icon>add</mat-icon>
+            Ajouter une colonne
+          </button>
+        </div>
+
+        <div class="table-info" style="margin-top: 8px; color: #666; font-size: 12px;">
+          {{tableData.length}} ligne(s) × {{tableColumns.length}} colonne(s)
+        </div>
+      </div>
+      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+        {{field.label}} est requis
+      </mat-error>
     </div>
 
-    <!-- Fixed Text -->
+    <!-- ✅ TEXTE FIXE CORRIGÉ -->
     <div *ngIf="field.type === 'fixed-text'" class="fixed-text-field">
-      <div class="fixed-text-content">
-        {{field.placeholder || 'Texte fixe à définir'}}
+      <div class="fixed-text-content"
+           style="padding: 16px; background: #f9f9f9; border-left: 4px solid #2196f3; border-radius: 4px;">
+        <div [innerHTML]="getFixedText()" style="line-height: 1.6;"></div>
       </div>
     </div>
 
-    <!-- Image -->
+    <!-- ✅ IMAGE FIXE CORRIGÉE -->
     <div *ngIf="field.type === 'image'" class="image-field">
       <label class="field-label" *ngIf="field.label">{{field.label}}</label>
-      <div class="image-placeholder" style="border: 1px dashed #ccc; padding: 20px; text-align: center;">
-        <mat-icon>image</mat-icon>
-        <p>Image fixe à configurer</p>
+
+      <div class="image-display" *ngIf="getImageUrl(); else imagePlaceholder">
+        <img [src]="getImageUrl()"
+             [alt]="getImageAlt()"
+             style="max-width: 100%; height: auto; border-radius: 4px;">
       </div>
+
+      <ng-template #imagePlaceholder>
+        <div class="image-placeholder"
+             style="border: 1px dashed #ccc; padding: 40px; text-align: center; background: #f9f9f9;">
+          <mat-icon style="font-size: 48px; color: #ccc;">image</mat-icon>
+          <p style="color: #666; margin: 10px 0 0 0;">
+            {{isPreview ? 'Aucune image configurée' : 'Cliquez sur modifier pour ajouter une image'}}
+          </p>
+        </div>
+      </ng-template>
     </div>
 
-    <!-- File Fixed -->
+    <!-- ✅ FICHIER FIXE CORRIGÉ -->
     <div *ngIf="field.type === 'file-fixed'" class="file-fixed-field">
       <label class="field-label">{{field.label}}</label>
-      <div class="file-display" style="border: 1px solid #ccc; padding: 10px;">
-        <mat-icon>description</mat-icon>
-        <span>Fichier fixe à configurer</span>
+
+      <div class="file-display"
+           style="border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center;">
+
+        <div *ngIf="hasFixedFile(); else noFileTemplate" class="file-content">
+          <mat-icon style="font-size: 48px; color: #2196f3;">description</mat-icon>
+          <h4 style="margin: 16px 0 8px 0;">{{getFileName()}}</h4>
+          <p style="color: #666; margin-bottom: 16px;">Fichier prêt au téléchargement</p>
+
+          <button mat-raised-button
+                  color="primary"
+                  (click)="downloadFixedFile()">
+            <mat-icon>download</mat-icon>
+            Télécharger
+          </button>
+        </div>
+
+        <ng-template #noFileTemplate>
+          <div class="no-file-content">
+            <mat-icon style="font-size: 48px; color: #ccc;">insert_drive_file</mat-icon>
+            <h4 style="margin: 16px 0 8px 0; color: #666;">
+              {{isPreview ? 'Aucun fichier disponible' : 'Fichier non configuré'}}
+            </h4>
+            <p *ngIf="!isPreview" style="color: #999;">
+              Cliquez sur modifier pour ajouter un fichier
+            </p>
+          </div>
+        </ng-template>
       </div>
     </div>
 
-    <!-- Calculation -->
+    <!-- ✅ CALCUL CORRIGÉ -->
     <div *ngIf="field.type === 'calculation'" class="calculation-field">
-      <label class="field-label">{{field.label}}</label>
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Formule de calcul</mat-label>
+        <mat-label>{{field.label}}</mat-label>
         <input matInput
-               [placeholder]="field.placeholder || 'Ex: field1 + field2'"
                [formControlName]="field.fieldName"
-               readonly>
+               readonly
+               style="background-color: #f5f5f5; font-weight: 500;">
+        <mat-icon matSuffix color="primary">calculate</mat-icon>
       </mat-form-field>
-      <small>Résultat calculé automatiquement</small>
-    </div>
 
-    <!-- Select -->
-    <mat-form-field appearance="outline" *ngIf="field.type === 'select'" class="full-width">
-      <mat-label>{{field.label}}</mat-label>
-      <mat-select [formControlName]="field.fieldName" [required]="field.required">
-        <mat-option *ngFor="let option of safeOptions" [value]="option.value">
-          {{option.label}}
-        </mat-option>
-      </mat-select>
-      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
-        {{field.label}} is required
-      </mat-error>
-    </mat-form-field>
-
-    <!-- Radio -->
-    <div *ngIf="field.type === 'radio'" class="radio-group">
-      <label class="field-label">{{field.label}}</label>
-      <mat-radio-group [formControlName]="field.fieldName" [required]="field.required">
-        <mat-radio-button *ngFor="let option of safeOptions" [value]="option.value">
-          {{option.label}}
-        </mat-radio-button>
-      </mat-radio-group>
-      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
-        {{field.label}} is required
-      </mat-error>
-    </div>
-
-    <!-- Checkbox -->
-    <div *ngIf="field.type === 'checkbox'" class="checkbox-group">
-      <label class="field-label">{{field.label}}</label>
-      <div *ngFor="let option of safeOptions">
-        <mat-checkbox [value]="option.value">
-          {{option.label}}
-        </mat-checkbox>
+      <div class="calculation-info" *ngIf="!isPreview">
+        <div *ngIf="getCalculationFormula(); else noFormula" class="formula-display">
+          <mat-icon>info</mat-icon>
+          <span><strong>Formule:</strong> {{getCalculationFormula()}}</span>
+        </div>
+        <ng-template #noFormula>
+          <div class="no-formula-warning">
+            <mat-icon color="warn">warning</mat-icon>
+            <span>Aucune formule configurée. Cliquez sur modifier pour en ajouter une.</span>
+          </div>
+        </ng-template>
       </div>
-    </div>
-
-    <!-- File Upload -->
-    <div *ngIf="field.type === 'file'" class="file-upload">
-      <label class="field-label">{{field.label}}</label>
-      <input type="file"
-             [formControlName]="field.fieldName"
-             [required]="field.required"
-             class="file-input">
       <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
-        {{field.label}} is required
+        {{field.label}} est requis
       </mat-error>
     </div>
+
   </div>
 </div>

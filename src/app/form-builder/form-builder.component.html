@@ -94,7 +94,14 @@
     <div class="palette-area">
       <div class="field-palette">
         <!-- Basic Fields -->
-        <div class="field-item-palette"
+
+        <div class="field-category"
+             cdkDropList
+             id="palette-list"
+             cdkDropListConnectedTo="form-fields-list"
+             [cdkDropListData]="[]">
+          <div class="field-row">
+                 <div class="field-item-palette"
      cdkDrag
      [cdkDragData]="{type: 'external-list', label: 'Liste externe'}"
      title="Liste externe">
@@ -103,12 +110,6 @@
   </div>
   <span>Liste externe</span>
 </div>
-        <div class="field-category"
-             cdkDropList
-             id="palette-list"
-             cdkDropListConnectedTo="form-fields-list"
-             [cdkDropListData]="[]">
-          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'text', label: 'Champ de saisie'}"
