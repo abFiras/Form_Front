@@ -92,6 +92,11 @@
   line-height: 1.4;
   font-weight: 500;
 }
+.forms-count {
+  color: #1976d2 !important;
+  font-weight: bold;
+  font-size: 28px;
+}
 
 /* Responsive design */
 @media (max-width: 768px) {

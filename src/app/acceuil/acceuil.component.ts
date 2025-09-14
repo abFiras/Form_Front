@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { FormDTO } from '../models/form.models';
+import { FormService } from '../service/FormService';
 
 @Component({
   selector: 'app-acceuil',
@@ -7,6 +9,29 @@ import { Component } from '@angular/core';
   styleUrl: './acceuil.component.css'
 })
 export class AcceuilComponent {
+  forms: FormDTO[] = [];
+
+  constructor(private formService: FormService) {}
+
+  ngOnInit(): void {
+    this.loadForms();
+  }
+
+  loadForms(): void {
+    this.formService.getAllForms().subscribe({
+      next: (forms) => {
+        this.forms = forms;
+        console.log('Nombre de formulaires:', this.forms.length);
+
+        // mettre à jour le dashboard
+        this.dashboardData.forms.count = this.forms.length.toString();
+      },
+      error: (error) => {
+        console.error('Error loading forms:', error);
+      }
+    });
+  }
+
   dashboardData = {
     plateauInfo: {
       title: 'Plateau SMTA',
@@ -22,7 +47,7 @@ export class AcceuilComponent {
       subtitle: 'Utilisateur(s) actif(s) / Licence(s)'
     },
     forms: {
-      count: '24',
+      count: '0', // valeur par défaut
       subtitle: 'Formulaire(s)'
     },
     lastData: {
