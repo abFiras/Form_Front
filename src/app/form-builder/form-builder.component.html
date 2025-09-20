@@ -1,15 +1,6 @@
 <!-- src/app/components/form-builder/form-builder.component.html -->
 <div class="form-builder-container">
-  <!-- Builder Header -->
-  <div class="builder-header" *ngIf="!isPreviewMode">
-   <!-- <button mat-icon-button (click)="goBack()" class="back-btn">
-      <mat-icon>arrow_back</mat-icon>
-    </button>
-    <h1>{{formId ? 'Edit Form' : 'Create New Form'}}</h1>-->
-
-  </div>
-
-  <!-- Top Header with Form Name (New Design) -->
+  <!-- Top Header with Form Name and Group Selection -->
   <div class="form-header" *ngIf="!isPreviewMode">
     <div class="form-title-section">
       <span class="form-label">Formulaire</span>
@@ -35,22 +26,80 @@
       </button>
     </div>
   </div>
-  <div class="header-actions">
-      <button mat-raised-button (click)="saveForm()" class="btn-save">
-        <mat-icon>save</mat-icon>
-        Enregistrer
-      </button>
-      <button mat-raised-button
-              (click)="publishForm()"
-              *ngIf="formId && currentForm?.status === 'DRAFT'"
-              color="accent">
-        <mat-icon>publish</mat-icon>
-        Publish
-      </button>
-      <!--<button mat-icon-button class="action-btn" title="Aperçu" (click)="isPreviewMode = !isPreviewMode">
-        <mat-icon>visibility</mat-icon>
-      </button>-->
+
+  <!-- ✅ NOUVELLE SECTION : Sélection des groupes -->
+  <div class="group-selection-section" *ngIf="!isPreviewMode">
+    <div class="group-selection-container">
+      <mat-form-field appearance="outline" class="group-select">
+        <mat-label>Assigner aux groupes</mat-label>
+        <mat-select
+          multiple
+          [value]="selectedGroups"
+          (selectionChange)="onGroupSelectionChange($event)"
+          [disabled]="loadingGroups">
+
+          <mat-option *ngFor="let group of availableGroups" [value]="group.id">
+            <div class="group-option">
+              <div class="group-color"
+                   [style.background-color]="group.color || '#007bff'">
+              </div>
+              <span class="group-name">{{ group.name }}</span>
+              <span class="group-description" *ngIf="group.description">
+                - {{ group.description }}
+              </span>
+            </div>
+          </mat-option>
+        </mat-select>
+
+        <mat-hint *ngIf="loadingGroups">
+          <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+          Chargement des groupes...
+        </mat-hint>
+
+        <mat-hint *ngIf="!loadingGroups && hasSelectedGroups()">
+          {{ selectedGroups.length }} groupe(s) sélectionné(s)
+        </mat-hint>
+
+        <mat-hint *ngIf="!loadingGroups && !hasSelectedGroups()">
+          Sélectionnez au moins un groupe pour restreindre l'accès
+        </mat-hint>
+      </mat-form-field>
+
+      <!-- Affichage des groupes sélectionnés -->
+      <div class="selected-groups-display" *ngIf="hasSelectedGroups()">
+        <div class="selected-groups-label">Groupes assignés :</div>
+        <div class="selected-groups-chips">
+          <mat-chip
+            *ngFor="let groupId of selectedGroups"
+            class="group-chip">
+{{ getGroupName(groupId) }}
+            <mat-icon
+              matChipRemove
+              (click)="removeGroup(groupId)">
+              cancel
+            </mat-icon>
+          </mat-chip>
+        </div>
+      </div>
+
+
     </div>
+  </div>
+
+  <div class="header-actions">
+    <button mat-raised-button (click)="saveForm()" class="btn-save">
+      <mat-icon>save</mat-icon>
+      Enregistrer
+    </button>
+    <button mat-raised-button
+            (click)="publishForm()"
+            *ngIf="formId && currentForm?.status === 'DRAFT'"
+            color="accent">
+      <mat-icon>publish</mat-icon>
+      Publish
+    </button>
+  </div>
+
   <div class="character-count" *ngIf="!isPreviewMode">
     <span>{{getCharacterCount()}} / 150</span>
   </div>
@@ -94,22 +143,23 @@
     <div class="palette-area">
       <div class="field-palette">
         <!-- Basic Fields -->
-
         <div class="field-category"
              cdkDropList
              id="palette-list"
              cdkDropListConnectedTo="form-fields-list"
              [cdkDropListData]="[]">
+
           <div class="field-row">
-                 <div class="field-item-palette"
-     cdkDrag
-     [cdkDragData]="{type: 'external-list', label: 'Liste externe'}"
-     title="Liste externe">
-  <div class="field-icon external-list-field">
-    <mat-icon>list_alt</mat-icon>
-  </div>
-  <span>Liste externe</span>
-</div>
+            <div class="field-item-palette"
+                 cdkDrag
+                 [cdkDragData]="{type: 'external-list', label: 'Liste externe'}"
+                 title="Liste externe">
+              <div class="field-icon external-list-field">
+                <mat-icon>list_alt</mat-icon>
+              </div>
+              <span>Liste externe</span>
+            </div>
+
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'text', label: 'Champ de saisie'}"
@@ -129,7 +179,9 @@
               </div>
               <span>Zone de texte</span>
             </div>
+          </div>
 
+          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'datetime', label: 'Date et Heure'}"
@@ -139,11 +191,7 @@
               </div>
               <span>Date et Heure</span>
             </div>
-          </div>
-          <!-- Ajoutez ce bloc dans une des field-row de votre palette existante -->
 
-
-          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'checkbox', label: 'Case à cocher'}"
@@ -163,7 +211,9 @@
               </div>
               <span>Slider</span>
             </div>
+          </div>
 
+          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'number', label: 'Compteur'}"
@@ -173,9 +223,7 @@
               </div>
               <span>Compteur</span>
             </div>
-          </div>
 
-          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'select', label: 'Liste'}"
@@ -195,7 +243,9 @@
               </div>
               <span>Choix</span>
             </div>
+          </div>
 
+          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'geolocation', label: 'Géolocalisation'}"
@@ -205,9 +255,7 @@
               </div>
               <span>Géolocalisation</span>
             </div>
-          </div>
 
-          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'contact', label: 'Contact'}"
@@ -227,7 +275,9 @@
               </div>
               <span>Adresse</span>
             </div>
+          </div>
 
+          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'reference', label: 'Référence'}"
@@ -237,9 +287,7 @@
               </div>
               <span>Référence</span>
             </div>
-          </div>
 
-          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'file', label: 'Photo'}"
@@ -259,7 +307,9 @@
               </div>
               <span>Audio</span>
             </div>
+          </div>
 
+          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'drawing', label: 'Dessin'}"
@@ -269,9 +319,7 @@
               </div>
               <span>Dessin</span>
             </div>
-          </div>
 
-          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'schema', label: 'Schéma'}"
@@ -291,7 +339,9 @@
               </div>
               <span>Pièce jointe</span>
             </div>
+          </div>
 
+          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'signature', label: 'Signature'}"
@@ -301,9 +351,7 @@
               </div>
               <span>Signature</span>
             </div>
-          </div>
 
-          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'barcode', label: 'Code-barres'}"
@@ -323,7 +371,9 @@
               </div>
               <span>Tag NFC</span>
             </div>
+          </div>
 
+          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'separator', label: 'Séparateur'}"
@@ -333,9 +383,7 @@
               </div>
               <span>Séparateur</span>
             </div>
-          </div>
 
-          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'table', label: 'Tableau'}"
@@ -355,7 +403,9 @@
               </div>
               <span>Texte fixe</span>
             </div>
+          </div>
 
+          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'image', label: 'Image fixe'}"
@@ -365,9 +415,7 @@
               </div>
               <span>Image fixe</span>
             </div>
-          </div>
 
-          <div class="field-row">
             <div class="field-item-palette"
                  cdkDrag
                  [cdkDragData]="{type: 'file-fixed', label: 'Fichier fixe'}"

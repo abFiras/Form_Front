@@ -1,14 +1,22 @@
-// ✅ Modèles TypeScript corrigés pour supporter les listes externes
+// form.models.ts - Modèles TypeScript corrigés avec gestion des groupes
 
 export interface FormDTO {
   id?: number;
   name: string;
   description?: string;
-  status: 'DRAFT' | 'PUBLISHED';
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   fields: FormFieldDTO[];
   createdAt?: string;
   updatedAt?: string;
   createdBy?: number;
+
+  // ✅ NOUVEAU : Gestion des groupes
+  assignedGroupIds?: number[];
+  assignedGroups?: GroupDTO[];
+
+  // ✅ NOUVEAU : Indicateurs d'accès
+  isAccessible?: boolean;
+  canEdit?: boolean;
 }
 
 export interface FormFieldDTO {
@@ -22,11 +30,9 @@ export interface FormFieldDTO {
   cssClasses?: string;
   options?: FieldOptionDTO[];
   validationRules?: ValidationRule;
+  attributes?: { [key: string]: any };
 
-  // ✅ CORRECTION: attributes doit être flexible (string ou any)
-  attributes?: { [key: string]: any }; // Changé de string vers any
-
-  // ✅ Propriétés spécifiques aux listes externes (compatibilité)
+  // ✅ Propriétés spécifiques aux listes externes
   externalListId?: number;
   externalListDisplayMode?: 'select' | 'radio' | 'checkbox';
   externalListUrl?: string;
@@ -78,18 +84,29 @@ export type FieldType =
   | 'calculation'
   | 'external-list';
 
+// ✅ NOUVEAU : DTO pour les groupes
+export interface GroupDTO {
+  id: number;
+  name: string;
+  description?: string;
+  color?: string;
+  active: boolean;
+}
+
+// ✅ NOUVEAU : Requête de création avec groupes
 export interface FormCreateRequest {
   name: string;
   description?: string;
-  fields: FormFieldCreateDTO[]; // ✅ Utiliser un DTO spécialisé pour la création
-  userId: number;
+  fields: FormFieldCreateDTO[];
+  userId?: number; // Sera rempli automatiquement côté service
+  groupIds?: number[]; // ✅ Groupes assignés au formulaire
 }
 
 export interface FormUpdateRequest extends FormCreateRequest {
-  status?: 'DRAFT' | 'PUBLISHED';
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  groupIds?: number[]; // ✅ Permet de modifier les groupes
 }
 
-// ✅ NOUVEAU: DTO spécialisé pour la création/mise à jour des champs
 export interface FormFieldCreateDTO {
   type: FieldType;
   label: string;
@@ -98,11 +115,30 @@ export interface FormFieldCreateDTO {
   required: boolean;
   order: number;
   options?: FieldOptionDTO[];
-  attributes?: { [key: string]: any }; // ✅ Flexible pour tous types de données
+  attributes?: { [key: string]: any };
 }
 
 export interface FormSubmissionRequest {
   data: { [key: string]: any };
+  email?: string;
+}
+
+export interface FormSubmissionResponseDTO {
+  id: number;
+  formId: number;
+  data: { [key: string]: any };
+  status?: string;
+  submittedAt: string;
+  submitterEmail?: string;
+  submitterIp?: string;
+  submitterId?: number;
+  submitterName?: string;
+  expanded?: boolean;
+  isTemplate?: boolean; // ✅ Pour distinguer templates des vraies soumissions
+
+  // ✅ NOUVEAU : Infos du formulaire
+  formName?: string;
+  formDescription?: string;
 }
 
 export interface FormSubmissionDTO {
@@ -118,4 +154,26 @@ export interface PaletteField {
   type: FieldType;
   label: string;
   icon: string;
+}
+
+// ✅ NOUVEAU : Interface pour les réponses API
+export interface ApiResponse<T> {
+  message: string;
+  data: T;
+  success: boolean;
+  timestamp?: string;
+}
+
+// ✅ NOUVEAU : Interface pour assigner des groupes
+export interface AssignGroupsRequest {
+  groupIds: number[];
+}
+
+// ✅ NOUVEAU : Interface pour les statistiques
+export interface FormStatistics {
+  totalForms: number;
+  publishedForms: number;
+  draftForms: number;
+  totalSubmissions: number;
+  recentSubmissions: number;
 }

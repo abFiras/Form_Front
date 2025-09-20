@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'; // <-- correct
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -49,6 +49,14 @@ import { ExternalListFieldComponent } from './external-list-field/external-list-
 import { ListExterneCardComponent } from './list-externe-card/list-externe-card.component';
 import { MatColumnDef, MatTableModule } from '@angular/material/table';
 import { ExternalListDetailComponent } from './external-list-detail/external-list-detail.component';
+import { PublicFormComponent } from './public-form/public-form.component';
+import { FormSubmissionsComponent } from './form-submissions/form-submissions.component';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { FormFillComponent } from './form-fill/form-fill.component';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { AuthInterceptor } from './service/auth-interceptor.service';
+import { SubmissionDetailComponent } from './submission-detail/submission-detail.component';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 @NgModule({
   declarations: [
@@ -71,6 +79,10 @@ import { ExternalListDetailComponent } from './external-list-detail/external-lis
     LibraryFormDetailComponent,
     ListExterneCardComponent,
     ExternalListDetailComponent,
+    PublicFormComponent,
+    FormSubmissionsComponent,
+    FormFillComponent,
+    SubmissionDetailComponent,
 
   ],
   imports: [
@@ -103,12 +115,17 @@ import { ExternalListDetailComponent } from './external-list-detail/external-lis
     MatProgressSpinnerModule,
     MatButtonToggleModule,
     ExternalListModule,
-    MatTableModule
+    MatTableModule,
+    MatPaginatorModule,
+    MatProgressBarModule,
+    MatExpansionModule
 
 
 
   ],
-  providers: [],
-  bootstrap: [AppComponent]
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+  ],
+    bootstrap: [AppComponent]
 })
 export class AppModule { }

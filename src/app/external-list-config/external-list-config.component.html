@@ -3,31 +3,18 @@
 
   <mat-dialog-content class="dialog-content">
     <form [formGroup]="configForm" class="config-form">
+
       <!-- Label du champ -->
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="outline" style="  margin-top: 10px;" class="full-width">
         <mat-label>Label du champ</mat-label>
         <input matInput formControlName="label" placeholder="Entrez le libellé du champ">
+        <mat-hint>Libellé affiché à l'utilisateur</mat-hint>
         <mat-error *ngIf="configForm.get('label')?.hasError('required')">
           Le label est obligatoire
         </mat-error>
       </mat-form-field>
 
-      <!-- Nom technique du champ -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Nom technique</mat-label>
-        <input matInput formControlName="fieldName" placeholder="field_name">
-        <mat-hint>Nom utilisé en interne (sans espaces ni caractères spéciaux)</mat-hint>
-        <mat-error *ngIf="configForm.get('fieldName')?.hasError('required')">
-          Le nom technique est obligatoire
-        </mat-error>
-      </mat-form-field>
 
-      <!-- Placeholder -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Texte d'aide</mat-label>
-        <input matInput formControlName="placeholder" placeholder="Sélectionnez une valeur...">
-        <mat-hint>Texte affiché quand aucune valeur n'est sélectionnée</mat-hint>
-      </mat-form-field>
 
       <!-- Sélection de la liste externe -->
       <mat-form-field appearance="outline" class="full-width">
@@ -36,61 +23,78 @@
           <mat-option value="">-- Sélectionnez une liste --</mat-option>
           <mat-option *ngFor="let list of availableLists" [value]="list.id?.toString()">
             {{ list.name }}
-            <span class="list-info">({{ list.itemCount || 0 }} éléments)</span>
+            <span class="list-info">{{ list.itemCount || 0 }} éléments</span>
           </mat-option>
         </mat-select>
-        <mat-hint *ngIf="getSelectedListInfo()">{{ getSelectedListInfo() }}</mat-hint>
+        <mat-hint *ngIf="!getSelectedListInfo()">Choisissez une liste de données externes</mat-hint>
+        <div *ngIf="getSelectedListInfo()" class="selected-list-info">
+          {{ getSelectedListInfo() }}
+        </div>
         <mat-error *ngIf="configForm.get('externalListId')?.hasError('required')">
           Sélectionnez une liste externe
         </mat-error>
       </mat-form-field>
 
       <!-- Mode d'affichage -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Mode d'affichage</mat-label>
-        <mat-select formControlName="displayMode">
-          <mat-option *ngFor="let mode of displayModes" [value]="mode.value">
-            {{ mode.label }}
-          </mat-option>
-        </mat-select>
-        <mat-hint>Comment les options seront présentées à l'utilisateur</mat-hint>
-      </mat-form-field>
+   <mat-form-field appearance="outline" class="full-width">
+  <mat-label>Mode d'affichage</mat-label>
+  <mat-select formControlName="displayMode" placeholder="--Sélectionnez une mode--" required>
+    <mat-option *ngFor="let mode of displayModes" [value]="mode.value">
+      {{ mode.label }}
+    </mat-option>
+  </mat-select>
+  <mat-hint>Comment les options seront présentées à l'utilisateur</mat-hint>
+</mat-form-field>
+
 
       <!-- Champ obligatoire -->
-      <mat-checkbox formControlName="required" class="checkbox-field">
-        Champ obligatoire
-      </mat-checkbox>
+      <div class="checkbox-field">
+        <mat-checkbox formControlName="required">
+          Champ obligatoire
+        </mat-checkbox>
+      </div>
 
       <!-- Aperçu du mode sélectionné -->
       <div class="preview-section" *ngIf="configForm.get('displayMode')?.value">
-        <h4>Aperçu du mode d'affichage :</h4>
+        <h4>Aperçu du mode d'affichage</h4>
         <div class="preview-container">
+
           <!-- Preview Select -->
           <div *ngIf="configForm.get('displayMode')?.value === 'select'" class="preview-select">
-            <mat-form-field appearance="outline">
-              <mat-select placeholder="Exemple de liste déroulante" disabled>
-                <mat-option>Option 1</mat-option>
-                <mat-option>Option 2</mat-option>
-                <mat-option>Option 3</mat-option>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ configForm.get('label')?.value || 'Libellé du champ' }}</mat-label>
+              <mat-select [placeholder]="configForm.get('placeholder')?.value || 'Sélectionnez une valeur...'" disabled>
+                <mat-option>Option exemple 1</mat-option>
+                <mat-option>Option exemple 2</mat-option>
+                <mat-option>Option exemple 3</mat-option>
               </mat-select>
             </mat-form-field>
           </div>
 
           <!-- Preview Radio -->
           <div *ngIf="configForm.get('displayMode')?.value === 'radio'" class="preview-radio">
+            <h5>{{ configForm.get('label')?.value || 'Libellé du champ' }}</h5>
             <mat-radio-group disabled>
-              <mat-radio-button value="1">Option 1</mat-radio-button>
-              <mat-radio-button value="2">Option 2</mat-radio-button>
-              <mat-radio-button value="3">Option 3</mat-radio-button>
+              <mat-radio-button value="1">Option exemple 1</mat-radio-button>
+              <mat-radio-button value="2">Option exemple 2</mat-radio-button>
+              <mat-radio-button value="3">Option exemple 3</mat-radio-button>
             </mat-radio-group>
           </div>
 
           <!-- Preview Checkbox -->
           <div *ngIf="configForm.get('displayMode')?.value === 'checkbox'" class="preview-checkbox">
-            <mat-checkbox disabled>Option 1</mat-checkbox>
-            <mat-checkbox disabled>Option 2</mat-checkbox>
-            <mat-checkbox disabled>Option 3</mat-checkbox>
+            <h5>{{ configForm.get('label')?.value || 'Libellé du champ' }}</h5>
+            <div>
+              <mat-checkbox disabled>Option exemple 1</mat-checkbox>
+            </div>
+            <div>
+              <mat-checkbox disabled>Option exemple 2</mat-checkbox>
+            </div>
+            <div>
+              <mat-checkbox disabled>Option exemple 3</mat-checkbox>
+            </div>
           </div>
+
         </div>
       </div>
     </form>
@@ -98,12 +102,14 @@
     <!-- État de chargement -->
     <div *ngIf="loading" class="loading-container">
       <mat-spinner diameter="30"></mat-spinner>
-      <span>Chargement des listes...</span>
+      <span>Chargement des listes externes...</span>
     </div>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end" class="dialog-actions">
-    <button mat-button (click)="onCancel()">Annuler</button>
+    <button mat-button (click)="onCancel()">
+      Annuler
+    </button>
     <button mat-raised-button
             color="primary"
             (click)="onSave()"

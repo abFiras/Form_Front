@@ -1,0 +1,703 @@
+<!-- form-fill.component.html - Version corrigée -->
+<div class="form-fill-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-section">
+    <mat-spinner></mat-spinner>
+    <p>Chargement du formulaire...</p>
+    <p class="loading-details" *ngIf="formId">Formulaire ID: {{formId}}</p>
+  </div>
+
+  <!-- Error State (si formId invalide) -->
+  <div *ngIf="!isLoading && !hasSubmitted && !currentForm" class="error-section">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          <h2>Formulaire non disponible</h2>
+          <p>Le formulaire demandé n'existe pas ou n'est pas accessible.</p>
+          <p class="error-details" *ngIf="formId">ID de formulaire: {{formId}}</p>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Retour à la liste
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="hasSubmitted" class="success-section">
+    <mat-card class="success-card">
+      <mat-card-content>
+        <div class="success-content">
+          <mat-icon class="success-icon">check_circle</mat-icon>
+          <h2>Formulaire soumis avec succès!</h2>
+          <p>Vos données ont été enregistrées de manière sécurisée.</p>
+          <p>Le formulaire reste disponible pour d'autres utilisateurs.</p>
+          <p class="redirect-message">Redirection automatique dans 3 secondes...</p>
+        </div>
+      </mat-card-content>
+      <!--<mat-card-actions>
+        <button mat-raised-button color="primary" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Retour à la liste
+        </button>
+        <button mat-button (click)="resetForm()">
+          <mat-icon>refresh</mat-icon>
+          Remplir à nouveau
+        </button>
+      </mat-card-actions>-->
+    </mat-card>
+  </div>
+
+  <!-- Form Fill Interface -->
+  <div *ngIf="!isLoading && !hasSubmitted && currentForm" class="form-content">
+    <!-- Header -->
+    <div class="form-header">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="form-title-section">
+        <h1>{{currentForm.name}}</h1>
+        <p *ngIf="currentForm.description" class="form-description">
+          {{currentForm.description}}
+        </p>
+        <div class="form-info">
+          <span class="form-status published">Formulaire publié</span>
+          <span class="field-count">{{currentForm.fields.length || 0}} champ(s)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group Access Info -->
+    <div *ngIf="currentForm.assignedGroups && currentForm.assignedGroups.length > 0"
+         class="access-info">
+      <div class="access-header">
+        <mat-icon>group</mat-icon>
+        <span>Accès restreint aux groupes :</span>
+      </div>
+      <mat-chip-listbox>
+        <mat-chip-option *ngFor="let group of currentForm.assignedGroups"
+                         [style.background-color]="group.color || '#007bff'"
+                         disabled>
+          {{group.name}}
+        </mat-chip-option>
+      </mat-chip-listbox>
+      <p class="access-text">Vous avez accès à ce formulaire via vos groupes d'appartenance.</p>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section" *ngIf="currentForm.fields && currentForm.fields.length > 1">
+      <div class="progress-header">
+        <span class="progress-label">Progression</span>
+        <span class="progress-percentage">{{getProgressPercentage()}}%</span>
+      </div>
+      <mat-progress-bar
+        mode="determinate"
+        [value]="getProgressPercentage()"
+        class="progress-bar">
+      </mat-progress-bar>
+      <p class="progress-text">
+        {{getProgressPercentage() === 100 ? 'Formulaire complété !' : 'Continuez à remplir les champs'}}
+      </p>
+    </div>
+
+    <!-- Form -->
+    <mat-card class="form-card">
+      <mat-card-content>
+        <form [formGroup]="submissionForm" (ngSubmit)="onSubmitForm()" novalidate>
+          <div class="form-fields">
+            <div *ngFor="let field of currentForm.fields; let i = index; trackBy: trackByFieldId"
+                 class="field-container"
+                 [class.field-required]="field.required"
+                 [class.field-invalid]="isFieldInvalid(field.fieldName)">
+
+              <!-- Field Label with Required Indicator -->
+              <div class="field-header">
+                <label [for]="field.fieldName" class="field-label">
+                  {{field.label}}
+                  <span *ngIf="field.required" class="required-indicator">*</span>
+                </label>
+                <span class="field-type-badge">{{getFieldTypeLabel(field.type)}}</span>
+              </div>
+
+              <!-- Dynamic Field Component -->
+              <app-dynamic-field
+                [field]="field"
+                [formGroup]="submissionForm"
+                [isPreview]="false"
+                [showValidation]="true">
+              </app-dynamic-field>
+
+              <!-- Field Error Display -->
+              <div *ngIf="getFieldError(field.fieldName)" class="field-error">
+                <mat-error>
+                  <mat-icon>error</mat-icon>
+                  {{getFieldError(field.fieldName)}}
+                </mat-error>
+              </div>
+
+              <!-- Field Helper Text -->
+              <div *ngIf="field.placeholder && !getFieldError(field.fieldName)" class="field-helper">
+                <mat-hint>{{field.placeholder}}</mat-hint>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <div class="actions-left">
+              <button
+                mat-button
+                type="button"
+                (click)="resetForm()"
+                class="reset-button">
+                <mat-icon>refresh</mat-icon>
+                Réinitialiser
+              </button>
+
+
+            </div>
+
+            <div class="actions-right">
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                [disabled]="!canSubmit()"
+                class="submit-button">
+                <mat-icon *ngIf="!isSubmitting">send</mat-icon>
+                <mat-spinner *ngIf="isSubmitting" diameter="20" class="submit-spinner"></mat-spinner>
+                <span *ngIf="!isSubmitting">Soumettre le formulaire</span>
+                <span *ngIf="isSubmitting">Envoi en cours...</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Form Validation Summary -->
+          <div *ngIf="submissionForm.invalid && submissionForm.touched" class="validation-summary">
+            <mat-error class="validation-error">
+              <mat-icon>error</mat-icon>
+              <span>{{getValidationSummaryMessage()}}</span>
+            </mat-error>
+            <ul class="error-list">
+              <li *ngFor="let field of getInvalidFields()" class="error-item">
+                <strong>{{getFieldLabel(field.fieldName)}}:</strong> {{field.error}}
+              </li>
+            </ul>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Help Section -->
+    <mat-card class="help-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>help_outline</mat-icon>
+          Aide pour remplir ce formulaire
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="help-content">
+          <div class="help-section">
+            <h4>Instructions générales</h4>
+            <ul class="help-list">
+              <li>Les champs marqués d'un astérisque (*) sont obligatoires</li>
+              <li>Vos données sont automatiquement sauvegardées pendant la saisie</li>
+              <li>Une fois soumis, le formulaire restera disponible pour d'autres utilisateurs</li>
+            </ul>
+          </div>
+
+          <div class="help-section" *ngIf="hasSpecialFields()">
+            <h4>Champs spéciaux</h4>
+            <ul class="help-list">
+              <li *ngIf="hasSignatureFields()">
+                <strong>Signatures :</strong> Utilisez votre souris ou votre doigt sur écran tactile
+              </li>
+              <li *ngIf="hasFileFields()">
+                <strong>Fichiers :</strong> Les fichiers joints sont automatiquement sécurisés
+              </li>
+              <li *ngIf="hasGeolocationFields()">
+                <strong>Géolocalisation :</strong> Autorisez l'accès à votre position si demandé
+              </li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h4>Sécurité et confidentialité</h4>
+            <ul class="help-list">
+              <li>Toutes vos données sont chiffrées et sécurisées</li>
+              <li>Seuls les administrateurs autorisés peuvent consulter vos réponses</li>
+              <li>Vos informations personnelles ne sont jamais partagées</li>
+            </ul>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<style>
+.form-fill-container {
+  max-width: 900px;
+  margin-top: 5vw;
+  margin-left: 25vw;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+/* Loading State */
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+}
+
+.loading-details {
+  color: #666;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* Error State */
+.error-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.error-card {
+  max-width: 500px;
+  text-align: center;
+}
+
+.error-content {
+  padding: 40px 20px;
+}
+
+.error-icon {
+  font-size: 64px;
+  color: #f44336;
+  margin-bottom: 20px;
+}
+
+.error-details {
+  color: #666;
+  font-size: 14px;
+  font-family: monospace;
+}
+
+/* Success State */
+.success-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.success-card {
+  max-width: 500px;
+  text-align: center;
+}
+
+.success-content {
+  padding: 40px 20px;
+}
+
+.success-icon {
+  font-size: 64px;
+  color: #4caf50;
+  margin-bottom: 20px;
+}
+
+.success-content h2 {
+  color: #4caf50;
+  margin-bottom: 16px;
+}
+
+.redirect-message {
+  color: #666;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+/* Form Header */
+.form-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.back-button {
+  margin-top: 8px;
+  color: #666;
+}
+
+.form-title-section {
+  flex: 1;
+}
+
+.form-title-section h1 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.form-description {
+  color: #666;
+  margin: 0 0 16px 0;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+.form-info {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.form-status {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.form-status.published {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.field-count {
+  color: #666;
+  font-size: 14px;
+}
+
+/* Access Info */
+.access-info {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 32px;
+}
+
+.access-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #333;
+}
+
+.access-info mat-chip-listbox {
+  margin-bottom: 12px;
+}
+
+.access-text {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Progress Section */
+.progress-section {
+  margin-bottom: 32px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progress-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.progress-percentage {
+  font-weight: 600;
+  color: #1976d2;
+  font-size: 18px;
+}
+
+.progress-bar {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.progress-text {
+  margin: 8px 0 0 0;
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Form Card */
+.form-card {
+  margin-bottom: 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 12px;
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Field Container */
+.field-container {
+  position: relative;
+  padding: 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.field-container.field-required {
+  border-left: 4px solid #ff9800;
+  background-color: #fffbf0;
+}
+
+.field-container.field-invalid {
+  border-left: 4px solid #f44336;
+  background-color: #ffebee;
+}
+
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.field-label {
+  font-weight: 500;
+  color: #333;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.required-indicator {
+  color: #f44336;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.field-type-badge {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Field Error */
+.field-error {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  border-left: 3px solid #f44336;
+}
+
+.field-error mat-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #d32f2f;
+}
+
+/* Field Helper */
+.field-helper {
+  margin-top: 8px;
+  padding-left: 12px;
+}
+
+.field-helper mat-hint {
+  color: #666;
+  font-size: 14px;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 2px solid #f5f5f5;
+}
+
+.actions-left, .actions-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.submit-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.submit-spinner {
+  margin-right: 8px;
+}
+
+.reset-button, .debug-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+}
+
+.debug-button {
+  color: #ff9800;
+  border-color: #ff9800;
+}
+
+/* Validation Summary */
+.validation-summary {
+  margin-top: 24px;
+  padding: 20px;
+  background: #ffebee;
+  border-radius: 8px;
+  border-left: 4px solid #f44336;
+}
+
+.validation-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px 0;
+  font-weight: 500;
+  color: #d32f2f;
+}
+
+.error-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.error-item {
+  margin-bottom: 8px;
+  line-height: 1.5;
+  color: #d32f2f;
+}
+
+/* Help Card */
+.help-card {
+  margin-top: 32px;
+  border-radius: 12px;
+}
+
+.help-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1976d2;
+}
+
+.help-content {
+  display: grid;
+  gap: 24px;
+}
+
+.help-section h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-weight: 500;
+}
+
+.help-list {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+.help-list li {
+  margin-bottom: 8px;
+  color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .form-fill-container {
+    margin: 10px;
+    padding: 10px;
+  }
+
+  .form-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .back-button {
+    align-self: flex-start;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions-left, .actions-right {
+    justify-content: center;
+  }
+
+  .submit-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .field-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-title-section h1 {
+    font-size: 24px;
+  }
+
+  .field-container {
+    padding: 16px;
+  }
+
+  .progress-section {
+    padding: 16px;
+  }
+}
+</style>

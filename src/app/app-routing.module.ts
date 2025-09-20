@@ -14,6 +14,10 @@ import { LibraryFormDetailComponent } from './library-form-detail/library-form-d
 import { ListexterneComponent } from './listexterne/listexterne.component';
 import { ListExterneCardComponent } from './list-externe-card/list-externe-card.component';
 import { ExternalListDetailComponent } from './external-list-detail/external-list-detail.component';
+import { FormSubmissionsComponent } from './form-submissions/form-submissions.component';
+import { PublicFormComponent } from './public-form/public-form.component';
+import { FormFillComponent } from './form-fill/form-fill.component';
+import { SubmissionDetailComponent } from './submission-detail/submission-detail.component';
 
 const routes: Routes = [
   { path: '', component: LandingPageComponent }, // default route
@@ -23,7 +27,8 @@ const routes: Routes = [
 
   { path: 'users', component: UsersComponent },
   { path: 'profil', component: UserProfileComponent },
-
+// ✅ NOUVEAU : Route pour remplir un formulaire publié (authentifié)
+  { path: 'forms/:id/fill', component: FormFillComponent },
 // NEW: Form Builder - Drag & Drop Interface
   { path: 'builder', component: FormBuilderComponent },
 
@@ -38,11 +43,17 @@ const routes: Routes = [
       { path: 'listeexterne', component: ListexterneComponent },
  { path: 'external-lists/:id', component: ExternalListDetailComponent  }, // Voir détails
   { path: 'external-lists/:id/edit', component: CreeListeExterneComponent }, // Éditer
-
+ {
+    path: 'forms/:id/submissions',
+    component: FormSubmissionsComponent  },
+    {
+    path: 'public/forms/:id',
+    component: PublicFormComponent  },
 
    { path: 'bib', component: BibliothequeComponent },
-{ path: 'forms/:id', component: LibraryFormDetailComponent }
+{ path: 'forms/:id', component: LibraryFormDetailComponent },
 
+  { path: 'forms/:id/submissions/:submissionId/detail', component: SubmissionDetailComponent },
 
 ];
 

@@ -27,7 +27,6 @@ export class ExternalListConfigComponent implements OnInit {
   availableLists: ExternalListDTO[] = [];
   loading = false;
   displayModes = [
-    { value: 'select', label: 'Liste déroulante avec recherche' },
     { value: 'radio', label: 'Boutons radio' },
     { value: 'checkbox', label: 'Cases à cocher (sélection multiple)' }
   ];

@@ -1,0 +1,210 @@
+<!-- published-forms.component.html -->
+<div class="published-forms-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Formulaires à remplir</h1>
+      <p class="subtitle">Formulaires publiés auxquels vous avez accès</p>
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button (click)="refreshList()" title="Actualiser">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button mat-raised-button (click)="goToMyForms()" color="primary">
+        <mat-icon>folder</mat-icon>
+        Mes formulaires
+      </button>
+    </div>
+  </div>
+
+  <!-- User Info -->
+  <div *ngIf="currentUser" class="user-info">
+    <mat-chip-listbox>
+      <mat-chip-option disabled>
+        <mat-icon>person</mat-icon>
+        {{currentUser.username}}
+      </mat-chip-option>
+      <mat-chip-option *ngFor="let group of currentUser.groups"
+                       [style.background-color]="group.color || '#007bff'"
+                       disabled>
+        {{group.name}}
+      </mat-chip-option>
+    </mat-chip-listbox>
+    <p class="user-info-text">Vos groupes déterminent les formulaires auxquels vous avez accès</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-section">
+    <mat-spinner></mat-spinner>
+    <p>Chargement des formulaires disponibles...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && publishedForms.length === 0" class="empty-state">
+    <mat-card class="empty-card">
+      <mat-card-content>
+        <div class="empty-content">
+          <mat-icon class="empty-icon">assignment</mat-icon>
+          <h2>Aucun formulaire disponible</h2>
+          <p>Il n'y a actuellement aucun formulaire publié accessible avec vos groupes.</p>
+          <p class="help-text">
+            Contactez l'administrateur si vous pensez que vous devriez avoir accès à certains formulaires.
+          </p>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="refreshList()">
+          <mat-icon>refresh</mat-icon>
+          Actualiser
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Forms Grid -->
+  <div *ngIf="!isLoading && publishedForms.length > 0" class="forms-grid">
+    <mat-card
+      *ngFor="let form of publishedForms; trackBy: trackByFormId"
+      class="form-card"
+      [class.accessible]="form.isAccessible"
+      [class.restricted]="!form.isAccessible">
+
+      <!-- Form Header -->
+      <mat-card-header class="form-header">
+        <div mat-card-avatar class="form-avatar">
+          <mat-icon>assignment</mat-icon>
+        </div>
+        <mat-card-title>{{form.name}}</mat-card-title>
+        <mat-card-subtitle>
+          <div class="form-meta">
+            <span class="status-badge" [style.color]="getFormStatusColor(form.status)">
+              {{getFormStatusText(form.status)}}
+            </span>
+            <span class="creation-date">
+              Créé le
+            </span>
+          </div>
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <!-- Form Content -->
+      <mat-card-content class="form-content">
+        <p class="form-description">{{getFormDescription(form)}}</p>
+
+        <!-- Access Info -->
+        <div class="access-section">
+          <div class="access-header">
+            <mat-icon class="access-icon"
+                      [class.accessible]="form.isAccessible"
+                      [class.restricted]="!form.isAccessible">
+              {{form.isAccessible ? 'lock_open' : 'lock'}}
+            </mat-icon>
+            <span class="access-text">{{getGroupAccessMessage(form)}}</span>
+          </div>
+
+          <!-- Groups -->
+          <div *ngIf="form.assignedGroups && form.assignedGroups.length > 0"
+               class="assigned-groups">
+            <mat-chip-listbox>
+              <mat-chip-option *ngFor="let group of form.assignedGroups"
+                               [style.background-color]="group.color || '#007bff'"
+                               disabled>
+                {{group.name}}
+              </mat-chip-option>
+            </mat-chip-listbox>
+          </div>
+        </div>
+
+        <!-- Form Stats -->
+        <div class="form-stats">
+          <div class="stat-item">
+            <mat-icon>dynamic_form</mat-icon>
+            <span>{{form.fields.length || 0}} champs</span>
+          </div>
+          <div class="stat-item" *ngIf="form.createdBy">
+            <mat-icon>person</mat-icon>
+            <span>Créé par Admin</span>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <!-- Form Actions -->
+      <mat-card-actions class="form-actions">
+        <button
+          mat-raised-button
+          [color]="canFillForm(form) ? 'primary' : 'warn'"
+          [disabled]="!canFillForm(form)"
+          (click)="fillForm(form)"
+          class="fill-button">
+
+          <mat-icon>{{canFillForm(form) ? 'edit' : 'lock'}}</mat-icon>
+          <span *ngIf="canFillForm(form)">Remplir le formulaire</span>
+          <span *ngIf="!canFillForm(form)">Accès restreint</span>
+        </button>
+
+        <button
+          mat-icon-button
+          *ngIf="canFillForm(form)"
+          [matMenuTriggerFor]="formMenu"
+          aria-label="Plus d'options">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+
+        <!-- Context Menu -->
+        <mat-menu #formMenu="matMenu">
+          <button mat-menu-item (click)="fillForm(form)">
+            <mat-icon>edit</mat-icon>
+            <span>Remplir</span>
+          </button>
+          <button mat-menu-item disabled>
+            <mat-icon>info</mat-icon>
+            <span>Détails</span>
+          </button>
+        </mat-menu>
+      </mat-card-actions>
+
+      <!-- Accessibility Overlay -->
+      <div *ngIf="!form.isAccessible" class="restriction-overlay">
+        <div class="restriction-content">
+          <mat-icon>lock</mat-icon>
+          <p>Vous n'êtes pas membre des groupes requis</p>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Summary Stats -->
+  <div *ngIf="!isLoading && publishedForms.length > 0" class="summary-stats">
+    <mat-card class="stats-card">
+      <mat-card-content>
+        <div class="stats-row">
+          <div class="stat-item">
+            <mat-icon>assignment</mat-icon>
+            <div class="stat-content">
+              <span class="stat-number">{{publishedForms.length}}</span>
+              <span class="stat-label">Formulaires disponibles</span>
+            </div>
+          </div>
+
+          <div class="stat-item">
+            <mat-icon>lock_open</mat-icon>
+            <div class="stat-content">
+<span class="stat-number">{{ getAccessibleCount() }}</span>
+              <span class="stat-label">Accessibles</span>
+            </div>
+          </div>
+
+          <div class="stat-item">
+            <mat-icon>lock</mat-icon>
+            <div class="stat-content">
+<span class="stat-number">{{ getRestrictedCount() }}</span>
+              <span class="stat-label">Restreints</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+

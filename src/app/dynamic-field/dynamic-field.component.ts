@@ -17,6 +17,7 @@ export class DynamicFieldComponent implements OnInit, AfterViewInit {
   @Input() formGroup!: FormGroup;
   @Output() fieldChange = new EventEmitter<FormFieldDTO>();
   @Output() removeField = new EventEmitter<void>();
+@Input() showValidation = false;
 
   @ViewChild('signatureCanvas', { static: false }) signatureCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('drawingCanvas', { static: false }) drawingCanvas!: ElementRef<HTMLCanvasElement>;
@@ -1091,16 +1092,17 @@ uploadImage(event: Event): void {
         updatedField.attributes['formula'] = this.editForm.value.calculationFormula || '';
       }
 
-        if (this.field.type === 'image') {
-      // Conserver l'URL d'image existante si pas de nouvelle URL dans le form
+       if (this.field.type === 'image') {
+      // Récupérer l'URL depuis le formulaire d'édition OU conserver l'existante
       const formImageUrl = this.editForm.value.imageUrl;
       const existingImageUrl = this.field.attributes?.['imageUrl'];
 
+      // Utiliser la nouvelle image si elle existe, sinon conserver l'ancienne
       updatedField.attributes['imageUrl'] = formImageUrl || existingImageUrl || '';
       updatedField.attributes['imageAlt'] = this.editForm.value.imageAlt || '';
 
-      console.log('Saving image field:', {
-        imageUrl: updatedField.attributes['imageUrl'],
+      console.log('Sauvegarde du champ image:', {
+        imageUrl: updatedField.attributes['imageUrl'] ? 'Présente' : 'Absente',
         imageAlt: updatedField.attributes['imageAlt']
       });
     }

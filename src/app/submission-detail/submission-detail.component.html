@@ -1,0 +1,289 @@
+<div class="submission-detail-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-section">
+    <mat-spinner></mat-spinner>
+    <p>Chargement des détails de la soumission...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading && submission && currentForm" class="main-content">
+    <!-- Header -->
+    <div class="header-section">
+      <div class="header-info">
+        <button mat-icon-button (click)="goBack()" class="back-button">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+
+        <div class="header-text">
+          <h1>Détail de la soumission</h1>
+          <h2>{{currentForm.name}}</h2>
+          <p *ngIf="currentForm.description" class="form-description">
+            {{currentForm.description}}
+          </p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button mat-raised-button (click)="printSubmission()">
+          <mat-icon>print</mat-icon>
+          Imprimer
+        </button>
+
+        <button mat-raised-button (click)="downloadAsPDF()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          Télécharger PDF
+        </button>
+
+        
+      </div>
+    </div>
+
+    <!-- Submission Info Card -->
+    <mat-card class="submission-info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>assignment_turned_in</mat-icon>
+          Informations de la soumission
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Soumis par</div>
+            <div class="info-value">
+              <mat-icon>person</mat-icon>
+              {{getSubmitterDisplay()}}
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Date de soumission</div>
+            <div class="info-value">
+              <mat-icon>schedule</mat-icon>
+              {{submission.submittedAt | date:'full':'fr-FR'}}
+              <span class="time-ago">({{getTimeAgo(submission.submittedAt)}})</span>
+            </div>
+          </div>
+
+          <div class="info-item" *ngIf="submission.submitterIp">
+            <div class="info-label">Adresse IP</div>
+            <div class="info-value">
+              <mat-icon>location_on</mat-icon>
+              {{submission.submitterIp}}
+            </div>
+          </div>
+
+          <div class="info-item" *ngIf="submission.status">
+            <div class="info-label">Statut</div>
+            <div class="info-value">
+              <mat-chip [color]="getStatusColor(submission.status)" selected>
+                {{getStatusLabel(submission.status)}}
+              </mat-chip>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">ID de soumission</div>
+            <div class="info-value">
+              <mat-icon>tag</mat-icon>
+              #{{submission.id}}
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Form Data Card -->
+    <mat-card class="form-data-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>description</mat-icon>
+          Données du formulaire
+        </mat-card-title>
+        <mat-card-subtitle>
+          {{getFormattedFieldsData().length}} champ(s) dans ce formulaire
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+
+        <div class="fields-container">
+          <div *ngFor="let field of getFormattedFieldsData(); trackBy: trackByFieldName"
+               class="field-item"
+               [class.field-empty]="!field.value"
+               [class.field-file]="isFileField(field.fieldName)"
+               [class.field-image]="isImageField(field.fieldName)">
+
+            <!-- Field Header -->
+            <div class="field-header">
+              <div class="field-label">
+                <mat-icon class="field-icon">{{getFieldIcon(field.type)}}</mat-icon>
+                {{field.label}}
+              </div>
+              <div class="field-type-badge">
+                {{getFieldTypeLabel(field.type)}}
+              </div>
+            </div>
+
+            <!-- Field Value -->
+            <!-- Field Value -->
+<div class="field-value">
+  <!-- 1. LISTES EXTERNES -->
+  <div *ngIf="isExternalListField(field.fieldName) && field.value" class="external-list-value">
+    <div class="selected-value">
+      <mat-icon class="value-icon">list</mat-icon>
+      <span class="display-label">{{getExternalListLabel(field.fieldName, field.value)}}</span>
+      <span class="technical-value">(valeur: {{field.value}})</span>
+    </div>
+  </div>
+
+ <!-- IMAGES FIXES/STATIQUES -->
+<div *ngIf="isStaticImageField(field.fieldName)" class="static-image-value">
+  <!-- Image configurée -->
+  <div *ngIf="hasStaticImage(field.fieldName)" class="configured-image">
+    <img [src]="getStaticImageUrl(field.fieldName)"
+         [alt]="getStaticImageAlt(field.fieldName)"
+         class="static-image"
+         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; display: block; margin: 0 auto;"
+         (click)="openImageModal(getStaticImageUrl(field.fieldName))">
+    <div class="image-info" style="text-align: center; margin-top: 8px;">
+      <small>
+        <mat-icon class="info-icon">image</mat-icon>
+Image fixe du formulaire ({{ getFieldFileName(field.fieldName) }}) - Cliquez pour agrandir
+      </small>
+    </div>
+  </div>
+
+  <!-- Aucune image configurée -->
+  <div *ngIf="!hasStaticImage(field.fieldName)" class="no-static-image" style="text-align: center; padding: 40px; background: #f5f5f5; border-radius: 8px;">
+    <mat-icon style="font-size: 48px; color: #ccc;">image_not_supported</mat-icon>
+    <p style="color: #666; margin: 10px 0;">Aucune image configurée pour ce champ</p>
+    <small style="color: #999;">Ce champ image n'a pas été configuré avec une image lors de la création du formulaire</small>
+  </div>
+</div>
+
+  <!-- 3. SIGNATURES ET DESSINS (créés par l'utilisateur) -->
+  <div *ngIf="isImageField(field.fieldName) && getImageUrl(field.fieldName)" class="image-value">
+    <img [src]="getImageUrl(field.fieldName)"
+         [alt]="field.label"
+         class="signature-image"
+         (click)="openImageModal(getImageUrl(field.fieldName))"
+         style="max-width: 300px; max-height: 200px; border: 1px solid #ccc; cursor: pointer;">
+    <div class="image-info">
+      <small>
+        <mat-icon class="info-icon">info</mat-icon>
+        {{getFileInfo(field.fieldName)?.type | titlecase}} - Cliquez pour agrandir
+      </small>
+    </div>
+  </div>
+
+  <!-- 4. FICHIERS -->
+  <div *ngIf="isFileField(field.fieldName) && !isImageField(field.fieldName) && getFileInfo(field.fieldName)" class="file-value">
+    <mat-icon>attach_file</mat-icon>
+    <a [href]="getFileInfo(field.fieldName)?.url" target="_blank" class="file-link">
+      Télécharger le fichier
+    </a>
+  </div>
+
+  <!-- 5. TABLES -->
+  <div *ngIf="isTableField(field.fieldName) && getTableData(field.fieldName)" class="table-value">
+    <div class="table-container">
+      <table mat-table [dataSource]="getTableData(field.fieldName).rows" class="form-table">
+        <ng-container *ngFor="let column of getTableData(field.fieldName).columns; let i = index" [matColumnDef]="column">
+          <th mat-header-cell *matHeaderCellDef>{{column}}</th>
+          <td mat-cell *matCellDef="let row">{{row[column] || '-'}}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="getTableData(field.fieldName).columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: getTableData(field.fieldName).columns;"></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. CHAMPS TEXTE/NOMBRE/BASIQUES -->
+  <div *ngIf="!isFileField(field.fieldName) &&
+             !isImageField(field.fieldName) &&
+             !isTableField(field.fieldName) &&
+             !isStaticImageField(field.fieldName) &&
+             !isComplexObjectField(field.fieldName) &&
+             !isExternalListField(field.fieldName)"
+       class="text-value">
+    <span [class.empty-value]="!field.value">
+      {{formatFieldValue(field.fieldName, field.value)}}
+    </span>
+  </div>
+
+  <!-- 7. ÉTAT VIDE -->
+  <div *ngIf="!field.value &&
+             !isStaticImageField(field.fieldName)"
+       class="empty-field">
+    <mat-icon>remove</mat-icon>
+    <span>Non renseigné</span>
+  </div>
+</div>
+            <!-- Field Metadata -->
+            <div *ngIf="hasFieldMetadata(field.fieldName)" class="field-metadata">
+              <small>
+                <mat-icon class="metadata-icon">info</mat-icon>
+                {{getFieldMetadataInfo(field.fieldName)}}
+              </small>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Metadata Card -->
+    <mat-card class="metadata-card" *ngIf="getSubmissionMetadata() | keyvalue as metadataEntries; else: noMetadata">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>info_outline</mat-icon>
+          Métadonnées techniques
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Informations techniques de la soumission
+            </mat-panel-title>
+            <mat-panel-description>
+              {{metadataEntries.length}} élément(s) de métadonnées
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="metadata-content">
+            <div *ngFor="let metadata of metadataEntries" class="metadata-item">
+              <div class="metadata-key">{{metadata.key}}</div>
+              <div class="metadata-value">
+                <pre>{{formatMetadata(metadata.key, metadata.value)}}</pre>
+              </div>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-card-content>
+    </mat-card>
+
+    <ng-template #noMetadata></ng-template>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!isLoading && (!submission || !currentForm)" class="error-state">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          <h2>Soumission non trouvée</h2>
+          <p>La soumission demandée n'existe pas ou n'est plus disponible.</p>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Retour à la liste
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

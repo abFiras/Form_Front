@@ -89,6 +89,13 @@
                 Rôle
               </span>
             </th>
+            <!-- ✅ NOUVELLE COLONNE GROUPE -->
+            <th class="table-header">
+              <span class="header-content">
+                <span class="header-icon">🏢</span>
+                Groupe
+              </span>
+            </th>
             <th class="table-header">
               <span class="header-content">
                 <span class="header-icon">⚡</span>
@@ -131,10 +138,34 @@
               <span class="phone-text">{{user.phone}}</span>
             </td>
             <td class="table-cell">
-              <span class="role-badge" [class]="'role-' + getUserRole(user).toLowerCase().replace('role_', '')">
-                {{getUserRoleLabel(user)}}
-              </span>
+  <span class="role-badge"
+      [class]="'role-' + getUserRole(user).toLowerCase().replace('role_', '')">
+  {{ getUserRoleLabel(user) }}
+</span>
+
+
             </td>
+            <!-- ✅ NOUVELLE COLONNE AFFICHAGE GROUPE -->
+         <td class="table-cell">
+  <!-- Affiche le badge du groupe si présent -->
+  <div *ngIf="user.assignedGroup || user.group" class="group-badge"
+       [style.background-color]="getUserGroupColor(user)"
+       [style.color]="'white'">
+    <span class="group-icon">{{getUserGroupIcon(user)}}</span>
+    <span class="group-name">{{(user.assignedGroup || user.group)?.name}}</span>
+  </div>
+
+  <!-- Affiche "Aucun groupe" si aucun groupe assigné -->
+  <span *ngIf="!user.assignedGroup && !user.group" class="no-group">
+    Aucun groupe
+  </span>
+</td>
+
+
+
+
+
+
             <td class="table-cell">
               <div class="status-container">
                 <button
@@ -150,7 +181,6 @@
             </td>
             <td class="table-cell actions-cell">
               <div class="actions-container">
-
                 <!-- Bouton Ban/Unban -->
                 <button
                   class="action-btn ban-btn"
@@ -266,7 +296,7 @@
             required>
         </div>
 
-       <!----> <div class="form-group">
+        <div class="form-group">
           <label class="form-label">Rôle</label>
           <select
             class="form-select"
@@ -277,6 +307,27 @@
               {{role.label}}
             </option>
           </select>
+        </div>
+
+        <!-- ✅ NOUVEAU CHAMP: Sélection de groupe -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="group-icon">🏢</span>
+            Groupe D&S
+          </label>
+          <select
+            class="form-select group-select"
+            [(ngModel)]="newUser.selectedGroupId"
+            name="selectedGroupId">
+            <option value="">-- Assignation automatique --</option>
+            <option *ngFor="let group of groups" [value]="group.id">
+              <span>{{userService.getGroupIcon(group.name)}} {{group.name}}</span>
+              <small> - {{group.description}}</small>
+            </option>
+          </select>
+          <div class="form-help-text">
+            Si aucun groupe n'est sélectionné, l'utilisateur sera assigné automatiquement au groupe ayant le moins de membres.
+          </div>
         </div>
 
         <div class="form-group checkbox-group">
@@ -325,7 +376,6 @@
             required>
         </div>
                 <div class="form-group">
-
             <label class="form-label">Prenom</label>
           <input
             type="text"
@@ -335,7 +385,6 @@
             required>
         </div>
                 <div class="form-group">
-
             <label class="form-label">Nom</label>
           <input
             type="text"
@@ -377,6 +426,26 @@
           </option>
         </select>
       </div>
+
+        <!-- ✅ NOUVEAU CHAMP: Modification de groupe -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="group-icon">🏢</span>
+            Groupe D&S
+          </label>
+          <select
+            class="form-select group-select"
+            [(ngModel)]="selectedUser.selectedGroupId"
+            name="selectedGroupId">
+            <option value="">-- Aucun groupe --</option>
+            <option *ngFor="let group of groups" [value]="group.id">
+              {{userService.getGroupIcon(group.name)}} {{group.name}} - {{group.description}}
+            </option>
+          </select>
+          <div class="form-help-text">
+            Groupe actuel: <strong>{{selectedUser.assignedGroup?.name || 'Aucun'}}</strong>
+          </div>
+        </div>
 
         <div class="form-group checkbox-group">
           <label class="checkbox-label">

@@ -23,11 +23,12 @@ export class AuthService {
   }
   // auth.service.ts
 getCurrentUser(): Observable<any> {
-  const token = localStorage.getItem('accessToken'); // ou authService.getToken()
+  const token = localStorage.getItem('accessToken');
   return this.http.get<any>(`${this.baseUrl}/auth/me`, {
     headers: { Authorization: `Bearer ${token}` }
   });
 }
+
 getUserRoles(): string[] {
   const token = this.getToken();
   if (!token) return [];

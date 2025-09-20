@@ -48,26 +48,34 @@ export class UserProfileComponent implements OnInit {
   }
 
   loadUserProfile(): void {
-    this.authService.getCurrentUser().subscribe({
-      next: (user) => {
-        if (user) {
-          this.user = user;
-          this.profilePhotoUrl = user.profilePhotoUrl || 'assets/images/icon.png';
+  this.loading = true;
+  this.authService.getCurrentUser().subscribe({
+    next: (user) => {
+      if (user) {
+        this.user = user;
+        this.profilePhotoUrl = user.profilePhotoUrl || 'assets/images/icon.png';
 
-          this.profileForm.patchValue({
-            prenom: user.prenom ?? '',
-            nom: user.nom ?? '',
-            email: user.email ?? '',
-            phone: user.phone ?? ''
-          });
-        }
-      },
-      error: (err) => {
-        console.error('Erreur de récupération utilisateur:', err);
-        this.showMessage('Erreur lors du chargement du profil', 'error');
+        // Patcher le formulaire avec des valeurs sécurisées
+        this.profileForm.patchValue({
+          prenom: user.prenom || '',
+          nom: user.nom || '',
+          email: user.email || '',
+          phone: user.phone || ''
+        });
+
+        console.log('Utilisateur chargé:', this.user);
+      } else {
+        this.showMessage('Aucune donnée utilisateur trouvée', 'error');
       }
-    });
-  }
+      this.loading = false;
+    },
+    error: (err) => {
+      console.error('Erreur de récupération utilisateur:', err);
+      this.showMessage('Erreur lors du chargement du profil', 'error');
+      this.loading = false;
+    }
+  });
+}
 
   onProfilePhotoChange(event: any): void {
     const file = event.target.files[0];
@@ -126,32 +134,49 @@ export class UserProfileComponent implements OnInit {
     }
   }
 
-  onUpdateProfile(): void {
-    if (this.profileForm.valid && this.user) {
-      this.loading = true;
-      const updates = this.profileForm.value;
+ onUpdateProfile(): void {
+  if (this.profileForm.valid && this.user) {
+    this.loading = true;
+    const updates = {
+      ...this.profileForm.value,
+      username: this.user.username // Garder le username existant
+    };
 
-      this.userService.updateProfile(updates).subscribe({
-        next: (response) => {
-          this.user = response;
+    this.userService.updateProfile(updates).subscribe({
+      next: (response) => {
+        // Mettre à jour l'utilisateur local avec la réponse
+        if (response) {
+          this.user = { ...this.user, ...response };
           this.isEditingProfile = false;
           this.showMessage('Profil mis à jour avec succès!', 'success');
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Erreur lors de la mise à jour:', error);
-          let errorMessage = 'Erreur lors de la mise à jour du profil';
-          if (error.error && typeof error.error === 'string') {
-            errorMessage = error.error;
-          } else if (error.error && error.error.message) {
-            errorMessage = error.error.message;
-          }
-          this.showMessage(errorMessage, 'error');
-          this.loading = false;
+
+          // Optionnel: recharger complètement le profil
+           this.loadUserProfile();
         }
-      });
-    }
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Erreur lors de la mise à jour:', error);
+        let errorMessage = 'Erreur lors de la mise à jour du profil';
+
+        if (error.error) {
+          if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.error.message) {
+            errorMessage = error.error.message;
+          } else if (error.error.error) {
+            errorMessage = error.error.error;
+          }
+        }
+
+        this.showMessage(errorMessage, 'error');
+        this.loading = false;
+      }
+    });
+  } else {
+    this.showMessage('Veuillez remplir tous les champs requis', 'error');
   }
+}
 
   toggleChangePassword(): void {
     this.isChangingPassword = !this.isChangingPassword;
@@ -215,22 +240,80 @@ export class UserProfileComponent implements OnInit {
     }, 5000);
   }
 
-  getRoleDisplay(): string {
-    if (!this.user?.roles) return '';
-    return this.user.roles.map(role =>
-      role.name.replace('ROLE_', '').toLowerCase()
-    ).join(', ');
+
+
+// ✅ MÉTHODE AJOUTÉE: Vérifier si l'utilisateur est administrateur
+isAdmin(): boolean {
+  return this.hasRole('ROLE_ADMIN');
+}
+getRoleDisplay(): string {
+  if (!this.user?.roles || !Array.isArray(this.user.roles) || this.user.roles.length === 0) {
+    return 'Utilisateur';
   }
 
-  getStatusBadgeClass(): string {
-    if (this.user?.banned) return 'status-banned';
-    if (this.user?.suspended) return 'status-suspended';
-    return 'status-active';
+  return this.user.roles
+    .filter(role => role) // Filtrer les valeurs nulles/undefined
+    .map(role => {
+      // TypeScript: role peut être string ou Role
+      const r = role as string | { name: string };
+
+      if (typeof r === 'string') {
+        const roleName = r.replace('ROLE_', '');
+        return roleName.charAt(0).toUpperCase() + roleName.slice(1).toLowerCase();
+      } else if (r.name) {
+        const roleName = r.name.replace('ROLE_', '');
+        return roleName.charAt(0).toUpperCase() + roleName.slice(1).toLowerCase();
+      }
+
+      return 'Utilisateur';
+    })
+    .join(', ') || 'Utilisateur';
+}
+
+// ✅ MÉTHODE CORRIGÉE: Vérification des rôles selon la nouvelle structure
+hasRole(roleName: string): boolean {
+  if (!this.user?.roles || !Array.isArray(this.user.roles)) {
+    return false;
+  }
+  return this.user.roles.some(role => {
+    if (typeof role === 'string') {
+      return role === roleName;
+    } else if (role && role.name) {
+      return role.name === roleName;
+    }
+    return false;
+  });
+}
+
+// ✅ MÉTHODE CORRIGÉE: Obtenir le rôle principal
+getPrimaryRole(): string {
+  if (!this.user?.roles || !Array.isArray(this.user.roles) || this.user.roles.length === 0) {
+    return 'ROLE_USER';
   }
 
-  getStatusText(): string {
-    if (this.user?.banned) return 'Banni';
-    if (this.user?.suspended) return 'Suspendu';
-    return 'Actif';
+  const firstRole = this.user.roles[0];
+  if (typeof firstRole === 'string') {
+    return firstRole;
+  } else if (firstRole && firstRole.name) {
+    return firstRole.name;
   }
+  return 'ROLE_USER';
+}
+
+// ✅ MÉTHODE CORRIGÉE: Gestion sécurisée du statut
+getStatusBadgeClass(): string {
+  if (!this.user) return 'status-unknown';
+  if (this.user.banned === true) return 'status-banned';
+  if (this.user.suspended === true) return 'status-suspended';
+  return 'status-active';
+}
+
+// ✅ MÉTHODE CORRIGÉE: Gestion sécurisée du texte de statut
+getStatusText(): string {
+  if (!this.user) return 'Inconnu';
+  if (this.user.banned === true) return 'Banni';
+  if (this.user.suspended === true) return 'Suspendu';
+  return 'Actif';
+}
+
 }
