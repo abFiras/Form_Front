@@ -103,7 +103,7 @@
             <mat-card-content>
               <div class="card-header">
                 <h4>{{form.name}}</h4>
-                <mat-chip-listbox>box>>
+                <mat-chip-listbox>>
                   <mat-chip [style.background-color]="getLanguageColor(form.language)">
                     {{form.language.toUpperCase()}}
                   </mat-chip>
@@ -222,19 +222,21 @@
           <mat-icon>visibility</mat-icon>
           Prévisualiser
         </button>
-        <button mat-raised-button color="accent" (click)="addToAccount(form)">
+       <!-- <button mat-raised-button color="accent" (click)="addToAccount(form)">
           <mat-icon>add</mat-icon>
           Ajouter au compte
-        </button>
+        </button>-->
         <button mat-icon-button [matMenuTriggerFor]="menu" class="more-actions">
           <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #menu="matMenu">
-          <button mat-menu-item (click)="downloadForm(form)">
+         <!-- <button mat-menu-item (click)="downloadForm(form)">
             <mat-icon>download</mat-icon>
             Télécharger (Word/Excel)
-          </button>
-          <button mat-menu-item (click)="removeFromLibrary(form)" class="delete-action">
+          </button>-->
+          <button mat-menu-item
+           [disabled]=" !canEdit(form)"
+           (click)="removeFromLibrary(form)" class="delete-action">
             <mat-icon>delete</mat-icon>
             Supprimer de la bibliothèque
           </button>
@@ -289,18 +291,18 @@
                 <mat-icon>visibility</mat-icon>
                 Prévisualiser
               </button>
-              <button mat-raised-button color="accent" (click)="addToAccount(form)">
+             <!-- <button mat-raised-button color="accent" (click)="addToAccount(form)">
                 <mat-icon>add</mat-icon>
                 Ajouter
-              </button>
+              </button>-->
               <button mat-icon-button [matMenuTriggerFor]="listMenu" class="more-actions">
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #listMenu="matMenu">
-                <button mat-menu-item (click)="downloadForm(form)">
+               <!-- <button mat-menu-item (click)="downloadForm(form)">
                   <mat-icon>download</mat-icon>
                   Télécharger
-                </button>
+                </button>-->
                 <button mat-menu-item (click)="removeFromLibrary(form)" class="delete-action">
                   <mat-icon>delete</mat-icon>
                   Supprimer

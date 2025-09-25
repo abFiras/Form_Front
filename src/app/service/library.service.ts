@@ -18,6 +18,8 @@ export interface LibraryFormDTO {
   createdAt: string;
   updatedAt: string;
   tags: string;
+    createdBy?: number;  // ✅ Ajout
+
 }
 
 export interface LibraryFilters {
@@ -294,7 +296,7 @@ export class LibraryService {
   /**
    * Valide et nettoie un ID avant de l'utiliser
    */
- 
+
   /**
    * Vérifie si un ID est potentiellement valide sans lever d'exception
    */

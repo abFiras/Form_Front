@@ -214,7 +214,62 @@
   gap: 6px;
   align-items: center;
 }
+/* Styles pour les boutons désactivés dans les menus */
+.disabled-menu-item {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
 
+.disabled-icon {
+  color: #ccc !important;
+}
+
+/* Styles pour les indicateurs d'accès */
+.access-indicator {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+
+.creator-badge {
+  background-color: #fff3e0;
+  color: #f57c00;
+  border: 1px solid #ffcc02;
+}
+
+.access-badge {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+  border: 1px solid #4caf50;
+}
+
+.no-access-badge {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #f44336;
+}
+
+.creator-icon, .access-icon, .no-access-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-right: 4px;
+}
+
+.access-text {
+  font-weight: 500;
+  font-size: 10px;
+}
+
+/* Amélioration des tooltips */
+.mat-tooltip {
+  font-size: 12px !important;
+  max-width: 300px !important;
+  white-space: normal !important;
+}
 /* Action buttons - Couleurs spécifiques selon votre capture */
 .action-btn {
   padding: 6px 12px !important;
@@ -228,10 +283,20 @@
 }
 
 /* Boutons section Brouillons */
+/* Bouton désactivé */
+.action-btn:disabled {
+  background: #ccc !important;   /* gris */
+  color: #666 !important;        /* texte grisé */
+  cursor: not-allowed !important; /* curseur interdit */
+  opacity: 0.7;                   /* effet visuel */
+}
+
+/* Boutons section Brouillons */
 .btn-modify {
   background: #28a745 !important;
   color: white !important;
 }
+
 
 .btn-modify:hover {
   background: #218838 !important;

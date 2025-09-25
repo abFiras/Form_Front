@@ -89,10 +89,22 @@
           <div class="form-name">{{form.name}}</div>
           <div class="form-count">{{getFormFieldsCount(form)}}</div>
           <div class="form-actions">
-            <button mat-raised-button class="action-btn btn-modify" (click)="editForm(form.id!)">
-              <mat-icon>edit</mat-icon>
-              Modifier
-            </button>
+<span
+  [matTooltip]="!canEdit(form) ? 'Seul le créateur peut modifier ce formulaire' : ''"
+  matTooltipPosition="above">
+  <button
+    mat-raised-button
+    class="action-btn btn-modify"
+    (click)="editForm(form.id!)"
+    [disabled]="!canEdit(form)">
+    <mat-icon>edit</mat-icon>
+    Modifier
+  </button>
+</span>
+
+
+
+
             <button mat-raised-button class="action-btn btn-preview" (click)="previewForm(form.id!)">
               <mat-icon>visibility</mat-icon>
               Aperçu
@@ -105,13 +117,26 @@
               <mat-icon>more_vert</mat-icon>
             </button>
 
-            <mat-menu #draftMenu="matMenu">
-             
-              <button mat-menu-item (click)="deleteForm(form.id!)" class="delete-action">
-                <mat-icon>delete</mat-icon>
-                Supprimer
-              </button>
-            </mat-menu>
+<mat-menu #draftMenu="matMenu">
+  <!-- ✅ BOUTON TÉLÉCHARGER WORD avec logique d'autorisation -->
+  <span [matTooltip]="getDownloadAccessMessage(form)"
+        matTooltipPosition="left"
+        [matTooltipDisabled]="canDownloadForm(form)">
+    <button
+      mat-menu-item
+      (click)="downloadFormAsWord(form)"
+      [disabled]="!canDownloadForm(form)"
+      [class.disabled-menu-item]="!canDownloadForm(form)">
+      <mat-icon [class.disabled-icon]="!canDownloadForm(form)">download</mat-icon>
+      Télécharger en Word
+    </button>
+  </span>
+
+  <button mat-menu-item (click)="deleteForm(form.id!)" class="delete-action">
+    <mat-icon>delete</mat-icon>
+    Supprimer
+  </button>
+</mat-menu>
           </div>
         </div>
       </div>
@@ -148,17 +173,41 @@
               <mat-icon>more_vert</mat-icon>
             </button>
 
-            <mat-menu #publishedMenu="matMenu">
-              <button mat-menu-item (click)="copyPublicUrl(form)">
-                <mat-icon>link</mat-icon>
-                Copier URL publique
-              </button>
+<mat-menu #publishedMenu="matMenu">
+  <button mat-menu-item (click)="copyPublicUrl(form)">
+    <mat-icon>link</mat-icon>
+    Copier URL publique
+  </button>
+<span [matTooltip]="form.isInLibrary ? 'Formulaire déjà dans la bibliothèque' : 'Partager ce formulaire dans la bibliothèque'"
+        matTooltipPosition="left">
+    <button
+      mat-menu-item
+      (click)="shareToLibrary(form)"
+      [disabled]="form.isInLibrary || !canEdit(form)"
+      [class.disabled-menu-item]="form.isInLibrary || !canEdit(form)">
+      <mat-icon [class.disabled-icon]="form.isInLibrary">library_add</mat-icon>
+      {{form.isInLibrary ? 'Déjà dans la bibliothèque' : 'Partager vers bibliothèque'}}
+    </button>
+  </span>
+  <!-- ✅ BOUTON TÉLÉCHARGER WORD avec logique d'autorisation -->
+  <span [matTooltip]="getDownloadAccessMessage(form)"
+        matTooltipPosition="left"
+        [matTooltipDisabled]="canDownloadForm(form)">
+    <button
+      mat-menu-item
+      (click)="downloadFormAsWord(form)"
+      [disabled]="!canDownloadForm(form)"
+      [class.disabled-menu-item]="!canDownloadForm(form)">
+      <mat-icon [class.disabled-icon]="!canDownloadForm(form)">download</mat-icon>
+      Télécharger en Word
+    </button>
+  </span>
 
-              <button mat-menu-item (click)="deleteForm(form.id!)" class="delete-action">
-                <mat-icon>delete</mat-icon>
-                Supprimer
-              </button>
-            </mat-menu>
+  <button mat-menu-item (click)="deleteForm(form.id!)" class="delete-action">
+    <mat-icon>delete</mat-icon>
+    Supprimer
+  </button>
+</mat-menu>
           </div>
         </div>
       </div>

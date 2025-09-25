@@ -3,6 +3,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { LibraryFilters, LibraryFormDTO, LibraryService } from '../service/library.service';
 import { Router } from '@angular/router';
+import { FormDTO } from '../models/form.models';
+import { AuthService } from '../service/auth.service';
 
 @Component({
   selector: 'app-bibliotheque',
@@ -15,6 +17,7 @@ export class BibliothequeComponent implements OnInit {
   filteredForms: LibraryFormDTO[] = [];
   popularForms: LibraryFormDTO[] = [];
   recentForms: LibraryFormDTO[] = [];
+    currentUserId!: number;
 
   loading = false;
 
@@ -55,13 +58,31 @@ export class BibliothequeComponent implements OnInit {
     private libraryService: LibraryService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private router:Router
+    private router:Router,
+    private authService: AuthService,
+
   ) {}
 
   ngOnInit(): void {
-    this.loadLibraryForms();
+
+     this.authService.getCurrentUser().subscribe({
+      next: (user) => {
+        console.log('Current logged-in user:', user);
+        this.currentUserId = user.id; // ✅ stocke l'ID utilisateur connecté
+      this.loadLibraryForms();
+      },
+      error: (err) => {
+        console.error('Error fetching current user:', err);
+      }
+    });
+
     this.loadPopularForms();
     this.loadRecentForms();
+
+  }
+
+   canEdit(form: LibraryFormDTO): boolean {
+    return form.createdBy === this.currentUserId;
   }
 
   /**
@@ -90,7 +111,7 @@ export class BibliothequeComponent implements OnInit {
    * Charge les formulaires populaires
    */
   loadPopularForms(): void {
-    this.libraryService.getPopularForms(5).subscribe({
+    this.libraryService.getPopularForms(3).subscribe({
       next: (forms) => {
         this.popularForms = forms;
       },
@@ -104,7 +125,7 @@ export class BibliothequeComponent implements OnInit {
    * Charge les formulaires récents
    */
   loadRecentForms(): void {
-    this.libraryService.getRecentForms(5).subscribe({
+    this.libraryService.getRecentForms(3).subscribe({
       next: (forms) => {
         this.recentForms = forms;
       },
@@ -154,7 +175,7 @@ export class BibliothequeComponent implements OnInit {
   previewForm(form: LibraryFormDTO): void {
     this.libraryService.incrementViewCount(form.id).subscribe({
       next: () => {
-        form.viewCount++;
+        //form.viewCount++;
         // Ici vous pouvez ouvrir une modal de prévisualisation
         this.snackBar.open('Prévisualisation du formulaire...', 'Fermer', {
           duration: 2000

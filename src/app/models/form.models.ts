@@ -3,12 +3,14 @@
 export interface FormDTO {
   id?: number;
   name: string;
+  secteur: string;
   description?: string;
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   fields: FormFieldDTO[];
   createdAt?: string;
   updatedAt?: string;
   createdBy?: number;
+
 
   // ✅ NOUVEAU : Gestion des groupes
   assignedGroupIds?: number[];
@@ -17,6 +19,8 @@ export interface FormDTO {
   // ✅ NOUVEAU : Indicateurs d'accès
   isAccessible?: boolean;
   canEdit?: boolean;
+
+  isInLibrary?: boolean;
 }
 
 export interface FormFieldDTO {
@@ -97,6 +101,7 @@ export interface GroupDTO {
 export interface FormCreateRequest {
   name: string;
   description?: string;
+  secteur: string;
   fields: FormFieldCreateDTO[];
   userId?: number; // Sera rempli automatiquement côté service
   groupIds?: number[]; // ✅ Groupes assignés au formulaire

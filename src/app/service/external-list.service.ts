@@ -20,6 +20,7 @@ export interface ExternalListDTO {
   isAdvanced?: boolean;
   isFiltered?: boolean;
   createdBy?: number;
+  createdName?: string;
   createdAt?: string;
   updatedAt?: string;
   itemCount?: number;

@@ -45,6 +45,63 @@ export class SubmissionDetailComponent implements OnInit {
       }
     });
   }
+  // ✅ NOUVELLE MÉTHODE : Télécharger la soumission en Word
+downloadSubmissionAsWord(): void {
+  if (!this.submission || !this.currentForm) {
+    this.snackBar.open('Données de soumission non disponibles', 'Fermer', { duration: 3000 });
+    return;
+  }
+
+  console.log('Téléchargement Word de la soumission:', this.submission.id);
+
+  this.formService.downloadSubmissionAsWord(this.formId, this.submissionId).subscribe({
+    next: (blob) => {
+      // Créer un nom de fichier sécurisé
+      const fileName = this.sanitizeFileName(
+        `${this.currentForm!.name}_soumission_${this.submission!.id}`
+      ) + '.docx';
+
+      // Télécharger le fichier
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+
+      // Nettoyer l'URL
+      window.URL.revokeObjectURL(url);
+
+      this.snackBar.open(
+        `Soumission "${this.currentForm!.name}" téléchargée en Word`,
+        'Fermer',
+        { duration: 3000 }
+      );
+    },
+    error: (error) => {
+      console.error('Erreur téléchargement Word soumission:', error);
+
+      let errorMessage = 'Erreur lors du téléchargement de la soumission';
+
+      if (error.status === 403) {
+        errorMessage = 'Accès refusé: vous n\'êtes pas autorisé à télécharger cette soumission';
+      } else if (error.status === 404) {
+        errorMessage = 'Soumission non trouvée';
+      } else if (error.status === 500) {
+        errorMessage = 'Erreur serveur lors de la génération du document';
+      }
+
+      this.snackBar.open(errorMessage, 'Fermer', { duration: 4000 });
+    }
+  });
+}
+
+// ✅ MÉTHODE UTILITAIRE : Nettoyer le nom de fichier (si pas déjà présente)
+private sanitizeFileName(fileName: string): string {
+  return fileName
+    .replace(/[^a-zA-Z0-9\-_\s]/g, '') // Supprimer caractères spéciaux
+    .replace(/\s+/g, '_') // Remplacer espaces par underscores
+    .substring(0, 50); // Limiter la longueur
+}
 
   loadData(): void {
     this.isLoading = true;
@@ -226,16 +283,28 @@ formatFieldValue(fieldName: string, value: any): string {
       return 'Aucune image configurée pour ce champ';
     }
   }
-    // TRAITEMENT SPÉCIAL POUR LES LISTES EXTERNES
-    if (fieldType === 'external-list') {
-      const labelMap = this.externalListLabels.get(fieldName);
-      if (labelMap && labelMap.has(value.toString())) {
-        const label = labelMap.get(value.toString());
-        return `${label}`;
+    // ✅ TRAITEMENT SPÉCIAL POUR LES LISTES EXTERNES
+  if (fieldType === 'external-list') {
+    const labelMap = this.externalListLabels.get(fieldName);
+
+    if (labelMap) {
+      // Gestion des tableaux (sélection multiple)
+      if (Array.isArray(value)) {
+        const labels = value.map(v => labelMap.get(v.toString()) || v);
+        return labels.join(', ');
       }
-      // Fallback si le label n'est pas encore chargé ou pas trouvé
-      return `Valeur: ${value} (chargement des labels...)`;
+      // Gestion des valeurs simples
+      else if (labelMap.has(value.toString())) {
+        return labelMap.get(value.toString()) || value.toString();
+      }
     }
+
+    // Fallback si le label n'est pas encore chargé
+    if (Array.isArray(value)) {
+      return `Valeurs: ${value.join(', ')} (chargement des labels...)`;
+    }
+    return `Valeur: ${value} (chargement des labels...)`;
+  }
 
     // Traitement spécial pour les objets complexes (signature, drawing, file)
     if (typeof value === 'object' && !Array.isArray(value)) {
@@ -300,14 +369,23 @@ formatFieldValue(fieldName: string, value: any): string {
     }
   }
 
-  // Nouvelle méthode : Obtenir le label d'une valeur de liste externe
-  getExternalListLabel(fieldName: string, value: string): string {
-    const labelMap = this.externalListLabels.get(fieldName);
-    if (labelMap && labelMap.has(value)) {
-      return labelMap.get(value) || value;
-    }
-    return value;
+// ✅ MÉTHODE CORRIGÉE : Obtenir le label d'une valeur de liste externe
+getExternalListLabel(fieldName: string, value: string | string[]): string {
+  const labelMap = this.externalListLabels.get(fieldName);
+
+  if (!labelMap) {
+    return Array.isArray(value) ? value.join(', ') : value.toString();
   }
+
+  // ✅ GESTION DES TABLEAUX (pour les sélections multiples)
+  if (Array.isArray(value)) {
+    const labels = value.map(v => labelMap.get(v.toString()) || v);
+    return labels.join(', ');
+  }
+
+  // ✅ GESTION DES VALEURS SIMPLES
+  return labelMap.get(value.toString()) || value.toString();
+}
 
   // Méthode utilitaire : Vérifier si un champ est une liste externe
   isExternalListField(fieldName: string): boolean {

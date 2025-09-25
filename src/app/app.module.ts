@@ -57,6 +57,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { AuthInterceptor } from './service/auth-interceptor.service';
 import { SubmissionDetailComponent } from './submission-detail/submission-detail.component';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ExcelImportDialogComponent } from './excel-import-dialog/excel-import-dialog.component';
+import { FormHistoryComponent } from './form-history/form-history.component';
 
 @NgModule({
   declarations: [
@@ -83,6 +86,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
     FormSubmissionsComponent,
     FormFillComponent,
     SubmissionDetailComponent,
+    ExcelImportDialogComponent,
+    FormHistoryComponent,
 
   ],
   imports: [
@@ -118,7 +123,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
     MatTableModule,
     MatPaginatorModule,
     MatProgressBarModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatTooltipModule
 
 
 

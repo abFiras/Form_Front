@@ -6,7 +6,6 @@
     </h1>
   </div>
 
-
   <div class="content-area">
     <div class="options-grid">
       <!-- Créer à partir d'une liste vierge -->
@@ -20,21 +19,25 @@
         </div>
       </div>
 
-
       <!-- Créer à partir d'un fichier Excel -->
-      <div class="option-card">
+      <div class="option-card" (click)="onExcelImportClick()" [class.disabled]="isUploading">
         <div class="beta-badge">BETA</div>
         <div class="card-content">
           <div class="icon-container excel-icon">
-            <mat-icon>description</mat-icon>
-            <div class="arrow-icon">
+            <mat-icon *ngIf="!isUploading">description</mat-icon>
+            <mat-spinner diameter="24" *ngIf="isUploading"></mat-spinner>
+            <div class="arrow-icon" *ngIf="!isUploading">
               <mat-icon>arrow_forward</mat-icon>
             </div>
           </div>
-          <h3 class="card-title ">Créer à partir d'un fichier Excel</h3>
+          <h3 class="card-title">
+            {{ isUploading ? 'Validation en cours...' : 'Créer à partir d\'un fichier Excel' }}
+          </h3>
+          <p class="card-subtitle" *ngIf="!isUploading">
+            Formats supportés: .xlsx, .xls (max 5MB)
+          </p>
         </div>
       </div>
-
 
       <!-- Accéder à l'ancien éditeur de liste -->
       <div class="option-card">
@@ -46,5 +49,24 @@
         </div>
       </div>
     </div>
+
+    <!-- Messages d'erreur -->
+    <div class="error-section" *ngIf="validationErrors.length > 0">
+      <mat-card class="error-card">
+        <mat-card-header>
+          <mat-icon class="error-icon">error</mat-icon>
+          <mat-card-title>Erreurs de validation</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <ul class="error-list">
+            <li *ngFor="let error of validationErrors" class="error-item">
+              {{ error }}
+            </li>
+          </ul>
+        </mat-card-content>
+      </mat-card>
+    </div>
   </div>
 </div>
+
+

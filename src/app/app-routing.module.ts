@@ -18,6 +18,7 @@ import { FormSubmissionsComponent } from './form-submissions/form-submissions.co
 import { PublicFormComponent } from './public-form/public-form.component';
 import { FormFillComponent } from './form-fill/form-fill.component';
 import { SubmissionDetailComponent } from './submission-detail/submission-detail.component';
+import { FormHistoryComponent } from './form-history/form-history.component';
 
 const routes: Routes = [
   { path: '', component: LandingPageComponent }, // default route
@@ -54,6 +55,8 @@ const routes: Routes = [
 { path: 'forms/:id', component: LibraryFormDetailComponent },
 
   { path: 'forms/:id/submissions/:submissionId/detail', component: SubmissionDetailComponent },
+
+     { path: 'history', component: FormHistoryComponent },
 
 ];
 

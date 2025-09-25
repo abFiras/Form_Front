@@ -1,9 +1,11 @@
 // form-list.component.ts - Version avec navigation corrigée
 import { Component, OnInit } from '@angular/core';
-import { FormDTO } from '../models/form.models';
+import { FormDTO, GroupDTO } from '../models/form.models';
 import { FormService } from '../service/FormService';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../service/auth.service';
+import { LibraryFormDTO } from '../service/library.service';
 
 @Component({
   selector: 'app-form-list',
@@ -17,15 +19,224 @@ export class FormListComponent implements OnInit {
   draftForms: FormDTO[] = [];
   publishedForms: FormDTO[] = [];
   searchTerm = '';
+    currentUserId!: number;
+  currentUserGroup?: GroupDTO; // ✅ AJOUT : Groupe de l'utilisateur connecté
+
   constructor(
     private formService: FormService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService,
+
   ) {}
 
   ngOnInit(): void {
-    this.loadForms();
+       this.authService.getCurrentUser().subscribe({
+      next: (user) => {
+        console.log('Current logged-in user:', user);
+        this.currentUserId = user.id; // ✅ stocke l'ID utilisateur connecté
+  this.currentUserGroup = user.group; // ✅ AJOUT : Stocker le groupe de l'utilisateur
+        this.loadForms();
+      },
+      error: (err) => {
+        console.error('Error fetching current user:', err);
+      }
+    });
   }
+
+
+
+  // ✅ NOUVELLE MÉTHODE : Vérifier si l'utilisateur peut télécharger le formulaire
+  canDownloadForm(form: FormDTO): boolean {
+    // Si l'utilisateur est le créateur du formulaire, il peut toujours le télécharger
+    if (form.createdBy === this.currentUserId) {
+      return true;
+    }
+
+    // Si l'utilisateur n'a pas de groupe, il ne peut pas télécharger
+    if (!this.currentUserGroup) {
+      return false;
+    }
+
+    // Si le formulaire n'a pas de groupes assignés, accessible à tous
+    if (!form.assignedGroupIds || form.assignedGroupIds.length === 0) {
+      return true;
+    }
+
+    // Vérifier si l'utilisateur appartient à un des groupes assignés au formulaire
+    return form.assignedGroupIds.includes(this.currentUserGroup.id);
+  }
+
+  // ✅ MÉTHODE MISE À JOUR : Télécharger le formulaire en Word avec vérification d'accès
+  downloadFormAsWord(form: FormDTO): void {
+    if (!this.validateFormId(form)) {
+      return;
+    }
+
+    // ✅ Vérifier l'accès avant le téléchargement
+    if (!this.canDownloadForm(form)) {
+      const assignedGroups = this.getAssignedGroupNames(form);
+      const message = assignedGroups.length > 0
+        ? `Accès refusé. Ce formulaire est réservé aux groupes: ${assignedGroups.join(', ')}`
+        : 'Vous n\'avez pas l\'autorisation de télécharger ce formulaire';
+
+      this.snackBar.open(message, 'Fermer', {
+        duration: 5000,
+        panelClass: ['warning-snackbar']
+      });
+      return;
+    }
+
+    console.log('Téléchargement Word du formulaire:', form.name);
+
+    // ✅ MISE À JOUR : Passer l'ID utilisateur au service
+    this.formService.downloadFormAsWord(form.id!, this.currentUserId).subscribe({
+      next: (blob) => {
+        // Créer un nom de fichier sécurisé
+        const fileName = this.sanitizeFileName(form.name) + '_formulaire.docx';
+
+        // Télécharger le fichier
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.click();
+
+        // Nettoyer l'URL
+        window.URL.revokeObjectURL(url);
+
+        this.snackBar.open(`Formulaire "${form.name}" téléchargé en Word`, 'Fermer', {
+          duration: 3000
+        });
+      },
+      error: (error) => {
+        console.error('Erreur téléchargement Word:', error);
+
+        // ✅ Messages d'erreur plus spécifiques
+        let errorMessage = 'Erreur lors du téléchargement du formulaire';
+
+        if (error.status === 403) {
+          errorMessage = 'Accès refusé: vous n\'êtes pas autorisé à télécharger ce formulaire';
+        } else if (error.status === 404) {
+          errorMessage = 'Formulaire non trouvé';
+        } else if (error.status === 500) {
+          errorMessage = 'Erreur serveur lors de la génération du document';
+        }
+
+        this.snackBar.open(errorMessage, 'Fermer', {
+          duration: 4000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  // ✅ NOUVELLE MÉTHODE : Obtenir le message d'accès pour le tooltip
+  getDownloadAccessMessage(form: FormDTO): string {
+    if (form.createdBy === this.currentUserId) {
+      return 'Vous pouvez télécharger ce formulaire (vous êtes le créateur)';
+    }
+
+    if (!this.currentUserGroup) {
+      return 'Vous devez appartenir à un groupe pour télécharger ce formulaire';
+    }
+
+    if (!form.assignedGroupIds || form.assignedGroupIds.length === 0) {
+      return 'Formulaire accessible à tous - Téléchargement autorisé';
+    }
+
+    const canDownload = form.assignedGroupIds.includes(this.currentUserGroup.id);
+    if (canDownload) {
+      return `Téléchargement autorisé (votre groupe: ${this.currentUserGroup.name})`;
+    } else {
+      const assignedGroups = this.getAssignedGroupNames(form);
+      return `Accès refusé - Réservé aux groupes: ${assignedGroups.join(', ')}`;
+    }
+  }
+
+
+// ✅ MÉTHODE MISE À JOUR : canEdit avec logique similaire
+  canEdit1(form: FormDTO): boolean {
+    // Le créateur peut toujours éditer
+    if (form.createdBy === this.currentUserId) {
+      return true;
+    }
+
+    // Si l'utilisateur n'a pas de groupe, il ne peut pas éditer
+    if (!this.currentUserGroup) {
+      return false;
+    }
+
+    // Vérifier si l'utilisateur appartient à un des groupes assignés
+    if (form.assignedGroupIds && form.assignedGroupIds.length > 0) {
+      return form.assignedGroupIds.includes(this.currentUserGroup.id);
+    }
+
+    return false;
+  }
+
+  // ✅ NOUVELLE MÉTHODE : Obtenir les informations d'accès pour l'affichage
+  getFormAccessInfo(form: FormDTO): { canAccess: boolean, message: string, isCreator: boolean } {
+    const isCreator = form.createdBy === this.currentUserId;
+
+    if (isCreator) {
+      return {
+        canAccess: true,
+        message: 'Créateur',
+        isCreator: true
+      };
+    }
+
+    if (!this.currentUserGroup) {
+      return {
+        canAccess: false,
+        message: 'Aucun groupe assigné',
+        isCreator: false
+      };
+    }
+
+    if (!form.assignedGroupIds || form.assignedGroupIds.length === 0) {
+      return {
+        canAccess: true,
+        message: 'Accessible à tous',
+        isCreator: false
+      };
+    }
+
+    const hasAccess = form.assignedGroupIds.includes(this.currentUserGroup.id);
+    const assignedGroups = this.getAssignedGroupNames(form);
+
+    return {
+      canAccess: hasAccess,
+      message: hasAccess
+        ? `Votre groupe: ${this.currentUserGroup.name}`
+        : `Groupes requis: ${assignedGroups.join(', ')}`,
+      isCreator: false
+    };
+  }
+
+  // ✅ MÉTHODE UTILITAIRE : Nettoyer le nom de fichier
+  private sanitizeFileName(fileName: string): string {
+    return fileName
+      .replace(/[^a-zA-Z0-9\-_\s]/g, '') // Supprimer caractères spéciaux
+      .replace(/\s+/g, '_') // Remplacer espaces par underscores
+      .substring(0, 50); // Limiter la longueur
+  }
+
+  // ✅ MÉTHODE DE DEBUG : Afficher les informations d'accès
+  debugFormAccess(form: FormDTO): void {
+    console.log('=== DEBUG ACCÈS FORMULAIRE ===');
+    console.log('Nom du formulaire:', form.name);
+    console.log('Créé par:', form.createdBy);
+    console.log('Utilisateur actuel:', this.currentUserId);
+    console.log('Groupe utilisateur:', this.currentUserGroup);
+    console.log('Groupes assignés au formulaire:', form.assignedGroupIds);
+    console.log('Peut télécharger:', this.canDownloadForm(form));
+    console.log('Peut éditer:', this.canEdit(form));
+    console.log('Info d\'accès:', this.getFormAccessInfo(form));
+    console.log('===============================');
+  }
+
 
   loadForms(): void {
     this.loading = true;
@@ -90,6 +301,9 @@ export class FormListComponent implements OnInit {
     console.log('Navigation vers édition du formulaire ID:', id);
     this.router.navigate(['/forms', id, 'edit']);
   }
+  canEdit(form: FormDTO): boolean {
+  return form.createdBy === this.currentUserId;
+}
 
   previewForm(id: number | undefined): void {
     if (!id || isNaN(Number(id)) || id <= 0) {
@@ -309,4 +523,68 @@ export class FormListComponent implements OnInit {
       console.log(`Formulaire: ${form.name} - ID: ${form.id} (${typeof form.id})`);
     });
   }
+
+  /**
+ * Partage un formulaire vers la bibliothèque
+ */
+shareToLibrary(form: FormDTO): void {
+  if (!this.validateFormId(form) || !this.canEdit(form)) {
+    return;
+  }
+
+  if (form.status !== 'PUBLISHED') {
+    this.snackBar.open('Seuls les formulaires publiés peuvent être partagés', 'Fermer', {
+      duration: 3000
+    });
+    return;
+  }
+
+  if (form.isInLibrary) {
+    this.snackBar.open('Ce formulaire est déjà dans la bibliothèque', 'Fermer', {
+      duration: 3000
+    });
+    return;
+  }
+
+  // Dialog pour demander la langue et les tags
+  const dialogData = {
+    title: 'Partager vers la bibliothèque',
+    message: `Voulez-vous partager "${form.name}" dans la bibliothèque publique ?`,
+    formName: form.name
+  };
+
+  // Ici vous pouvez ouvrir un dialog pour saisir langue et tags
+  // Pour l'instant, utilisation de valeurs par défaut
+  const shareRequest = {
+    language: 'fr',
+  tags: form.assignedGroups?.map(g => g.name).join(', ') || ''
+  };
+
+  this.formService.shareFormToLibrary(form.id!, shareRequest).subscribe({
+    next: (response) => {
+      this.snackBar.open('Formulaire partagé avec succès dans la bibliothèque!', 'Fermer', {
+        duration: 4000,
+        panelClass: ['success-snackbar']
+      });
+
+      // Marquer le formulaire comme étant dans la bibliothèque
+      form.isInLibrary = true;
+    },
+    error: (error) => {
+      console.error('Erreur partage vers bibliothèque:', error);
+      let errorMessage = 'Erreur lors du partage vers la bibliothèque';
+
+      if (error.error?.message) {
+        errorMessage = error.error.message;
+      }
+
+      this.snackBar.open(errorMessage, 'Fermer', {
+        duration: 4000,
+        panelClass: ['error-snackbar']
+      });
+    }
+  });
+}
+
+
 }

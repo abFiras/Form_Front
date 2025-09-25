@@ -3,6 +3,13 @@
   <!-- Top Header with Form Name and Group Selection -->
   <div class="form-header" *ngIf="!isPreviewMode">
     <div class="form-title-section">
+      <span class="form-label">Secteur</span>
+      <input
+        class="form-secteur-input"
+        [value]="formSettingsForm.get('secteur')?.value || ''"
+        (input)="formSettingsForm.get('secteur')?.setValue($any($event.target).value)"
+        placeholder="Entrez le secteur">
+
       <span class="form-label">Formulaire</span>
       <input
         class="form-name-input"
@@ -32,24 +39,33 @@
     <div class="group-selection-container">
       <mat-form-field appearance="outline" class="group-select">
         <mat-label>Assigner aux groupes</mat-label>
-        <mat-select
-          multiple
-          [value]="selectedGroups"
-          (selectionChange)="onGroupSelectionChange($event)"
-          [disabled]="loadingGroups">
+      <mat-select
+  multiple
+  [value]="selectedGroups"
+  (selectionChange)="onGroupSelectionChange($event)"
+  [disabled]="loadingGroups">
 
-          <mat-option *ngFor="let group of availableGroups" [value]="group.id">
-            <div class="group-option">
-              <div class="group-color"
-                   [style.background-color]="group.color || '#007bff'">
-              </div>
-              <span class="group-name">{{ group.name }}</span>
-              <span class="group-description" *ngIf="group.description">
-                - {{ group.description }}
-              </span>
-            </div>
-          </mat-option>
-        </mat-select>
+  <mat-option
+    *ngFor="let group of availableGroups"
+    [value]="group.id"
+    [disabled]="currentUserGroup && group.id === currentUserGroup.id">
+    <div class="group-option"
+         [class.default-group-option]="currentUserGroup && group.id === currentUserGroup.id">
+      <div class="group-color"
+           [style.background-color]="group.color || '#007bff'">
+      </div>
+      <span class="group-name">{{ group.name }}</span>
+      <span class="group-description" *ngIf="group.description">
+        - {{ group.description }}
+      </span>
+      <!-- ✅ AJOUT : Indicateur pour le groupe par défaut -->
+      <mat-icon *ngIf="currentUserGroup && group.id === currentUserGroup.id"
+                class="default-indicator">
+        lock
+      </mat-icon>
+    </div>
+  </mat-option>
+</mat-select>
 
         <mat-hint *ngIf="loadingGroups">
           <mat-icon class="loading-icon">hourglass_empty</mat-icon>
@@ -66,28 +82,38 @@
       </mat-form-field>
 
       <!-- Affichage des groupes sélectionnés -->
-      <div class="selected-groups-display" *ngIf="hasSelectedGroups()">
-        <div class="selected-groups-label">Groupes assignés :</div>
-        <div class="selected-groups-chips">
-          <mat-chip
-            *ngFor="let groupId of selectedGroups"
-            class="group-chip">
-{{ getGroupName(groupId) }}
-            <mat-icon
-              matChipRemove
-              (click)="removeGroup(groupId)">
-              cancel
-            </mat-icon>
-          </mat-chip>
-        </div>
-      </div>
+      <!-- Affichage des groupes sélectionnés -->
+<div class="selected-groups-display" *ngIf="hasSelectedGroups()">
+  <div class="selected-groups-label">Groupes assignés :</div>
+  <div class="selected-groups-chips">
+    <mat-chip
+      *ngFor="let groupId of selectedGroups"
+      class="group-chip"
+      [class.default-group]="currentUserGroup && groupId === currentUserGroup.id">
+      {{ getGroupName(groupId) }}
+      <!-- ✅ MODIFICATION : Conditionner l'affichage du bouton de suppression -->
+      <mat-icon
+        *ngIf="canRemoveGroup(groupId)"
+        matChipRemove
+        (click)="removeGroup(groupId)">
+        cancel
+      </mat-icon>
+      <!-- ✅ AJOUT : Icône pour indiquer le groupe par défaut -->
+      <mat-icon
+        *ngIf="!canRemoveGroup(groupId)"
+        class="default-group-icon">
+        lock
+      </mat-icon>
+    </mat-chip>
+  </div>
+</div>
 
 
     </div>
   </div>
 
   <div class="header-actions">
-    <button mat-raised-button (click)="saveForm()" class="btn-save">
+    <button *ngIf="!isPreviewMode" mat-raised-button (click)="saveForm()" class="btn-save">
       <mat-icon>save</mat-icon>
       Enregistrer
     </button>
@@ -446,7 +472,7 @@
     <mat-card class="preview-card">
       <mat-card-header>
         <mat-card-title>{{currentForm?.name}}</mat-card-title>
-        <mat-card-subtitle>{{currentForm?.description}}</mat-card-subtitle>
+        <mat-card-subtitle style="color: #ef4444;">{{currentForm?.secteur}}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <form [formGroup]="previewForm" (ngSubmit)="submitPreview()">
@@ -459,12 +485,12 @@
           </div>
 
           <div class="preview-actions">
-            <button mat-raised-button
+          <!--  <button mat-raised-button
                     type="submit"
                     color="primary"
                     [disabled]="!previewForm.valid">
               Submit
-            </button>
+            </button>-->
             <button mat-button type="button" (click)="previewForm.reset()">
               Reset
             </button>

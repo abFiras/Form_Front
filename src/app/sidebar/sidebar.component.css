@@ -85,6 +85,7 @@
   border-radius: 0;
   position: relative;
   min-height: 48px;
+
 }
 
 .nav-link:hover {
@@ -168,6 +169,8 @@
   border-left: 2px solid rgba(233, 30, 99, 0.1);
   margin-left: 32px;
   animation: slideDown 0.3s ease-out;
+      cursor: pointer;
+
 }
 
 @keyframes slideDown {
@@ -219,8 +222,6 @@
   border-radius: 16px;
   border: 1px solid rgba(233, 30, 99, 0.1);
   opacity: 1;
-    cursor: pointer;
-
   transition: opacity 0.3s ease;
 }
 

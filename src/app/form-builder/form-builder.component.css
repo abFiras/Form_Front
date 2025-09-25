@@ -52,6 +52,28 @@
   }
 }
 
+.form-secteur-input {
+  border: none;
+  border-bottom: 2px solid #007bff; /* bleu pour différencier du nom */
+  background: transparent;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  padding: 8px 0;
+  outline: none;
+  max-width: 250px;
+  margin-right: 20px;
+}
+
+.form-secteur-input::placeholder {
+  color: #6c757d;
+}
+
+.form-secteur-input:focus {
+  border-bottom-color: #0056b3;
+}
+
+
 .form-actions {
   display: flex;
   gap: 8px;
@@ -73,6 +95,43 @@
     height: 20px;
   }
 }
+/* ✅ AJOUT : Styles pour le groupe par défaut */
+.group-chip.default-group {
+  background-color: #e3f2fd !important;
+  border: 1px solid #1976d2;
+}
+
+.default-group-icon {
+  color: #1976d2;
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* ✅ AJOUT : Styles pour l'option du groupe par défaut */
+.default-group-option {
+  background-color: #f5f5f5 !important;
+  opacity: 0.8;
+}
+
+.default-group-option .group-name {
+  font-weight: 500;
+  color: #1976d2;
+}
+
+.default-indicator {
+  color: #1976d2;
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: auto;
+}
+
+/* Style pour les options désactivées */
+.mat-option[disabled] {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
 
 .character-count {
   padding: 8px 24px;

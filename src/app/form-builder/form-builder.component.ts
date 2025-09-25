@@ -28,9 +28,11 @@ export class FormBuilderComponent implements OnInit {
   availableGroups: GroupDTO[] = [];
   selectedGroups: number[] = [];
   loadingGroups = false;
+currentUserGroup?: GroupDTO; // ✅ AJOUT : Groupe de l'utilisateur connecté
 
   formSettingsForm = new FormGroup({
     name: new FormControl('', Validators.required),
+    secteur:new FormControl('', Validators.required),
     description: new FormControl(''),
   selectedGroups: new FormControl<number[]>([]) // explicitly typed
   });
@@ -52,8 +54,7 @@ getGroupName(groupId: number): string {
   ngOnInit(): void {
     console.log('IsPreviewMode:', this.isPreviewMode);
 
-    // Charger les groupes disponibles
-    this.loadAvailableGroups();
+
 
     this.route.params.subscribe(params => {
       if (params['id']) {
@@ -66,12 +67,16 @@ getGroupName(groupId: number): string {
     this.authService.getCurrentUser().subscribe({
       next: (user) => {
         console.log('Current logged-in user:', user);
+              this.currentUserGroup = user.group; // ✅ Stocker le groupe de l'utilisateur
+      this.loadAvailableGroups();
+
       },
       error: (err) => {
         console.error('Error fetching current user:', err);
       }
     });
   }
+
 
   // Nouvelle méthode pour charger les groupes disponibles
   loadAvailableGroups(): void {
@@ -80,6 +85,13 @@ getGroupName(groupId: number): string {
       next: (groups) => {
         this.availableGroups = groups;
         this.loadingGroups = false;
+
+              // ✅ AJOUT : Inclure automatiquement le groupe de l'utilisateur
+
+            if (this.currentUserGroup && !this.selectedGroups.includes(this.currentUserGroup.id)) {
+        this.selectedGroups = [this.currentUserGroup.id, ...this.selectedGroups];
+        this.formSettingsForm.get('selectedGroups')?.setValue(this.selectedGroups);
+      }
         console.log('Groupes disponibles chargés:', groups);
       },
       error: (error) => {
@@ -168,6 +180,7 @@ getGroupName(groupId: number): string {
 
           this.formSettingsForm.patchValue({
             name: form.name,
+            secteur:form.secteur,
             description: form.description,
             selectedGroups: this.selectedGroups
           });
@@ -183,7 +196,7 @@ getGroupName(groupId: number): string {
   }
 
   // Nouvelle méthode pour gérer les changements de sélection de groupes
- 
+
 
   // Méthode pour obtenir les noms des groupes sélectionnés (pour l'affichage)
   getSelectedGroupNames(): string[] {
@@ -196,9 +209,19 @@ getGroupName(groupId: number): string {
   hasSelectedGroups(): boolean {
     return this.selectedGroups.length > 0;
   }
-
+// ✅ AJOUT : Méthode pour vérifier si un groupe peut être supprimé
+canRemoveGroup(groupId: number): boolean {
+  return !this.currentUserGroup || groupId !== this.currentUserGroup.id;
+}
   // Méthode pour supprimer un groupe spécifique
 removeGroup(groupId: number): void {
+
+    // ✅ AJOUT : Empêcher la suppression du groupe de l'utilisateur
+  if (this.currentUserGroup && groupId === this.currentUserGroup.id) {
+    this.snackBar.open('Vous ne pouvez pas supprimer votre groupe par défaut', 'Fermer', { duration: 3000 });
+    return;
+  }
+
   // Empêcher la propagation de l'événement pour éviter les interactions indésirables
   event?.stopPropagation();
 
@@ -470,6 +493,7 @@ saveForm(): void {
 
       const formData: FormCreateRequest | FormUpdateRequest = {
         name: this.formSettingsForm.value.name!,
+        secteur: this.formSettingsForm.value.secteur!,
         description: this.formSettingsForm.value.description || '',
         userId: numericUserId,
         groupIds: [...this.selectedGroups], // ✅ Copie indépendante des groupes
@@ -478,6 +502,7 @@ saveForm(): void {
 
       console.log('=== DONNÉES FINALES À ENVOYER ===');
       console.log('Nom:', formData.name);
+      console.log('secteur:', formData.secteur);
       console.log('Groupes sélectionnés:', formData.groupIds);
       console.log('Nombre de champs:', formData.fields.length);
       console.log('Noms des champs:', formData.fields.map(f => f.fieldName));
@@ -512,9 +537,13 @@ saveForm(): void {
       // ✅ Recharger proprement
       if (this.formId) {
         this.loadForm();
+                this.router.navigate(['/forms']);
+
       } else {
         this.formId = form.id;
-        this.router.navigate(['/forms', form.id, 'edit']);
+       // this.router.navigate(['/forms', form.id, 'edit']);
+               this.router.navigate(['/forms']);
+
       }
     },
     error: (error) => {
@@ -563,14 +592,24 @@ debugCurrentState(): void {
 onGroupSelectionChange(event: any): void {
   console.log('Changement de sélection des groupes:', event.value);
 
-  // ✅ Mise à jour simple sans affecter les champs
-  this.selectedGroups = [...event.value]; // Copie indépendante
+  let newSelection = [...event.value];
 
-  // Marquer comme modifié
+  // ✅ AJOUT : S'assurer que le groupe de l'utilisateur est toujours inclus
+  if (this.currentUserGroup && !newSelection.includes(this.currentUserGroup.id)) {
+    newSelection.unshift(this.currentUserGroup.id); // Ajouter au début
+
+    // Afficher un message d'information
+    this.snackBar.open(
+      'Votre groupe par défaut ne peut pas être désélectionné',
+      'Fermer',
+      { duration: 3000 }
+    );
+  }
+
+  this.selectedGroups = newSelection;
   this.formSettingsForm.markAsDirty();
 
   console.log('Nouveaux groupes sélectionnés:', this.selectedGroups);
-  console.log('Nombre de champs (inchangé):', this.formFields.length);
 }
 
 // ✅ MÉTHODE DE DEBUG pour identifier les problèmes

@@ -21,6 +21,44 @@ export class FormService {
 
   constructor(private http: HttpClient) {}
 
+/**
+ * Partage un formulaire vers la bibliothèque
+ */
+shareFormToLibrary(formId: number, request: any): Observable<any> {
+  return this.http.post(`${this.baseUrl}/${formId}/share-to-library`, request);
+}
+  downloadSubmissionAsWord(formId: number, submissionId: number): Observable<Blob> {
+  const url = `${this.baseUrl}/${formId}/submissions/${submissionId}/download/word`;
+
+  return this.http.get(url, {
+    responseType: 'blob',
+    headers: {
+      'Accept': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    }
+  }).pipe(
+    catchError(error => {
+      console.error('Erreur téléchargement Word soumission:', error);
+      throw error;
+    })
+  );
+}
+  // ✅ NOUVELLE MÉTHODE : Télécharger formulaire en Word avec userId
+downloadFormAsWord(formId: number, userId: number): Observable<Blob> {
+  const url = `${this.baseUrl}/forms/${formId}/download/word?userId=${userId}`;
+
+  return this.http.get(url, {
+    responseType: 'blob',
+    headers: {
+      'Accept': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    }
+  }).pipe(
+    catchError(error => {
+      console.error('Erreur téléchargement Word:', error);
+      throw error;
+    })
+  );
+}
+
   // ✅ MÉTHODE UTILITAIRE : Valider les IDs
   private validateFormId(formId: number | string | undefined | null): number {
     if (formId === undefined || formId === null) {

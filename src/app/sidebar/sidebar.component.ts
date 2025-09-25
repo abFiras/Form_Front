@@ -96,7 +96,7 @@ export class SidebarComponent {
       id: 'exports',
       label: 'Listes externes',
       icon: '📤',
-      route: '/exports',
+
       children: [
         {
           id: 'export-word',
@@ -116,13 +116,12 @@ export class SidebarComponent {
       id: 'exports',
       label: 'Données',
       icon: '📄',
-      route: '/exports',
       children: [
         {
           id: 'Historique',
           label: 'Historique',
           icon: '📄',
-          route: '/exports/word'
+          route: '/history' // ✅ NOUVEAU
         },
         {
           id: 'import-excel',

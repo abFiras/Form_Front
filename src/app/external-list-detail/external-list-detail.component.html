@@ -12,6 +12,10 @@
         </div>
 
         <div class="header-actions" *ngIf="list">
+           <button mat-raised-button color="primary" (click)="downloadAsExcel()">
+    <mat-icon>download</mat-icon>
+    Télécharger Excel
+  </button>
           <button mat-raised-button color="accent" (click)="editList()">
             <mat-icon>edit</mat-icon>
             Modifier

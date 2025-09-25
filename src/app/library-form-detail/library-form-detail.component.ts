@@ -54,7 +54,7 @@ export class LibraryFormDetailComponent implements OnInit {
         this.formDetail = detail;
         this.loading = false;
         // Incrémenter le compteur de vues
-        this.libraryService.incrementViewCount(this.libraryFormId).subscribe();
+        //this.libraryService.incrementViewCount(this.libraryFormId).subscribe();
       },
       error: (error) => {
         console.error('Erreur lors du chargement des détails:', error);
