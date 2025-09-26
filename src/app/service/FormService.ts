@@ -24,6 +24,19 @@ export class FormService {
 /**
  * Partage un formulaire vers la bibliothèque
  */
+/**
+ * Mettre à jour les attributs d'un champ
+ */
+updateFieldAttributes(fieldId: number, attributes: any): Observable<ApiResponse<string>> {
+  return this.http.put<ApiResponse<string>>(`${this.baseUrl}/form-fields/${fieldId}/attributes`, {
+    attributes: attributes
+  }).pipe(
+    catchError(error => {
+      console.error('Erreur mise à jour attributs champ:', error);
+      return throwError(() => error);
+    })
+  );
+}
 shareFormToLibrary(formId: number, request: any): Observable<any> {
   return this.http.post(`${this.baseUrl}/${formId}/share-to-library`, request);
 }
@@ -198,28 +211,42 @@ downloadFormAsWord(formId: number, userId: number): Observable<Blob> {
   }
 
   // ✅ SOUMETTRE UN FORMULAIRE - CORRECTION PRINCIPALE
-  submitForm(formId: number | string, submission: FormSubmissionRequest): Observable<FormSubmissionResponseDTO> {
-    try {
-      const validatedId = this.validateFormId(formId);
-      console.log('Soumission du formulaire, ID validé:', validatedId, 'Données:', submission);
+// Dans votre service Angular
+submitForm(formId: number | string, submission: FormSubmissionRequest): Observable<FormSubmissionResponseDTO> {
+  try {
+    const validatedId = this.validateFormId(formId);
 
-      // ✅ VALIDATION SUPPLÉMENTAIRE des données de soumission
-      if (!submission || !submission.data || Object.keys(submission.data).length === 0) {
-        throw new Error('Données de soumission manquantes ou vides');
-      }
+    // ✅ LOG DÉTAILLÉ des données envoyées
+    console.log('📤 Soumission du formulaire:', {
+      formId: validatedId,
+      dataKeys: Object.keys(submission.data),
+      dataTypes: Object.entries(submission.data).map(([key, value]) => ({
+        key,
+        type: typeof value,
+        hasValue: value !== null && value !== undefined
+      }))
+    });
 
-      return this.http.post<ApiResponse<FormSubmissionResponseDTO>>(`${this.baseUrl}/${validatedId}/submit`, submission)
-        .pipe(
-          map(response => {
-            console.log('Formulaire soumis avec succès:', response);
-            return response.data;
-          }),
-          catchError(this.handleError)
-        );
-    } catch (error) {
-      return throwError(error instanceof Error ? error.message : String(error));
+    // ✅ VALIDATION SUPPLÉMENTAIRE des données de soumission
+    if (!submission || !submission.data || Object.keys(submission.data).length === 0) {
+      throw new Error('Données de soumission manquantes ou vides');
     }
+
+    return this.http.post<ApiResponse<FormSubmissionResponseDTO>>(`${this.baseUrl}/${validatedId}/submit`, submission)
+      .pipe(
+        map(response => {
+          console.log('✅ Formulaire soumis avec succès:', response);
+          return response.data;
+        }),
+        catchError(error => {
+          console.error('❌ Erreur soumission:', error);
+          return this.handleError(error);
+        })
+      );
+  } catch (error) {
+    return throwError(error instanceof Error ? error.message : String(error));
   }
+}
 
   // ✅ OBTENIR LES SOUMISSIONS
   getFormSubmissions(formId: number | string): Observable<FormSubmissionResponseDTO[]> {

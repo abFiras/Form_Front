@@ -4,6 +4,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ExternalListConfigComponent } from '../external-list-config/external-list-config.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ExternalListFieldComponent } from '../external-list-field/external-list-field.component';
+import { FormService } from '../service/FormService';
 
 @Component({
   selector: 'app-dynamic-field',
@@ -50,7 +51,10 @@ export class DynamicFieldComponent implements OnInit, AfterViewInit {
   isScanning = false;
   nfcSupported = false;
 
-  constructor(private dialog: MatDialog) {}
+  constructor(private dialog: MatDialog,
+      private formService: FormService  // ✅ Ajoutez ceci
+
+  ) {}
 
   ngOnInit(): void {
     console.log('DynamicField ngOnInit - Field received:', this.field);
@@ -102,7 +106,79 @@ export class DynamicFieldComponent implements OnInit, AfterViewInit {
       setTimeout(() => this.initializeDrawingPad(), 100);
     }
   }
+// Gérer l'upload de fichier pour attachment
+onFileUpload(event: Event): void {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
 
+  // Vérifier la taille du fichier (par exemple, max 10MB)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxSize) {
+    alert('Le fichier est trop volumineux. Taille maximale : 10MB');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const fileData = e.target?.result as string;
+
+    // Sauvegarder le fichier en base64 dans le FormControl
+    this.formGroup.get(this.field.fieldName)?.setValue(fileData);
+
+    // Sauvegarder les métadonnées dans les attributs si nécessaire
+    if (!this.field.attributes) {
+      this.field.attributes = {};
+    }
+
+    this.field.attributes['fileName'] = file.name;
+    this.field.attributes['fileType'] = file.type;
+    this.field.attributes['fileSize'] = file.size;
+
+    console.log('Fichier uploadé:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      dataLength: fileData.length
+    });
+  };
+
+  reader.onerror = (error) => {
+    console.error('Erreur lecture fichier:', error);
+    alert('Erreur lors du chargement du fichier');
+  };
+
+  reader.readAsDataURL(file);
+}
+
+// Obtenir les types de fichiers acceptés
+getAcceptedFileTypes(): string {
+  // Vous pouvez configurer cela selon vos besoins
+  return '.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.zip';
+}
+
+// Obtenir le nom du fichier uploadé
+getUploadedFileName(): string {
+  return this.field.attributes?.['fileName'] || '';
+}
+
+// Effacer le fichier
+clearFile(): void {
+  this.formGroup.get(this.field.fieldName)?.setValue('');
+  if (this.field.attributes) {
+    delete this.field.attributes['fileName'];
+    delete this.field.attributes['fileType'];
+    delete this.field.attributes['fileSize'];
+  }
+}
+// Utilitaires pour les fichiers
+getFileSize(): string {
+  const size = this.field.attributes?.['fileSize'];
+  if (!size) return '';
+
+  if (size < 1024) return size + ' B';
+  if (size < 1024 * 1024) return Math.round(size / 1024) + ' KB';
+  return Math.round(size / (1024 * 1024)) + ' MB';
+}
   // ============ SIGNATURE CORRIGÉE ============
 initializeSignaturePad(): void {
   if (!this.signatureCanvas?.nativeElement) return;
@@ -916,10 +992,10 @@ private showNFCError(message: string): void {
   }
 
 // ============ MÉTHODE UPLOADIMAGE CORRIGÉE ============
+// Après l'upload d'image, sauvegarder en base
 uploadImage(event: Event): void {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (file) {
-    // Validation du type de fichier
     if (!file.type.startsWith('image/')) {
       alert('Veuillez sélectionner un fichier image valide');
       return;
@@ -929,30 +1005,20 @@ uploadImage(event: Event): void {
     reader.onload = (e) => {
       const imageUrl = e.target?.result as string;
 
-      // Initialiser attributes si nécessaire
       if (!this.field.attributes) {
         this.field.attributes = {};
       }
 
-      // Stocker l'URL de l'image dans les attributs
       this.field.attributes['imageUrl'] = imageUrl;
-
-      // Stocker aussi le nom du fichier
       this.field.attributes['fileName'] = file.name;
       this.field.attributes['fileType'] = file.type;
       this.field.attributes['fileSize'] = file.size;
 
-      console.log('Image uploaded:', {
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        dataLength: imageUrl.length
-      });
+      // ✅ NOUVEAU : Sauvegarder immédiatement en base via un service
+      this.saveFieldAttributes();
 
-      // Émettre le changement pour sauvegarder
       this.fieldChange.emit(this.field);
 
-      // Mettre à jour le formulaire d'édition si ouvert
       if (this.editMode) {
         this.editForm.patchValue({
           imageUrl: imageUrl
@@ -960,15 +1026,23 @@ uploadImage(event: Event): void {
       }
     };
 
-    reader.onerror = (error) => {
-      console.error('Erreur lors de la lecture du fichier:', error);
-      alert('Erreur lors du chargement de l\'image');
-    };
-
     reader.readAsDataURL(file);
   }
 }
+private saveFieldAttributes(): void {
+  if (!this.field.id || !this.field.attributes) return;
 
+  this.formService.updateFieldAttributes(this.field.id, this.field.attributes)
+    .subscribe({
+      next: (response) => {
+        console.log('Attributes sauvegardés pour le champ', this.field.fieldName);
+      },
+      error: (error) => {
+        console.error('Erreur sauvegarde attributes:', error);
+        // Optionnel : afficher un message d'erreur à l'utilisateur
+      }
+    });
+}
   // ============ MÉTHODES UTILITAIRES ============
   initializeSpecialFields(): void {
     if (this.field.type === 'table') {
@@ -1028,7 +1102,32 @@ uploadImage(event: Event): void {
     if (!this.formGroup) return;
 
     const validators = this.field.required ? [Validators.required] : [];
-    const control = new FormControl('', validators);
+
+      // Valeur par défaut selon le type de checkbox
+  let defaultValue: any;
+  if (this.field.type === 'checkbox') {
+    // Valeur par défaut selon le type de checkbox
+    if (this.field.options && this.field.options.length > 0) {
+      // Checkboxes multiples - array vide
+      defaultValue = [];
+    } else {
+      // Checkbox simple - boolean false
+      defaultValue = false;
+    }
+  } else {
+    // Autres types de champs
+    defaultValue = '';
+  }
+  if (this.field.options && this.field.options.length > 0) {
+    // Checkboxes multiples - array vide
+    defaultValue = [];
+  } else {
+    // Checkbox simple - boolean false
+    defaultValue = false;
+  }
+
+
+    const control = new FormControl(defaultValue, validators);
     this.formGroup.addControl(this.field.fieldName, control);
 
     // Contrôles additionnels pour les champs complexes
@@ -1108,9 +1207,17 @@ uploadImage(event: Event): void {
     }
 
 
-      if (this.field.type === 'fixed-text') {
-        updatedField.attributes['content'] = this.editForm.value.fixedText || '';
-      }
+if (this.field.type === 'fixed-text') {
+  const textContent = this.editForm.value.fixedText || '';
+  updatedField.attributes['content'] = textContent;
+
+  // Sauvegarder immédiatement via l'API
+  if (this.field.id) {
+    this.saveFieldAttributes();
+  }
+
+  console.log('Fixed-text content saved:', textContent);
+}
 
       if (this.field.type === 'file-fixed') {
         updatedField.attributes['fileName'] = this.editForm.value.fileName || '';
@@ -1165,7 +1272,35 @@ uploadImage(event: Event): void {
       }
     });
   }
+// Méthode pour vérifier si le champ fixed-text a du contenu
+hasFixedTextContent(): boolean {
+  if (this.field.type !== 'fixed-text') return false;
 
+  const content = this.getFixedTextContent();
+  return !!(content && content.trim() !== '' && content !== 'Texte à configurer...');
+}
+
+// Méthode améliorée pour récupérer le contenu
+getFixedTextContent(): string {
+  if (this.field.type !== 'fixed-text') return '';
+
+  // 1. Vérifier dans les attributs
+  if (this.field.attributes?.['content']) {
+    return this.field.attributes['content'];
+  }
+
+  // 2. Vérifier dans le placeholder (fallback)
+  if (this.field.placeholder && this.field.placeholder !== 'Enter texte fixe...') {
+    return this.field.placeholder;
+  }
+
+  // 3. Vérifier dans le label si configuré
+  if (this.field.label && this.field.label !== 'Texte fixe') {
+    return `Contenu basé sur le label: ${this.field.label}`;
+  }
+
+  return 'Texte non configuré';
+}
   get safeOptions() {
     return Array.isArray(this.field.options) ? this.field.options : [];
   }
@@ -1180,13 +1315,12 @@ triggerImageUpload(): void {
 }
   // Méthodes utilitaires pour l'affichage
 getImageUrl(): string {
-  // Vérifier d'abord dans les attributs
-  const attributeUrl = this.field.attributes?.['imageUrl'];
-  if (attributeUrl) {
-    return attributeUrl;
+  // ✅ CORRECTION : Vérifier d'abord dans les attributs du champ
+  if (this.field?.attributes?.['imageUrl']) {
+    return this.field.attributes['imageUrl'];
   }
 
-  // Fallback vers l'ancienne méthode si nécessaire
+  // Fallback vers le formulaire d'édition
   const editFormUrl = this.editForm?.get('imageUrl')?.value;
   if (editFormUrl) {
     return editFormUrl;
@@ -1203,9 +1337,28 @@ getImageUrl(): string {
     return this.field.attributes?.['formula'] || '';
   }
 
-  getFixedText(): string {
-    return this.field.attributes?.['content'] || 'Texte à configurer...';
+ // Remplacer votre méthode getFixedText() actuelle par :
+getFixedText(): string {
+  // 1. D'abord vérifier les attributes
+  if (this.field.attributes?.['content']) {
+    return this.field.attributes['content'];
   }
+
+  // 2. Ensuite le placeholder s'il contient du vrai contenu
+  if (this.field.placeholder &&
+      this.field.placeholder !== 'Enter texte fixe...' &&
+      this.field.placeholder.trim() !== '') {
+    return this.field.placeholder;
+  }
+
+  // 3. Utiliser le label si différent du défaut
+  if (this.field.label && this.field.label !== 'Texte fixe') {
+    return this.field.label;
+  }
+
+  // 4. Message par défaut plus explicite
+  return 'Contenu du texte fixe non configuré dans les paramètres du champ.';
+}
 
   getFileName(): string {
     return this.field.attributes?.['fileName'] || 'Document';
@@ -1312,6 +1465,28 @@ getDateTimePreview(): string {
 hasDateTimeError(): boolean {
   const mainControl = this.formGroup.get(this.field.fieldName);
   return !!(mainControl?.hasError('pattern') || mainControl?.hasError('invalid'));
+}
+// Vérifier si une option est sélectionnée
+isOptionSelected(optionValue: string): boolean {
+  const currentValue = this.formGroup.get(this.field.fieldName)?.value;
+  return Array.isArray(currentValue) && currentValue.includes(optionValue);
+}
+
+// Gérer le changement de checkbox
+onCheckboxChange(optionValue: string, event: any): void {
+  const currentValue = this.formGroup.get(this.field.fieldName)?.value || [];
+  let newValue: string[];
+
+  if (event.checked) {
+    // Ajouter la valeur si cochée
+    newValue = Array.isArray(currentValue) ? [...currentValue, optionValue] : [optionValue];
+  } else {
+    // Retirer la valeur si décochée
+    newValue = Array.isArray(currentValue) ? currentValue.filter(v => v !== optionValue) : [];
+  }
+
+  this.formGroup.get(this.field.fieldName)?.setValue(newValue);
+  console.log('Checkbox changed:', this.field.fieldName, newValue);
 }
 
 

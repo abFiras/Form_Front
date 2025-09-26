@@ -192,47 +192,16 @@
 <!-- ✅ DATETIME CORRIGÉE - Remplacez la section DateTime dans le template -->
 <div *ngIf="field.type === 'datetime'" class="datetime-field">
   <mat-form-field appearance="outline" class="full-width">
-    <mat-label>{{field.label}} - Date</mat-label>
+    <mat-label>{{field.label}}</mat-label>
     <input matInput
-           [matDatepicker]="dateTimePicker"
-           [placeholder]="'Sélectionnez une date'"
-           [formControlName]="field.fieldName + '_date'"
+           type="datetime-local"
+           [placeholder]="field.placeholder || 'jj/mm/aaaa HH:mm'"
+           [formControlName]="field.fieldName"
            [required]="field.required"
-           (dateInput)="onDateTimeChange()"
-           (dateChange)="onDateTimeChange()">
-    <mat-datepicker-toggle matSuffix [for]="dateTimePicker">
-      <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
-    </mat-datepicker-toggle>
-    <mat-datepicker #dateTimePicker
-                    [touchUi]="isMobile()"
-                    [startView]="'month'">
-    </mat-datepicker>
+           (input)="onManualDateTimeChange($event)">
+    <mat-icon matSuffix>edit</mat-icon>
+    <mat-hint>Format: AAAA-MM-JJTHH:mm</mat-hint>
   </mat-form-field>
-
-  <div class="datetime-time-section">
-    <mat-form-field appearance="outline">
-      <mat-label>Heure</mat-label>
-      <input matInput
-             type="time"
-             [placeholder]="'HH:mm'"
-             [formControlName]="field.fieldName + '_time'"
-             [required]="field.required"
-             (input)="onDateTimeChange()">
-      <mat-icon matSuffix>access_time</mat-icon>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Saisie manuelle complète</mat-label>
-      <input matInput
-             type="datetime-local"
-             [placeholder]="field.placeholder || 'jj/mm/aaaa HH:mm'"
-             [formControlName]="field.fieldName"
-             [required]="field.required"
-             (input)="onManualDateTimeChange($event)">
-      <mat-icon matSuffix>edit</mat-icon>
-      <mat-hint>Format: AAAA-MM-JJTHH:mm</mat-hint>
-    </mat-form-field>
-  </div>
 
   <div class="datetime-preview" *ngIf="getDateTimePreview()">
     <mat-icon>info</mat-icon>
@@ -246,6 +215,7 @@
     Format de date/heure invalide
   </mat-error>
 </div>
+
 
     <!-- Select -->
     <mat-form-field appearance="outline" *ngIf="field.type === 'select'" class="full-width">
@@ -274,26 +244,51 @@
     </div>
 
     <!-- Checkbox -->
-    <div *ngIf="field.type === 'checkbox'" class="checkbox-group">
-      <label class="field-label">{{field.label}}</label>
-      <div *ngFor="let option of safeOptions">
-        <mat-checkbox [value]="option.value">
-          {{option.label}}
-        </mat-checkbox>
-      </div>
-    </div>
+<div *ngIf="field.type === 'checkbox'" class="checkbox-group">
+  <label class="field-label">{{field.label}}</label>
+  <div *ngFor="let option of safeOptions">
+    <mat-checkbox
+      [checked]="isOptionSelected(option.value)"
+      (change)="onCheckboxChange(option.value, $event)">
+      {{option.label}}
+    </mat-checkbox>
+  </div>
+</div>
 
     <!-- File Upload -->
-    <div *ngIf="field.type === 'file'" class="file-upload">
-      <label class="field-label">{{field.label}}</label>
-      <input type="file"
-             [formControlName]="field.fieldName"
-             [required]="field.required"
-             class="file-input">
-      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
-        {{field.label}} is required
-      </mat-error>
-    </div>
+  <!-- Champ FILE corrigé -->
+<div *ngIf="field.type === 'file'" class="file-field">
+  <label class="field-label">{{field.label}}</label>
+
+  <input type="file"
+         [id]="field.fieldName + '_file'"
+         (change)="onFileUpload($event)"
+         style="display: none;"
+         #fileInputRegular>
+
+  <button type="button"
+          mat-raised-button
+          color="primary"
+          (click)="fileInputRegular.click()">
+    <mat-icon>upload_file</mat-icon>
+    Choisir un fichier
+  </button>
+
+  <div *ngIf="getUploadedFileName()" class="file-info">
+    <mat-icon>description</mat-icon>
+    <span>{{getUploadedFileName()}} ({{getFileSize()}})</span>
+    <button type="button"
+            mat-icon-button
+            (click)="clearFile()"
+            title="Supprimer le fichier">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+    {{field.label}} est requis
+  </mat-error>
+</div>
 
     <!-- ✅ SLIDER CORRIGÉ -->
     <div *ngIf="field.type === 'slider'" class="slider-field">
@@ -357,20 +352,23 @@
     </div>
 
     <!-- Contact -->
-    <div *ngIf="field.type === 'contact'" class="contact-field">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>{{field.label}} - Nom</mat-label>
-        <input matInput [formControlName]="field.fieldName + '_name'" placeholder="Nom complet">
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Téléphone</mat-label>
-        <input matInput type="tel" [formControlName]="field.fieldName + '_phone'" placeholder="Numéro de téléphone">
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email</mat-label>
-        <input matInput type="email" [formControlName]="field.fieldName + '_email'" placeholder="Adresse email">
-      </mat-form-field>
-    </div>
+<!-- Ajout dans votre template pour les champs de type contact -->
+<div *ngIf="field.type === 'contact'" class="contact-field">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Nom</mat-label>
+    <input matInput [formControlName]="field.fieldName + '_name'" placeholder="Entrez le nom">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Téléphone</mat-label>
+    <input matInput [formControlName]="field.fieldName + '_phone'" placeholder="Entrez le téléphone">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Email</mat-label>
+    <input matInput type="email" [formControlName]="field.fieldName + '_email'" placeholder="Entrez l'email">
+  </mat-form-field>
+</div>
 
     <!-- Address -->
     <div *ngIf="field.type === 'address'" class="address-field">
@@ -483,17 +481,36 @@
     </div>
 
     <!-- Attachment -->
-    <div *ngIf="field.type === 'attachment'" class="attachment-field">
-      <label class="field-label">{{field.label}}</label>
-      <input type="file"
-             multiple
-             [formControlName]="field.fieldName"
-             [required]="field.required"
-             class="file-input">
-      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
-        {{field.label}} is required
-      </mat-error>
-    </div>
+  <!-- Champ ATTACHMENT -->
+<div *ngIf="field.type === 'attachment'" class="attachment-field">
+  <label class="field-label">{{field.label}}</label>
+
+  <input type="file"
+         [id]="field.fieldName"
+         (change)="onFileUpload($event)"
+         [accept]="getAcceptedFileTypes()"
+         style="display: none;"
+         #fileInput>
+
+  <button type="button"
+          mat-raised-button
+          color="primary"
+          (click)="fileInput.click()">
+    <mat-icon>attach_file</mat-icon>
+    Choisir un fichier
+  </button>
+
+  <div *ngIf="getUploadedFileName()" class="file-info">
+    <mat-icon>description</mat-icon>
+    <span>{{getUploadedFileName()}}</span>
+    <button type="button"
+            mat-icon-button
+            (click)="clearFile()"
+            title="Supprimer le fichier">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</div>
 
     <!-- ✅ SIGNATURE CORRIGÉE -->
     <div *ngIf="field.type === 'signature'" class="signature-field">
@@ -673,12 +690,22 @@
     </div>
 
     <!-- ✅ TEXTE FIXE CORRIGÉ -->
-    <div *ngIf="field.type === 'fixed-text'" class="fixed-text-field">
-      <div class="fixed-text-content"
-           style="padding: 16px; background: #f9f9f9; border-left: 4px solid #2196f3; border-radius: 4px;">
-        <div [innerHTML]="getFixedText()" style="line-height: 1.6;"></div>
-      </div>
+<div *ngIf="field.type === 'fixed-text'" class="fixed-text-display">
+  <div *ngIf="hasFixedTextContent()" class="configured-fixed-text">
+    <div class="fixed-text-content"
+         style="background: #f0f7ff; border: 1px solid #2196f3; border-left: 4px solid #2196f3;
+                padding: 16px; border-radius: 4px; margin-bottom: 16px;">
+      <div [innerHTML]="getFixedTextContent()"
+           style="line-height: 1.6; color: #333; word-wrap: break-word;"></div>
     </div>
+  </div>
+
+  <div *ngIf="!hasFixedTextContent()" class="no-fixed-text"
+       style="background: #f5f5f5; padding: 16px; border-radius: 4px; text-align: center; margin-bottom: 16px;">
+    <mat-icon style="color: #999; font-size: 32px; margin-bottom: 8px;">text_format</mat-icon>
+    <p style="color: #666; margin: 0; font-style: italic;">Aucun texte configuré pour ce champ</p>
+  </div>
+</div>
 
     <!-- ✅ IMAGE FIXE CORRIGÉE -->
     <div *ngIf="field.type === 'image'" class="image-field">

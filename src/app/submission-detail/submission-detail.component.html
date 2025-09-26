@@ -137,7 +137,50 @@
       <span class="technical-value">(valeur: {{field.value}})</span>
     </div>
   </div>
+<!-- CASE À COCHER SPÉCIALE -->
+<!-- CASE À COCHER AMÉLIORÉE -->
+<div *ngIf="field.type === 'checkbox'" class="checkbox-value-container">
+  <!-- Checkboxes multiples (array) -->
+  <div *ngIf="isArray(field.value); else singleCheckbox" class="multiple-checkbox-display">
+    <div *ngIf="field.value.length > 0; else noSelection" class="selected-options-container">
+      <div class="checkbox-header">
+        <mat-icon class="checkbox-icon selected">check_box</mat-icon>
+        <span class="checkbox-label">Sélections :</span>
+      </div>
+      <div class="options-list">
+        <mat-chip-listbox>
+          <mat-chip-option *ngFor="let selectedValue of field.value"
+                          [selected]="true"
+                          [disabled]="true"
+                          class="selected-chip">
+            {{ getOptionLabel(field.fieldName, selectedValue) }}
+          </mat-chip-option>
+        </mat-chip-listbox>
+      </div>
+    </div>
 
+    <ng-template #noSelection>
+      <div class="checkbox-header empty">
+        <mat-icon class="checkbox-icon unselected">check_box_outline_blank</mat-icon>
+        <span class="checkbox-label empty">Aucune option sélectionnée</span>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Checkbox simple (boolean) -->
+  <ng-template #singleCheckbox>
+    <div class="single-checkbox-display">
+      <div class="checkbox-header" [class.selected]="field.value === true">
+        <mat-icon class="checkbox-icon" [class.selected]="field.value === true">
+          {{ field.value === true ? 'check_box' : 'check_box_outline_blank' }}
+        </mat-icon>
+        <span class="checkbox-label" [class.selected]="field.value === true">
+          {{ field.value === true ? 'Coché' : 'Non coché' }}
+        </span>
+      </div>
+    </div>
+  </ng-template>
+</div>
  <!-- IMAGES FIXES/STATIQUES -->
 <div *ngIf="isStaticImageField(field.fieldName)" class="static-image-value">
   <!-- Image configurée -->
@@ -199,27 +242,93 @@ Image fixe du formulaire ({{ getFieldFileName(field.fieldName) }}) - Cliquez pou
       </table>
     </div>
   </div>
-
+<!-- Pour les séparateurs avec style spécial -->
+<div *ngIf="field.type === 'separator'" class="separator-line">
+  {{formatFieldValue(field.fieldName, field.value)}}
+</div>
   <!-- 6. CHAMPS TEXTE/NOMBRE/BASIQUES -->
   <div *ngIf="!isFileField(field.fieldName) &&
              !isImageField(field.fieldName) &&
              !isTableField(field.fieldName) &&
              !isStaticImageField(field.fieldName) &&
              !isComplexObjectField(field.fieldName) &&
-             !isExternalListField(field.fieldName)"
+             !isExternalListField(field.fieldName)&&
+           field.type !== 'checkbox'"
        class="text-value">
     <span [class.empty-value]="!field.value">
       {{formatFieldValue(field.fieldName, field.value)}}
     </span>
   </div>
+<!-- FICHIERS FIXES -->
+<div *ngIf="field.type === 'file-fixed'" class="file-fixed-value">
+  <!-- Fichier fixe configuré -->
+  <div *ngIf="hasFixedFileData(field.fieldName)" class="configured-file-fixed">
+    <div class="file-fixed-container" style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; text-align: center; background: #f9f9f9;">
+      <mat-icon style="font-size: 48px; color: #2196f3; margin-bottom: 16px;">description</mat-icon>
+      <h4 style="margin: 0 0 8px 0; color: #333;">{{getFixedFileName(field.fieldName)}}</h4>
+      <p style="color: #666; margin: 0 0 16px 0;">Fichier prêt au téléchargement</p>
 
-  <!-- 7. ÉTAT VIDE -->
-  <div *ngIf="!field.value &&
-             !isStaticImageField(field.fieldName)"
-       class="empty-field">
-    <mat-icon>remove</mat-icon>
-    <span>Non renseigné</span>
+      <button mat-raised-button
+              color="primary"
+              (click)="downloadFixedFileFromSubmission(field.fieldName)"
+              style="margin-right: 8px;">
+        <mat-icon>download</mat-icon>
+        Télécharger
+      </button>
+
+      <small style="display: block; margin-top: 12px; color: #999;">
+        Type: {{getFixedFileType(field.fieldName)}}
+      </small>
+    </div>
   </div>
+
+
+  <!-- Aucun fichier fixe configuré -->
+  <div *ngIf="!hasFixedFileData(field.fieldName)" class="no-fixed-file" style="text-align: center; padding: 40px; background: #f5f5f5; border-radius: 8px;">
+    <mat-icon style="font-size: 48px; color: #ccc;">insert_drive_file</mat-icon>
+    <p style="color: #666; margin: 10px 0;">Aucun fichier fixe configuré</p>
+    <small style="color: #999;">Ce champ fichier fixe n'a pas été configuré avec un fichier lors de la création du formulaire</small>
+  </div>
+</div>
+
+<!-- TEXTE FIXE -->
+<div *ngIf="field.type === 'fixed-text'" class="fixed-text-display">
+  <div *ngIf="hasFixedTextContent(field.fieldName)" class="configured-fixed-text">
+    <div class="fixed-text-content" style="background: #f0f7ff; border: 1px solid #2196f3; border-left: 4px solid #2196f3; padding: 16px; border-radius: 4px;">
+      <div [innerHTML]="getFixedTextContent(field.fieldName)" style="line-height: 1.6; color: #333;"></div>
+    </div>
+  </div>
+
+  <div *ngIf="!hasFixedTextContent(field.fieldName)" class="no-fixed-text" style="background: #f5f5f5; padding: 16px; border-radius: 4px; text-align: center;">
+    <mat-icon style="color: #999;">text_format</mat-icon>
+    <p style="color: #666; margin: 8px 0 0 0;">Aucun texte configuré pour ce champ</p>
+  </div>
+</div>
+<!-- Pour les valeurs nulles/undefined/vides -->
+<div *ngIf="(field.value === null || field.value === undefined || field.value === '') &&
+           !isStaticImageField(field.fieldName) &&
+           !isTableField(field.fieldName) &&
+           !isImageField(field.fieldName) &&
+           !isFileField(field.fieldName) &&
+           !isExternalListField(field.fieldName)"
+     class="empty-field">
+  <mat-icon>remove</mat-icon>
+  <span>{{formatFieldValue(field.fieldName, field.value)}}</span>
+</div>
+</div>
+<!-- CODES-BARRES ET NFC - AJOUTER CETTE SECTION -->
+<div *ngIf="field.type === 'barcode' || field.type === 'nfc'" class="barcode-value">
+  <div *ngIf="field.value && typeof field.value === 'object' && field.value.code; else noBarcode">
+    <mat-icon class="value-icon">qr_code_scanner</mat-icon>
+    <span class="barcode-code">Code scanné: {{field.value.code}}</span>
+    <small class="scan-time" *ngIf="field.value.scannedAt">
+      (scanné le {{field.value.scannedAt | date:'short':'fr-FR'}})
+    </small>
+  </div>
+  <ng-template #noBarcode>
+    <mat-icon>qr_code</mat-icon>
+    <span>Code non scanné</span>
+  </ng-template>
 </div>
             <!-- Field Metadata -->
             <div *ngIf="hasFieldMetadata(field.fieldName)" class="field-metadata">

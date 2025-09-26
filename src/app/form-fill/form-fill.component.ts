@@ -97,33 +97,43 @@ export class FormFillComponent implements OnInit {
   }
 
   buildSubmissionForm(): void {
-    if (!this.currentForm?.fields) {
-      console.warn('Aucun champ trouvé dans le formulaire');
-      return;
+  if (!this.currentForm?.fields) {
+    console.warn('Aucun champ trouvé dans le formulaire');
+    return;
+  }
+
+  const controls: { [key: string]: FormControl } = {};
+
+  this.currentForm.fields.forEach(field => {
+    const validators = [];
+
+    if (field.required) {
+      validators.push(Validators.required);
     }
 
-    const controls: { [key: string]: FormControl } = {};
+    if (field.type === 'email') {
+      validators.push(Validators.email);
+    }
 
-    this.currentForm.fields.forEach(field => {
-      const validators = [];
+    // ✅ AJOUT: Traitement spécial pour le champ contact
+    if (field.type === 'contact') {
+      // Créer les sous-contrôles pour contact
+      controls[`${field.fieldName}_name`] = new FormControl('', field.required ? [Validators.required] : []);
+      controls[`${field.fieldName}_phone`] = new FormControl('', []);
+      controls[`${field.fieldName}_email`] = new FormControl('', [Validators.email]);
 
-      if (field.required) {
-        validators.push(Validators.required);
-      }
-
-      if (field.type === 'email') {
-        validators.push(Validators.email);
-      }
-
-      // ✅ AMÉLIORATION : Valeurs par défaut plus robustes
+      // Le contrôle principal reste pour la logique
+      controls[field.fieldName] = new FormControl(null, validators);
+    } else {
+      // Traitement normal pour les autres types
       let defaultValue: any = this.getDefaultValueForFieldType(field.type);
-
       controls[field.fieldName] = new FormControl(defaultValue, validators);
-    });
+    }
+  });
 
-    this.submissionForm = new FormGroup(controls);
-    console.log('Formulaire de soumission construit avec', Object.keys(controls).length, 'champs');
-  }
+  this.submissionForm = new FormGroup(controls);
+  console.log('Formulaire de soumission construit avec', Object.keys(controls).length, 'champs');
+}
 
   // ✅ NOUVELLE MÉTHODE : Obtenir la valeur par défaut selon le type
   private getDefaultValueForFieldType(fieldType: string): any {
@@ -215,53 +225,271 @@ export class FormFillComponent implements OnInit {
     });
   }
 
-  prepareSubmissionData(): Record<string, any> {
-    const formValue: Record<string, any> = this.submissionForm.value || {};
-    const processedData: Record<string, any> = {};
+prepareSubmissionData(): Record<string, any> {
+  const formValue: Record<string, any> = this.submissionForm.value || {};
+  const processedData: Record<string, any> = {};
 
-    if (!this.currentForm?.fields) {
-      return processedData;
-    }
+  console.log('=== DEBUT prepareSubmissionData ===');
+  console.log('FormValue complet:', formValue);
 
-    this.currentForm.fields.forEach(field => {
-      const fieldValue = formValue[field.fieldName];
-
-      if (fieldValue !== null && fieldValue !== undefined && fieldValue !== '') {
-        // ✅ VALIDATION DES TYPES DE DONNÉES
-        const processedValue = this.processFieldValueForSubmission(field, fieldValue);
-        if (processedValue !== null) {
-          processedData[field.fieldName] = processedValue;
-        }
-
-        // Ajouter des métadonnées pour certains types
-        this.addFieldMetadata(processedData, field, fieldValue);
-      }
-    });
-
-    // Ajouter des métadonnées globales de soumission
-    processedData['_submission_metadata'] = {
-      submittedAt: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      formVersion: this.currentForm?.id,
-      language: navigator.language,
-      formId: this.formId // ✅ S'assurer que l'ID est inclus
-    };
-
+  if (!this.currentForm?.fields) {
     return processedData;
   }
+
+  this.currentForm.fields.forEach(field => {
+    const fieldValue = formValue[field.fieldName];
+if (field.type === 'fixed-text') {
+      // Essayer plusieurs sources pour le contenu
+      let content = 'Texte non configuré';
+
+      if (field.attributes?.['content']) {
+        content = field.attributes['content'];
+      } else if (field.placeholder && field.placeholder !== 'Enter texte fixe...') {
+        content = field.placeholder;
+      } else if (field.label && field.label !== 'Texte fixe') {
+        content = `Contenu: ${field.label}`;
+      }
+
+      processedData[field.fieldName] = {
+        type: 'fixed-text',
+        content: content,
+        acknowledged: true,
+        timestamp: new Date().toISOString(),
+        fieldLabel: field.label
+      };
+    }
+    if (field.type === 'file-fixed') {
+      if (field.attributes && field.attributes['fileUrl']) {
+        processedData[field.fieldName] = {
+          type: 'file-fixed',
+          fileUrl: field.attributes['fileUrl'],
+          fileName: field.attributes['fileName'],
+          fileType: field.attributes['fileType'],
+          acknowledged: true,
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        processedData[field.fieldName] = {
+          type: 'file-fixed',
+          acknowledged: false,
+          timestamp: new Date().toISOString()
+        };
+      }
+    }
+    console.log(`Field ${field.fieldName}:`);
+    console.log('- Type:', field.type);
+    console.log('- Raw value:', fieldValue);
+    console.log('- Is array:', Array.isArray(fieldValue));
+    if (field.type === 'image') {
+      // Pour les champs image, récupérer les données depuis les attributes
+      if (field.attributes && typeof field.attributes === 'object') {
+        processedData[field.fieldName] = {
+          type: 'image',
+          imageUrl: field.attributes['imageUrl'],
+          fileName: field.attributes['fileName'],
+          fileType: field.attributes['fileType'],
+          acknowledged: true,
+          timestamp: new Date().toISOString()
+        };
+      } else if (field.attributes && typeof field.attributes === 'string') {
+        // Si attributes est une chaîne JSON
+        try {
+          const parsedAttributes = JSON.parse(field.attributes);
+          processedData[field.fieldName] = {
+            type: 'image',
+            imageUrl: parsedAttributes.imageUrl,
+            fileName: parsedAttributes.fileName,
+            fileType: parsedAttributes.fileType,
+            acknowledged: true,
+            timestamp: new Date().toISOString()
+          };
+        } catch (e) {
+          processedData[field.fieldName] = this.getDefaultSubmissionValue(field.type);
+        }
+      } else {
+        processedData[field.fieldName] = this.getDefaultSubmissionValue(field.type);
+      }
+    }
+    // ✅ TRAITEMENT SPÉCIAL POUR CONTACT
+    if (field.type === 'contact') {
+      const contactData = {
+        name: formValue[`${field.fieldName}_name`] || '',
+        phone: formValue[`${field.fieldName}_phone`] || '',
+        email: formValue[`${field.fieldName}_email`] || '',
+        company: formValue[`${field.fieldName}_company`] || ''
+      };
+
+      const hasData = Object.values(contactData).some(val => val && val.trim() !== '');
+      processedData[field.fieldName] = hasData ? contactData : null;
+      console.log('- Contact processed:', processedData[field.fieldName]);
+
+    } else {
+      // ✅ CORRECTION PRINCIPALE : Traitement des arrays (checkboxes multiples)
+      if (Array.isArray(fieldValue)) {
+        // Array - garder tel quel (même si vide)
+        processedData[field.fieldName] = fieldValue;
+        console.log('- Array kept as-is:', fieldValue);
+
+      } else if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
+        // Valeur non-vide - traitement normal
+        const processedValue = this.processFieldValueForSubmission(field, fieldValue);
+        processedData[field.fieldName] = processedValue;
+        console.log('- Processed value:', processedValue);
+
+      } else {
+        // Valeur vide - utiliser défaut
+        const defaultValue = this.getDefaultSubmissionValue(field.type);
+        processedData[field.fieldName] = defaultValue;
+        console.log('- Default value used:', defaultValue);
+      }
+    }
+
+    console.log('- Final value in processedData:', processedData[field.fieldName]);
+  });
+
+  // Métadonnées globales
+  processedData['_submission_metadata'] = {
+    submittedAt: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    formVersion: this.currentForm?.id,
+    language: navigator.language,
+    formId: this.formId
+  };
+
+  console.log('=== PROCESSED DATA FINAL ===', processedData);
+  return processedData;
+}
+
+
+// ✅ NOUVELLE MÉTHODE : Données pour champs informatifs
+private getInformationalFieldData(field: FormFieldDTO): any {
+  switch (field.type) {
+    case 'separator':
+      return { type: 'separator', acknowledged: true };
+    case 'fixed-text':
+      return { type: 'fixed-text', text: field.attributes?.['text'] || '' };
+    case 'image':
+      return {
+        type: 'image',
+        url: field.attributes?.['imageUrl'] || '',
+        fileName: field.attributes?.['fileName'] || ''
+      };
+    case 'geolocation':
+      return null; // Géolocalisation nécessite une action utilisateur
+    case 'contact':
+      return null; // Contact nécessite des données utilisateur
+    default:
+      return { type: field.type, acknowledged: true };
+  }
+}
+
+// ✅ NOUVELLE MÉTHODE : Valeurs par défaut pour soumission
+private getDefaultSubmissionValue(fieldType: string): any {
+  switch (fieldType) {
+    case 'checkbox':
+      return false;
+    case 'number':
+    case 'slider':
+      return 0;
+    case 'text':
+    case 'textarea':
+    case 'email':
+    case 'schema':
+      return '';
+    case 'select':
+    case 'radio':
+      return null;
+    case 'multiselect':
+    case 'external-list':
+      return [];
+    case 'date':
+    case 'datetime':
+      return null;
+    case 'geolocation':
+    case 'contact':
+      return null;
+    case 'barcode':
+    case 'nfc':
+      return null;
+    case 'address':
+    case 'reference':
+      return null;
+    case 'file':
+    case 'attachment':
+    case 'signature':
+    case 'drawing':
+    case 'audio':
+      return null;
+    case 'file-fixed':
+      // Pour file-fixed, récupérer les données depuis les attributes
+      const fileFixedField = this.currentForm?.fields?.find(f => f.type === 'file-fixed');
+      if (fileFixedField?.attributes?.['fileUrl']) {
+        return {
+          type: 'file-fixed',
+          fileUrl: fileFixedField.attributes['fileUrl'],
+          fileName: fileFixedField.attributes['fileName'],
+          fileType: fileFixedField.attributes['fileType'],
+          acknowledged: true,
+          timestamp: new Date().toISOString()
+        };
+      }
+      return {
+        type: 'file-fixed',
+        acknowledged: false,
+        timestamp: new Date().toISOString()
+      };
+    case 'separator':
+    case 'fixed-text':
+      return {
+        type: fieldType,
+        acknowledged: true,
+        timestamp: new Date().toISOString()
+      };
+    case 'image':
+      // Retourner les données d'image depuis les attributs du champ
+      const imageField = this.currentForm?.fields?.find(f => f.type === 'image');
+      if (imageField?.attributes?.['imageUrl']) {
+        return {
+          type: 'image',
+          imageUrl: imageField.attributes['imageUrl'],
+          fileName: imageField.attributes['fileName'],
+          acknowledged: true,
+          timestamp: new Date().toISOString()
+        };
+      }
+      return {
+        type: fieldType,
+        acknowledged: true,
+        timestamp: new Date().toISOString()
+      };
+    case 'calculation':
+      return '';
+    default:
+      return null;
+  }
+}
+
 
   // ✅ NOUVELLE MÉTHODE : Traiter les valeurs selon le type de champ
   private processFieldValueForSubmission(field: FormFieldDTO, value: any): any {
     switch (field.type) {
+        case 'attachment':
+    case 'file':
+      // Pour les fichiers, garder la valeur base64 telle quelle
+      if (typeof value === 'string' && value.startsWith('data:')) {
+        return value; // Données base64 du fichier
+      }
+      return null;
       case 'number':
       case 'slider':
         const numValue = Number(value);
         return isNaN(numValue) ? 0 : numValue;
 
       case 'checkbox':
-        return Boolean(value);
-
-        return Array.isArray(value) ? value : [];
+         if (Array.isArray(value)) {
+        return value; // Garder l'array tel quel
+      }
+      return Boolean(value);
 
       case 'date':
       case 'datetime':

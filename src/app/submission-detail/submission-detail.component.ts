@@ -142,20 +142,36 @@ private sanitizeFileName(fileName: string): string {
   }
 
   // Obtenir le label d'un champ
-  getFieldLabel(fieldName: string): string {
-    if (!this.currentForm) return fieldName;
+ getFieldLabel(fieldName: string): string {
+  if (!this.currentForm) return fieldName;
 
-    const field = this.currentForm.fields.find(f => f.fieldName === fieldName);
-    return field ? field.label : this.formatFieldName(fieldName);
+  // Chercher d'abord une correspondance exacte
+  let field = this.currentForm.fields.find(f => f.fieldName === fieldName);
+
+  // Si pas trouvé, chercher par correspondance partielle (enlever les suffixes numériques)
+  if (!field) {
+    const baseFieldName = fieldName.replace(/_\d+_\d+$/, '');
+    field = this.currentForm.fields.find(f => f.fieldName.startsWith(baseFieldName));
   }
+
+  return field ? field.label : this.formatFieldName(fieldName);
+}
 
   // Obtenir le type d'un champ
-  getFieldType(fieldName: string): string {
-    if (!this.currentForm) return '';
+getFieldType(fieldName: string): string {
+  if (!this.currentForm) return '';
 
-    const field = this.currentForm.fields.find(f => f.fieldName === fieldName);
-    return field ? field.type : '';
+  // Chercher d'abord une correspondance exacte
+  let field = this.currentForm.fields.find(f => f.fieldName === fieldName);
+
+  // Si pas trouvé, chercher par correspondance partielle
+  if (!field) {
+    const baseFieldName = fieldName.replace(/_\d+_\d+$/, '');
+    field = this.currentForm.fields.find(f => f.fieldName.startsWith(baseFieldName));
   }
+
+  return field ? field.type : '';
+}
 
   // Formater le nom de champ
   private formatFieldName(fieldName: string): string {
@@ -172,7 +188,17 @@ isComplexObjectField(fieldName: string): boolean {
   const value = this.submission.data[fieldName];
   return value && typeof value === 'object' && !Array.isArray(value) && value.type;
 }
+// Obtenir le label d'une option pour un champ donné
+// Obtenir le label d'une option pour un champ donné
+getOptionLabel(fieldName: string, optionValue: string): string {
+  if (!this.currentForm?.fields) return optionValue;
 
+  const field = this.currentForm.fields.find(f => f.fieldName === fieldName);
+  if (!field?.options) return optionValue;
+
+  const option = field.options.find(opt => opt.value === optionValue);
+  return option ? option.label : optionValue;
+}
 // Obtenir l'URL d'une signature ou d'un dessin
 getImageUrl(fieldName: string): string {
   if (!this.submission?.data) return '';
@@ -197,17 +223,33 @@ isTableField(fieldName: string): boolean {
 }
 
 // Obtenir les données de table
+// Remplacer cette méthode :
 getTableData(fieldName: string): any {
-  if (!this.submission?.data || !this.currentForm) return null;
+  if (!this.submission?.data) return null;
 
-  const field = this.currentForm.fields.find(f => f.fieldName === fieldName);
+  const tableValue = this.submission.data[fieldName];
 
-  if (field && field.attributes && field.attributes['rows']) {
+  if (typeof tableValue === 'string') {
+    try {
+      const parsed = JSON.parse(tableValue);
+      // ✅ CORRECTION : Structure attendue
+      return {
+        columns: parsed.columns || [],
+        rows: parsed.data || [] // 'data' pas 'rows' !
+      };
+    } catch (e) {
+      console.error('Erreur parsing table:', e);
+      return null;
+    }
+  }
+
+  if (typeof tableValue === 'object' && tableValue.columns && tableValue.data) {
     return {
-      columns: field.attributes['columns'] || [],
-      rows: field.attributes['rows'] || []
+      columns: tableValue.columns,
+      rows: tableValue.data // 'data' pas 'rows' !
     };
   }
+
   return null;
 }
 
@@ -268,106 +310,361 @@ isStaticImageField(fieldName: string): boolean {
 
     this.externalListsLoaded = true;
   }
+// Vérifier si un fichier fixe est configuré
+hasFixedFileData(fieldName: string): boolean {
+  if (!this.submission?.data) return false;
 
+  const value = this.submission.data[fieldName];
+  return value &&
+         typeof value === 'object' &&
+         value.type === 'file-fixed' &&
+         value.fileUrl &&
+         value.fileUrl.length > 0;
+}
+
+// Obtenir le nom du fichier fixe
+getFixedFileName(fieldName: string): string {
+  if (!this.submission?.data) return 'Document';
+
+  const value = this.submission.data[fieldName];
+  if (value && typeof value === 'object' && value.fileName) {
+    return value.fileName;
+  }
+
+  return 'Fichier fixe';
+}
+
+// Obtenir le type du fichier fixe
+getFixedFileType(fieldName: string): string {
+  if (!this.submission?.data) return '';
+
+  const value = this.submission.data[fieldName];
+  if (value && typeof value === 'object' && value.fileType) {
+    return value.fileType;
+  }
+
+  return '';
+}
+
+// Télécharger le fichier fixe depuis la soumission
+downloadFixedFileFromSubmission(fieldName: string): void {
+  if (!this.submission?.data) return;
+
+  const value = this.submission.data[fieldName];
+  if (!value || typeof value !== 'object' || !value.fileUrl) {
+    this.snackBar.open('Fichier non disponible', 'Fermer', { duration: 3000 });
+    return;
+  }
+
+  try {
+    const link = document.createElement('a');
+    link.href = value.fileUrl;
+    link.download = value.fileName || 'fichier_fixe';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    console.log('Téléchargement du fichier fixe:', value.fileName);
+  } catch (error) {
+    console.error('Erreur téléchargement fichier fixe:', error);
+    this.snackBar.open('Erreur lors du téléchargement', 'Fermer', { duration: 3000 });
+  }
+}
+// Vérifier si le texte fixe a du contenu
+hasFixedTextContent(fieldName: string): boolean {
+  if (!this.submission?.data) return false;
+
+  const value = this.submission.data[fieldName];
+  return value &&
+         typeof value === 'object' &&
+         value.type === 'fixed-text' &&
+         value.content &&
+         value.content.trim().length > 0;
+}
+
+// Obtenir le contenu du texte fixe
+getFixedTextContent(fieldName: string): string {
+  if (!this.submission?.data) return '';
+
+  const value = this.submission.data[fieldName];
+  if (value && typeof value === 'object' && value.content) {
+    return value.content;
+  }
+
+  return 'Texte non configuré';
+}
   // ✅ MÉTHODE CORRIGÉE : Formater les valeurs avec support des listes externes
 formatFieldValue(fieldName: string, value: any): string {
-    if (value === null || value === undefined) return 'Non renseigné';
-
-    const fieldType = this.getFieldType(fieldName);
-  if (fieldType === 'image') {
-    if (this.hasStaticImage(fieldName)) {
-      const field = this.currentForm?.fields?.find(f => f.fieldName === fieldName);
-      const fileName = field?.attributes?.['fileName'] || 'image';
-      return `Image configurée: ${fileName}`;
-    } else {
-      return 'Aucune image configurée pour ce champ';
-    }
-  }
-    // ✅ TRAITEMENT SPÉCIAL POUR LES LISTES EXTERNES
-  if (fieldType === 'external-list') {
-    const labelMap = this.externalListLabels.get(fieldName);
-
-    if (labelMap) {
-      // Gestion des tableaux (sélection multiple)
-      if (Array.isArray(value)) {
-        const labels = value.map(v => labelMap.get(v.toString()) || v);
-        return labels.join(', ');
-      }
-      // Gestion des valeurs simples
-      else if (labelMap.has(value.toString())) {
-        return labelMap.get(value.toString()) || value.toString();
-      }
-    }
-
-    // Fallback si le label n'est pas encore chargé
+  const fieldType = this.getFieldType(fieldName);
+  if (fieldType === 'checkbox') {
+    // Si c'est un array (checkboxes multiples)
     if (Array.isArray(value)) {
-      return `Valeurs: ${value.join(', ')} (chargement des labels...)`;
+      if (value.length === 0) {
+        return 'Aucune option sélectionnée';
+      }
+
+      const field = this.currentForm?.fields?.find(f => f.fieldName === fieldName);
+      if (field?.options) {
+        const selectedLabels = value.map(selectedValue => {
+          const option = field.options?.find(opt => opt.value === selectedValue);
+          return option ? option.label : selectedValue;
+        });
+        return selectedLabels.join(', ');
+      }
+      return value.join(', ');
     }
-    return `Valeur: ${value} (chargement des labels...)`;
+
+    // Si c'est un boolean (ancienne version)
+    if (typeof value === 'boolean') {
+      return value ? 'Coché' : 'Non coché';
+    }
+       return 'Non renseigné';
+  }
+  // ✅ TRAITEMENT SPÉCIAL POUR LES SÉPARATEURS
+  if (fieldType === 'separator') {
+    return '───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────';
   }
 
-    // Traitement spécial pour les objets complexes (signature, drawing, file)
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      if (value.type && ['signature', 'drawing', 'file'].includes(value.type)) {
-        if (value.url) {
-          return `Fichier enregistré (${value.type})`;
-        }
+  // ✅ TRAITEMENT SPÉCIAL POUR LES CHAMPS AVEC OBJETS DE TYPE "acknowledged"
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    if (value.type && value.acknowledged) {
+      switch (value.type) {
+        case 'separator':
+          return '───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────';
+        case 'fixed-text':
+          return 'Texte fixe du formulaire';
+        case 'image':
+          return 'Image fixe du formulaire';
+        default:
+          return `${value.type} (confirmé)`;
       }
     }
+  }
 
+  // ✅ GESTION DES VALEURS NULLES/UNDEFINED/VIDES
+  if (value === null || value === undefined || value === '') {
     switch (fieldType) {
-      case 'checkbox':
-        return value ? 'Oui' : 'Non';
-
-      case 'date':
-        try {
-          return new Date(value).toLocaleDateString('fr-FR');
-        } catch {
-          return value.toString();
-        }
-
-      case 'datetime':
-        try {
-          return new Date(value).toLocaleString('fr-FR');
-        } catch {
-          return value.toString();
-        }
-
-      case 'number':
-      case 'slider':
-        return Number(value).toLocaleString('fr-FR');
-
-      case 'multiselect':
-        if (Array.isArray(value)) {
-          // Pour multiselect avec liste externe, essayer de récupérer les labels
-          const labelMap = this.externalListLabels.get(fieldName);
-          if (labelMap) {
-            const labels = value.map(v => labelMap.get(v.toString()) || v).join(', ');
-            return labels;
-          }
-          return value.join(', ');
-        }
-        return value.toString();
-
-      case 'geolocation':
-        if (typeof value === 'object' && value?.latitude && value?.longitude) {
-          return `${value.latitude.toFixed(6)}, ${value.longitude.toFixed(6)}`;
-        }
-        return 'Position non disponible';
-
-      case 'table':
-        return 'Données de tableau (voir ci-dessous)';
-
+      case 'separator':
+        return '───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────';
+      case 'fixed-text':
+        return 'Texte fixe du formulaire';
       case 'image':
-        return 'Image statique du formulaire';
+        return this.hasStaticImage(fieldName) ?
+               'Image fixe configurée' :
+               'Aucune image configurée';
+      case 'geolocation':
+        return 'Géolocalisation non renseignée';
+      case 'contact':
+        return 'Contact non renseigné';
 
+      case 'file-fixed':
+        return 'Fichier fixe non configuré';
+      case 'calculation':
+        return 'Calcul non effectué';
       default:
-        if (typeof value === 'object') {
-          return JSON.stringify(value, null, 2);
-        }
-        return value.toString();
+        return 'Non renseigné';
     }
   }
+
+  // ✅ GESTION DES CHAMPS SPÉCIAUX AVEC VALEURS
+  switch (fieldType) {
+    // IMAGES FIXES/STATIQUES
+    case 'image':
+      if (this.hasStaticImage(fieldName)) {
+        const field = this.currentForm?.fields?.find(f => f.fieldName === fieldName);
+        const fileName = field?.attributes?.['fileName'] || 'image';
+        return `Image configurée: ${fileName}`;
+      } else {
+        return 'Aucune image configurée pour ce champ';
+      }
+
+    // LISTES EXTERNES
+    case 'external-list':
+      const labelMap = this.externalListLabels.get(fieldName);
+      if (labelMap) {
+        if (Array.isArray(value)) {
+          const labels = value.map(v => labelMap.get(v.toString()) || v);
+          return labels.join(', ');
+        } else if (labelMap.has(value.toString())) {
+          return labelMap.get(value.toString()) || value.toString();
+        }
+      }
+      if (Array.isArray(value)) {
+        return `Valeurs: ${value.join(', ')}`;
+      }
+      return `Valeur: ${value}`;
+
+
+
+    // DATES
+    case 'date':
+      try {
+        return new Date(value).toLocaleDateString('fr-FR');
+      } catch {
+        return value.toString();
+      }
+
+    case 'datetime':
+      try {
+        return new Date(value).toLocaleString('fr-FR');
+      } catch {
+        return value.toString();
+      }
+
+    // NOMBRES
+    case 'number':
+    case 'slider':
+      return Number(value).toLocaleString('fr-FR');
+
+    // SÉLECTIONS MULTIPLES
+    case 'multiselect':
+      if (Array.isArray(value)) {
+        const labelMap = this.externalListLabels.get(fieldName);
+        if (labelMap) {
+          const labels = value.map(v => labelMap.get(v.toString()) || v);
+          return labels.join(', ');
+        }
+        return value.join(', ');
+      }
+      return value.toString();
+
+    // GÉOLOCALISATION
+    case 'geolocation':
+      if (typeof value === 'object' && value?.latitude && value?.longitude) {
+        return `${value.latitude.toFixed(6)}, ${value.longitude.toFixed(6)}`;
+      }
+      return 'Position non disponible';
+
+    // TABLES
+    case 'table':
+      return 'Données de tableau (voir ci-dessous)';
+
+    // CODES-BARRES ET NFC
+    case 'barcode':
+    case 'nfc':
+      if (typeof value === 'object' && value.code) {
+        return `Code scanné: ${value.code}`;
+      } else if (typeof value === 'string') {
+        return `Code: ${value}`;
+      }
+      return 'Non renseigné';
+
+    // FICHIERS
+    case 'file':
+    case 'attachment':
+      if (typeof value === 'string' && value.startsWith('C:\\fakepath\\')) {
+        const fileName = value.replace('C:\\fakepath\\', '');
+        return `Fichier: ${fileName}`;
+      } else if (typeof value === 'object' && value.url) {
+        return `Fichier téléchargé`;
+      }
+      return 'Non renseigné';
+
+    // FICHIERS FIXES
+    case 'file-fixed':
+      if (typeof value === 'string' && value.trim()) {
+        return `Fichier fixe: ${value}`;
+      }
+      return 'Fichier fixe non configuré';
+
+    // CALCULS
+    case 'calculation':
+      if (typeof value === 'string' && value.trim()) {
+        return `Résultat du calcul: ${value}`;
+      } else if (typeof value === 'number') {
+        return `Résultat: ${value}`;
+      }
+      return 'Calcul non effectué';
+
+    // SIGNATURES ET DESSINS
+    case 'signature':
+    case 'drawing':
+      if (typeof value === 'object' && value.url) {
+        return `${fieldType === 'signature' ? 'Signature' : 'Dessin'} enregistré`;
+      }
+      return 'Non renseigné';
+
+    // ADRESSES
+    case 'address':
+      if (typeof value === 'object') {
+        if (value.fullAddress) {
+          return value.fullAddress;
+        }
+        const parts = [
+          value.street,
+          value.city,
+          value.postalCode,
+          value.country
+        ].filter(part => part && part.trim());
+        return parts.length > 0 ? parts.join(', ') : 'Adresse incomplète';
+      }
+      return value.toString();
+
+    // CONTACTS
+    case 'contact':
+      if (typeof value === 'object' && value !== null) {
+        const parts = [];
+        if (value.name) parts.push(value.name);
+        if (value.email) parts.push(value.email);
+        if (value.phone) parts.push(value.phone);
+        return parts.length > 0 ? parts.join(' - ') : 'Contact incomplet';
+      }
+      return 'Contact non renseigné';
+
+    // RÉFÉRENCES
+    case 'reference':
+      if (typeof value === 'object' && value !== null) {
+        if (value.value) {
+          return value.value;
+        }
+        if (value.label) {
+          return value.label;
+        }
+      }
+      return value.toString();
+
+    // SCHÉMAS
+    case 'schema':
+      if (typeof value === 'string') {
+        return value;
+      } else if (typeof value === 'object') {
+        return JSON.stringify(value, null, 2);
+      }
+      return 'Schéma non renseigné';
+
+    // TEXTE FIXE
+    case 'fixed-text':
+      return 'Texte fixe du formulaire';
+
+    // AUDIO
+    case 'audio':
+      if (typeof value === 'object' && value.url) {
+        return 'Fichier audio enregistré';
+      }
+      return 'Aucun audio';
+
+    // CHAMPS TEXTUELS ET AUTRES
+    default:
+      if (typeof value === 'object' && value !== null) {
+        if (Array.isArray(value)) {
+               if (fieldType !== 'checkbox') {
+        return value.join(', ');
+      }
+        }
+        // Objet complexe
+        if (value.type && ['signature', 'drawing', 'file'].includes(value.type)) {
+          return value.url ? `Fichier enregistré (${value.type})` : 'Fichier non disponible';
+        }
+        return JSON.stringify(value, null, 2);
+      }
+      return value.toString();
+  }
+}
+// Méthode utilitaire pour vérifier si une valeur est un array
+isArray(value: any): boolean {
+  return Array.isArray(value);
+}
 
 // ✅ MÉTHODE CORRIGÉE : Obtenir le label d'une valeur de liste externe
 getExternalListLabel(fieldName: string, value: string | string[]): string {
@@ -452,27 +749,25 @@ private formatFileSize(bytes: number): string {
 }
 
   // Obtenir les champs avec leurs valeurs
-  getFormattedFieldsData(): { fieldName: string; label: string; value: any; type: string }[] {
-    if (!this.submission?.data || !this.currentForm?.fields) return [];
+getFormattedFieldsData(): { fieldName: string; label: string; value: any; type: string }[] {
+  if (!this.submission?.data || !this.currentForm?.fields) return [];
 
-    const fieldsData: { fieldName: string; label: string; value: any; type: string }[] = [];
+  const fieldsData: { fieldName: string; label: string; value: any; type: string }[] = [];
 
-    // Parcourir les champs du formulaire dans l'ordre
-    this.currentForm.fields.forEach(field => {
-      const value = this.submission!.data[field.fieldName];
+  // ✅ PARCOURIR LES CHAMPS DU FORMULAIRE (pas les données)
+  this.currentForm.fields.forEach(field => {
+    const value = this.submission!.data[field.fieldName];
 
-      // Inclure même les champs vides pour maintenir la structure
-      fieldsData.push({
-        fieldName: field.fieldName,
-        label: field.label,
-        value: value,
-        type: field.type
-      });
+    fieldsData.push({
+      fieldName: field.fieldName,
+      label: field.label,
+      value: value,
+      type: field.type
     });
+  });
 
-    return fieldsData;
-  }
-
+  return fieldsData; // Garder l'ordre original du formulaire
+}
   // Obtenir les métadonnées de soumission
   getSubmissionMetadata(): { [key: string]: any } {
     if (!this.submission?.data) return {};
@@ -655,7 +950,13 @@ getStaticImageAlt(fieldName: string): string {
       'signature': 'gesture',
       'drawing': 'brush',
       'geolocation': 'location_on',
-      'slider': 'tune'
+      'slider': 'tune',
+          'file-fixed': 'insert_drive_file',
+    'calculation': 'calculate',
+    'separator': 'horizontal_rule',
+    'fixed-text': 'text_format',
+    'contact': 'contact_page',
+    'reference': 'link'
     };
     return iconMap[fieldType] || 'help_outline';
   }
@@ -678,7 +979,13 @@ getStaticImageAlt(fieldName: string): string {
       'signature': 'Signature',
       'drawing': 'Dessin',
       'geolocation': 'Géolocalisation',
-      'slider': 'Curseur'
+      'slider': 'Curseur',
+
+          'file-fixed': 'Fichier fixe',
+    'barcode': 'Code-barres',
+    'nfc': 'NFC',
+    'separator': 'Séparateur',
+    'fixed-text': 'Texte fixe'
     };
     return labelMap[fieldType] || fieldType;
   }
