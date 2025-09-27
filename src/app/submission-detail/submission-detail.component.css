@@ -506,6 +506,7 @@ padding: 20px;
 }
 
 .field-type-badge {
+  margin-right: 6vw;
   background-color: #e3f2fd;
   color: #1565c0;
   padding: 4px 12px;
