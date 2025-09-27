@@ -35,6 +35,7 @@ export interface FormFieldDTO {
   options?: FieldOptionDTO[];
   validationRules?: ValidationRule;
   attributes?: { [key: string]: any };
+  geoData?: any; // Pour stocker temporairement les données de géolocalisation
 
   // ✅ Propriétés spécifiques aux listes externes
   externalListId?: number;

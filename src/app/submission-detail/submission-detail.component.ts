@@ -569,13 +569,23 @@ formatFieldValue(fieldName: string, value: any): string {
       return 'Fichier fixe non configuré';
 
     // CALCULS
-    case 'calculation':
-      if (typeof value === 'string' && value.trim()) {
-        return `Résultat du calcul: ${value}`;
-      } else if (typeof value === 'number') {
+// Dans formatFieldValue(), pour le case calculation :
+case 'calculation':
+    if (value === null || value === undefined || value === '' || value === 0) {
+        return 'Aucun calcul configuré (formule manquante)';
+    }
+    if (typeof value === 'string') {
+        if (value === 'Erreur') {
+            return 'Erreur dans la formule de calcul';
+        }
+        if (value.trim() === '') {
+            return 'Aucun calcul configuré (formule manquante)';
+        }
         return `Résultat: ${value}`;
-      }
-      return 'Calcul non effectué';
+    } else if (typeof value === 'number') {
+        return `Résultat: ${value.toLocaleString('fr-FR')}`;
+    }
+    return 'Calcul non disponible';
 
     // SIGNATURES ET DESSINS
     case 'signature':
@@ -586,20 +596,33 @@ formatFieldValue(fieldName: string, value: any): string {
       return 'Non renseigné';
 
     // ADRESSES
-    case 'address':
-      if (typeof value === 'object') {
-        if (value.fullAddress) {
-          return value.fullAddress;
-        }
-        const parts = [
-          value.street,
-          value.city,
-          value.postalCode,
-          value.country
-        ].filter(part => part && part.trim());
-        return parts.length > 0 ? parts.join(', ') : 'Adresse incomplète';
-      }
-      return value.toString();
+   // Dans formatFieldValue(), remplacer le case 'address' par :
+
+// ADRESSES
+case 'address':
+  if (typeof value === 'object' && value !== null) {
+    // ✅ CORRECTION : Utiliser fullAddress en priorité
+    if (value.fullAddress && value.fullAddress.trim() !== '') {
+      return value.fullAddress;
+    }
+
+    // Fallback : construire à partir des parties séparées
+    const parts = [
+      value.street,
+      value.city,
+      value.zipCode || value.postalCode,
+      value.country
+    ].filter(part => part && part.trim() !== '');
+
+    return parts.length > 0 ? parts.join(', ') : 'Adresse non renseignée';
+  }
+
+  // Si c'est une string directe
+  if (typeof value === 'string' && value.trim() !== '') {
+    return value;
+  }
+
+  return 'Adresse non renseignée';
 
     // CONTACTS
     case 'contact':

@@ -96,7 +96,48 @@ export class DynamicFieldComponent implements OnInit, AfterViewInit {
     }
     this.initializeSpecialFields();
     this.checkNFCSupport();
+
+    if (this.field.type === 'calculation') {
+    setTimeout(() => {
+      console.log('Force initial calculation for:', this.field.fieldName);
+      this.calculateValue();
+    }, 1500); // Délai plus long pour s'assurer que tout est initialisé
   }
+   if (this.formGroup) {
+    this.ensureControlsExist();
+  }
+  }
+  private ensureControlsExist(): void {
+  // Contrôle principal
+  if (!this.formGroup.get(this.field.fieldName)) {
+    this.addControlToForm();
+  } else if (this.field.type === 'address') {
+    // ✅ CORRECTION CRITIQUE : Même si le contrôle principal existe,
+    // vérifier et créer les contrôles secondaires pour l'adresse
+    if (!this.formGroup.get(this.field.fieldName + '_zip')) {
+      this.formGroup.addControl(this.field.fieldName + '_zip', new FormControl(''));
+      console.log('✅ Added missing zip control:', this.field.fieldName + '_zip');
+    }
+
+    if (!this.formGroup.get(this.field.fieldName + '_city')) {
+      this.formGroup.addControl(this.field.fieldName + '_city', new FormControl(''));
+      console.log('✅ Added missing city control:', this.field.fieldName + '_city');
+    }
+
+    console.log('✅ Address controls verified for:', this.field.fieldName);
+  } else if (this.field.type === 'contact') {
+    // Même logique pour contact
+    if (!this.formGroup.get(this.field.fieldName + '_name')) {
+      this.formGroup.addControl(this.field.fieldName + '_name', new FormControl(''));
+    }
+    if (!this.formGroup.get(this.field.fieldName + '_phone')) {
+      this.formGroup.addControl(this.field.fieldName + '_phone', new FormControl(''));
+    }
+    if (!this.formGroup.get(this.field.fieldName + '_email')) {
+      this.formGroup.addControl(this.field.fieldName + '_email', new FormControl(''));
+    }
+  }
+}
 
   ngAfterViewInit(): void {
     if (this.field.type === 'signature' && this.signatureCanvas) {
@@ -701,63 +742,102 @@ clearDrawing(): void {
     return [...this.tableColumns, 'actions'];
   }
 
-  // ============ CALCUL CORRIGÉ ============
-  setupCalculationWatcher(): void {
-    if (this.field.attributes?.['formula']) {
-      this.formGroup.valueChanges.subscribe(() => {
-        setTimeout(() => this.calculateValue(), 100);
-      });
-      // Calcul initial
-      setTimeout(() => this.calculateValue(), 200);
-    }
+setupCalculationWatcher(): void {
+  let formula = this.field.attributes?.['formula'] || this.field.placeholder;
+
+  console.log('=== SETUP CALCULATION WATCHER ===');
+  console.log('Field:', this.field.fieldName);
+  console.log('Attributes:', this.field.attributes);
+  console.log('Placeholder:', this.field.placeholder);
+  console.log('Formula found:', formula);
+
+  if (formula && formula !== 'Enter calcul...') {
+    console.log('✅ Formula trouvée:', formula);
+
+    this.formGroup.valueChanges.subscribe(() => {
+      console.log('Form values changed, recalculating...');
+      setTimeout(() => this.calculateValue(), 100);
+    });
+
+    // Calcul initial
+    setTimeout(() => {
+      console.log('Initial calculation trigger');
+      this.calculateValue();
+    }, 2000);
+  } else {
+    console.warn('❌ Aucune formule configurée pour:', this.field.fieldName);
+  }
+}
+
+ calculateValue(): void {
+  let formula = this.field.attributes?.['formula'];
+
+  // Fallback vers placeholder
+  if (!formula && this.field.placeholder && this.field.placeholder !== 'Enter calcul...') {
+    formula = this.field.placeholder;
   }
 
-  calculateValue(): void {
-    if (!this.field.attributes?.['formula']) return;
-
-    try {
-      let formula = this.field.attributes['formula'];
-      console.log('Original formula:', formula);
-
-      // Remplacer les références aux champs par leurs valeurs
-      const fieldPattern = /field_\w+/g;
-      const fieldNames = formula.match(fieldPattern) || [];
-
-      fieldNames.forEach((fieldName: string) => {
-        const control = this.formGroup.get(fieldName);
-        const value = control?.value || 0;
-        const numericValue = parseFloat(value.toString()) || 0;
-        formula = formula.replace(new RegExp(fieldName, 'g'), numericValue.toString());
-      });
-
-      console.log('Formula after replacement:', formula);
-
-      // Évaluer la formule de manière sécurisée
-      const result = this.safeEval(formula);
-      console.log('Calculation result:', result);
-
-      this.formGroup.get(this.field.fieldName)?.setValue(result, { emitEvent: false });
-    } catch (error) {
-      console.error('Error calculating value:', error);
-      this.formGroup.get(this.field.fieldName)?.setValue('Erreur');
-    }
+  if (!formula) {
+    console.warn('Pas de formule pour calculer');
+    return;
   }
 
-  safeEval(formula: string): number {
-    try {
-      // Nettoyer la formule pour n'autoriser que les opérations sécurisées
-      const cleanFormula = formula.replace(/[^0-9+\-*/.() ]/g, '');
-      if (cleanFormula !== formula) {
-        throw new Error('Formula contains invalid characters');
-      }
+  try {
+    let processedFormula = formula;
+    console.log('Formule originale:', processedFormula);
 
-      const result = new Function(`"use strict"; return (${cleanFormula})`)();
-      return isNaN(result) ? 0 : Math.round(result * 100) / 100;
-    } catch (error) {
-      console.error('Safe eval error:', error);
-      return 0;
-    }
+    // ✅ CORRECTION : Gérer les formules avec nombres ET les références de champs
+
+    // 1. D'abord remplacer les références aux champs (field_xxx)
+    const fieldPattern = /field_[\w\d_]+/g;
+    const fieldNames = processedFormula.match(fieldPattern) || [];
+
+    fieldNames.forEach((fieldName: string) => {
+      const control = this.formGroup.get(fieldName);
+      const value = control?.value || 0;
+      const numericValue = parseFloat(value.toString()) || 0;
+      processedFormula = processedFormula.replace(new RegExp(fieldName, 'g'), numericValue.toString());
+      console.log(`Remplacé ${fieldName} par ${numericValue}`);
+    });
+
+    console.log('Formule après remplacement des champs:', processedFormula);
+
+    // ✅ 2. Evaluer la formule (même si elle n'a que des nombres)
+    const result = this.safeEval(processedFormula);
+    console.log('Résultat du calcul:', result);
+
+    // Mettre à jour le champ avec le résultat
+    const control = this.formGroup.get(this.field.fieldName);
+    control?.setValue(result, { emitEvent: false });
+
+  } catch (error) {
+    console.error('Erreur lors du calcul:', error);
+    this.formGroup.get(this.field.fieldName)?.setValue('Erreur', { emitEvent: false });
   }
+}
+
+safeEval(formula: string): number {
+  try {
+    console.log('SafeEval - formule à évaluer:', formula);
+
+    // Nettoyer la formule pour n'autoriser que les opérations sécurisées
+    const cleanFormula = formula.replace(/[^0-9+\-*/.() ]/g, '');
+    console.log('SafeEval - formule nettoyée:', cleanFormula);
+
+    if (cleanFormula !== formula) {
+      console.warn('Formula contains invalid characters, cleaned:', cleanFormula);
+    }
+
+    const result = new Function(`"use strict"; return (${cleanFormula})`)();
+    const finalResult = isNaN(result) ? 0 : Math.round(result * 100) / 100;
+
+    console.log('SafeEval - résultat final:', finalResult);
+    return finalResult;
+  } catch (error) {
+    console.error('Safe eval error:', error);
+    return 0;
+  }
+}
 
   // ============ CODE-BARRES CORRIGÉ ============
 /*  async startBarcodeScanning(): Promise<void> {
@@ -1137,10 +1217,16 @@ private saveFieldAttributes(): void {
       this.formGroup.addControl(this.field.fieldName + '_email', new FormControl(''));
     }
 
-    if (this.field.type === 'address') {
-      this.formGroup.addControl(this.field.fieldName + '_zip', new FormControl(''));
-      this.formGroup.addControl(this.field.fieldName + '_city', new FormControl(''));
-    }
+   if (this.field.type === 'address') {
+    this.formGroup.addControl(this.field.fieldName + '_zip', new FormControl(''));
+    this.formGroup.addControl(this.field.fieldName + '_city', new FormControl(''));
+
+    console.log('✅ Address controls created:', [
+      this.field.fieldName,
+      this.field.fieldName + '_zip',
+      this.field.fieldName + '_city'
+    ]);
+  }
       // ✅ NOUVEAUX CONTRÔLES POUR DATETIME
   if (this.field.type === 'datetime') {
     this.formGroup.addControl(this.field.fieldName + '_date', new FormControl(''));
@@ -1152,19 +1238,96 @@ private saveFieldAttributes(): void {
     }
   }
 
-  getLocation(): void {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const coords = `${position.coords.latitude}, ${position.coords.longitude}`;
-          this.formGroup.get(this.field.fieldName)?.setValue(coords);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-        }
-      );
+getLocation(): void {
+  if (!navigator.geolocation) {
+    alert('La géolocalisation n\'est pas supportée par ce navigateur');
+    return;
+  }
+
+  const control = this.formGroup.get(this.field.fieldName);
+  control?.setValue('Localisation en cours...');
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const geoData = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        timestamp: new Date().toISOString()
+      };
+
+      // ✅ STOCKER L'OBJET dans un attribut caché
+      this.field.geoData = geoData;
+
+      // ✅ AFFICHER le texte formaté dans l'input
+      const displayText = `${geoData.latitude.toFixed(6)}, ${geoData.longitude.toFixed(6)}`;
+      control?.setValue(displayText);
+
+      console.log('Géolocalisation obtenue:', geoData);
+    },
+    (error) => {
+      console.error('Erreur géolocalisation:', error);
+      control?.setValue('');
+      this.field.geoData = null;
+
+      // ... reste du code d'erreur
+    }
+  );
+}
+// Dans dynamic-field.component.ts
+onManualLocationInput(event: Event): void {
+  const target = event.target as HTMLInputElement;
+  const value = target.value.trim();
+
+  if (value) {
+    const coords = this.parseManualCoordinates(value);
+    if (coords) {
+      // ✅ STOCKER l'objet dans l'attribut
+      this.field.geoData = coords;
+    } else {
+      // ✅ NETTOYER si format invalide
+      this.field.geoData = null;
+    }
+  } else {
+    this.field.geoData = null;
+  }
+}
+
+private parseManualCoordinates(input: string): any {
+  // Format: "lat, lng" ou "lat,lng"
+  const coordPattern = /^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/;
+  const match = input.match(coordPattern);
+
+  if (match) {
+    const latitude = parseFloat(match[1]);
+    const longitude = parseFloat(match[2]);
+
+    if (latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180) {
+      return {
+        latitude,
+        longitude,
+        accuracy: null,
+        timestamp: new Date().toISOString(),
+        source: 'manual'
+      };
     }
   }
+
+  return null;
+}
+
+getLocationDisplay(): string {
+  const control = this.formGroup.get(this.field.fieldName);
+  const value = control?.value;
+
+  if (typeof value === 'object' && value?.latitude && value?.longitude) {
+    return `${value.latitude.toFixed(6)}, ${value.longitude.toFixed(6)}`;
+  } else if (typeof value === 'string' && value !== '' && !value.includes('cours')) {
+    return value;
+  }
+
+  return '';
+}
 
   toggleEdit(): void {
     this.editMode = !this.editMode;

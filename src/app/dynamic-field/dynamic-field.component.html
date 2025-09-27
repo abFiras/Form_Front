@@ -305,23 +305,31 @@
     </div>
 
     <!-- Geolocation -->
-    <div *ngIf="field.type === 'geolocation'" class="geolocation-field">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>{{field.label}}</mat-label>
-        <input matInput
-               [placeholder]="field.placeholder || 'Coordonnées GPS'"
-               [formControlName]="field.fieldName"
-               [required]="field.required"
-               readonly>
-        <button type="button" mat-icon-button matSuffix type="button" (click)="getLocation()"
-                matTooltip="Obtenir ma position">
-          <mat-icon>my_location</mat-icon>
-        </button>
-      </mat-form-field>
-      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
-        {{field.label}} is required
-      </mat-error>
-    </div>
+   <div *ngIf="field.type === 'geolocation'" class="geolocation-field">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>{{field.label}}</mat-label>
+    <input matInput
+           [placeholder]="field.placeholder || 'Latitude, Longitude ou cliquez sur localiser'"
+           [formControlName]="field.fieldName"
+           [required]="field.required"
+           (input)="onManualLocationInput($event)">
+    <button type="button" mat-icon-button matSuffix (click)="getLocation()"
+            matTooltip="Obtenir ma position">
+      <mat-icon>my_location</mat-icon>
+    </button>
+  </mat-form-field>
+
+  <div *ngIf="getLocationDisplay()" class="location-display">
+    <small>
+      <mat-icon>location_on</mat-icon>
+      {{getLocationDisplay()}}
+    </small>
+  </div>
+
+  <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+    {{field.label}} est requis
+  </mat-error>
+</div>
 
     <!-- ✅ EXTERNAL LIST FIELD CORRIGÉ -->
     <div *ngIf="field.type === 'external-list'" class="field-wrapper">
@@ -763,32 +771,25 @@
     </div>
 
     <!-- ✅ CALCUL CORRIGÉ -->
-    <div *ngIf="field.type === 'calculation'" class="calculation-field">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>{{field.label}}</mat-label>
-        <input matInput
-               [formControlName]="field.fieldName"
-               readonly
-               style="background-color: #f5f5f5; font-weight: 500;">
-        <mat-icon matSuffix color="primary">calculate</mat-icon>
-      </mat-form-field>
+  <div *ngIf="field.type === 'calculation'" class="calculation-field">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>{{field.label}}</mat-label>
+    <input matInput
+           [formControlName]="field.fieldName"
+           [required]="field.required"
+           readonly
+           placeholder="Résultat du calcul">
+    <mat-icon matSuffix>calculate</mat-icon>
+  </mat-form-field>
 
-      <div class="calculation-info" *ngIf="!isPreview">
-        <div *ngIf="getCalculationFormula(); else noFormula" class="formula-display">
-          <mat-icon>info</mat-icon>
-          <span><strong>Formule:</strong> {{getCalculationFormula()}}</span>
-        </div>
-        <ng-template #noFormula>
-          <div class="no-formula-warning">
-            <mat-icon color="warn">warning</mat-icon>
-            <span>Aucune formule configurée. Cliquez sur modifier pour en ajouter une.</span>
-          </div>
-        </ng-template>
-      </div>
-      <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
-        {{field.label}} est requis
-      </mat-error>
-    </div>
+  <mat-hint *ngIf="getCalculationFormula()">
+    Formule: {{getCalculationFormula()}}
+  </mat-hint>
+
+  <mat-error *ngIf="formGroup?.get(field.fieldName)?.hasError('required')">
+    {{field.label}} est requis
+  </mat-error>
+</div>
 
   </div>
 </div>

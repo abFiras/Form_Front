@@ -238,6 +238,38 @@ prepareSubmissionData(): Record<string, any> {
 
   this.currentForm.fields.forEach(field => {
     const fieldValue = formValue[field.fieldName];
+
+if (field.type === 'calculation') {
+  // Pour les calculs, toujours prendre la valeur actuelle du FormControl
+  const calculatedValue = formValue[field.fieldName];
+
+  if (calculatedValue !== null && calculatedValue !== undefined && calculatedValue !== '') {
+    if (typeof calculatedValue === 'number') {
+      processedData[field.fieldName] = calculatedValue;
+    } else if (typeof calculatedValue === 'string' && !isNaN(Number(calculatedValue))) {
+      processedData[field.fieldName] = Number(calculatedValue);
+    } else {
+      processedData[field.fieldName] = calculatedValue.toString();
+    }
+    console.log('✅ Calculation value processed:', processedData[field.fieldName]);
+  } else {
+    processedData[field.fieldName] = 0;
+    console.log('✅ Calculation default value:', 0);
+  }
+}
+  // Traitement normal pour les autres champs...
+    if (field.type === 'geolocation') {
+      // Utiliser les données stockées dans l'attribut du champ
+      if ((field as any).geoData) {
+        processedData[field.fieldName] = (field as any).geoData;
+      } else if (fieldValue && typeof fieldValue === 'string' && fieldValue !== '') {
+        // Parser la saisie manuelle si pas d'objet stocké
+        const coords = this.parseManualCoordinates(fieldValue);
+        processedData[field.fieldName] = coords;
+      } else {
+        processedData[field.fieldName] = null;
+      }
+    } else {
 if (field.type === 'fixed-text') {
       // Essayer plusieurs sources pour le contenu
       let content = 'Texte non configuré';
@@ -310,9 +342,42 @@ if (field.type === 'fixed-text') {
         processedData[field.fieldName] = this.getDefaultSubmissionValue(field.type);
       }
     }
-    // ✅ TRAITEMENT SPÉCIAL POUR CONTACT
-    if (field.type === 'contact') {
-      const contactData = {
+
+ // Dans prepareSubmissionData(), remplacer le traitement de l'adresse par :
+
+// ✅ TRAITEMENT SPÉCIAL POUR ADDRESS - VERSION CORRIGÉE
+if (field.type === 'address') {
+  const addressData = {
+    fullAddress: formValue[field.fieldName] || '',
+    zipCode: formValue[`${field.fieldName}_zip`] || '',
+    city: formValue[`${field.fieldName}_city`] || ''
+  };
+
+  // ✅ DEBUG: Vérifier les valeurs récupérées
+  console.log('=== ADDRESS FIELD DEBUG ===');
+  console.log('Field name:', field.fieldName);
+  console.log('Full address value:', formValue[field.fieldName]);
+  console.log('Zip code value:', formValue[`${field.fieldName}_zip`]);
+  console.log('City value:', formValue[`${field.fieldName}_city`]);
+  console.log('Form keys containing address:', Object.keys(formValue).filter(key => key.includes(field.fieldName)));
+
+  // Construire l'adresse complète si les champs séparés sont remplis
+  if (addressData.zipCode || addressData.city) {
+    const parts = [
+      addressData.fullAddress,
+      addressData.zipCode,
+      addressData.city
+    ].filter(part => part && part.trim() !== '');
+
+    addressData.fullAddress = parts.join(', ');
+  }
+
+  const hasData = Object.values(addressData).some(val => val && val.trim() !== '');
+  processedData[field.fieldName] = hasData ? addressData : null;
+  console.log('- Address processed:', processedData[field.fieldName]);
+
+} else if (field.type === 'contact') {
+        const contactData = {
         name: formValue[`${field.fieldName}_name`] || '',
         phone: formValue[`${field.fieldName}_phone`] || '',
         email: formValue[`${field.fieldName}_email`] || '',
@@ -345,7 +410,9 @@ if (field.type === 'fixed-text') {
     }
 
     console.log('- Final value in processedData:', processedData[field.fieldName]);
+  }
   });
+
 
   // Métadonnées globales
   processedData['_submission_metadata'] = {
@@ -360,7 +427,27 @@ if (field.type === 'fixed-text') {
   return processedData;
 }
 
+private parseManualCoordinates(input: string): any {
+  const coordPattern = /^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/;
+  const match = input.match(coordPattern);
 
+  if (match) {
+    const latitude = parseFloat(match[1]);
+    const longitude = parseFloat(match[2]);
+
+    if (latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180) {
+      return {
+        latitude,
+        longitude,
+        accuracy: null,
+        timestamp: new Date().toISOString(),
+        source: 'manual'
+      };
+    }
+  }
+
+  return null;
+}
 // ✅ NOUVELLE MÉTHODE : Données pour champs informatifs
 private getInformationalFieldData(field: FormFieldDTO): any {
   switch (field.type) {
