@@ -78,9 +78,10 @@ export class DynamicFieldComponent implements OnInit, AfterViewInit {
       }
 
       // Valeurs par défaut si toujours manquantes
-      if (!this.field.externalListDisplayMode) {
-        this.field.externalListDisplayMode = 'select';
-      }
+   // Valeurs par défaut si toujours manquantes
+if (!this.field.externalListDisplayMode) {
+  this.field.externalListDisplayMode = 'radio'; // ✅ Changer en 'radio'
+}
 
       console.log('External list field after initialization:', {
         externalListId: this.field.externalListId,

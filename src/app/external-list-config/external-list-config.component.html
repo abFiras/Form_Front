@@ -14,8 +14,6 @@
         </mat-error>
       </mat-form-field>
 
-
-
       <!-- Sélection de la liste externe -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Liste externe</mat-label>
@@ -36,16 +34,19 @@
       </mat-form-field>
 
       <!-- Mode d'affichage -->
-   <mat-form-field appearance="outline" class="full-width">
+  <!-- Mode d'affichage -->
+<mat-form-field appearance="outline" class="full-width">
   <mat-label>Mode d'affichage</mat-label>
-  <mat-select formControlName="displayMode" placeholder="--Sélectionnez une mode--" required>
+  <mat-select formControlName="displayMode" [value]="'radio'" required>
     <mat-option *ngFor="let mode of displayModes" [value]="mode.value">
       {{ mode.label }}
     </mat-option>
   </mat-select>
   <mat-hint>Comment les options seront présentées à l'utilisateur</mat-hint>
+  <mat-error *ngIf="configForm.get('displayMode')?.hasError('required')">
+    Le mode d'affichage est obligatoire
+  </mat-error>
 </mat-form-field>
-
 
       <!-- Champ obligatoire -->
       <div class="checkbox-field">
@@ -59,20 +60,10 @@
         <h4>Aperçu du mode d'affichage</h4>
         <div class="preview-container">
 
-          <!-- Preview Select -->
-          <div *ngIf="configForm.get('displayMode')?.value === 'select'" class="preview-select">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>{{ configForm.get('label')?.value || 'Libellé du champ' }}</mat-label>
-              <mat-select [placeholder]="configForm.get('placeholder')?.value || 'Sélectionnez une valeur...'" disabled>
-                <mat-option>Option exemple 1</mat-option>
-                <mat-option>Option exemple 2</mat-option>
-                <mat-option>Option exemple 3</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
+
 
           <!-- Preview Radio -->
-          <div *ngIf="configForm.get('displayMode')?.value === 'radio'" class="preview-radio">
+<div *ngIf="configForm.get('displayMode')!.value === 'radio'" class="preview-radio">
             <h5>{{ configForm.get('label')?.value || 'Libellé du champ' }}</h5>
             <mat-radio-group disabled>
               <mat-radio-button value="1">Option exemple 1</mat-radio-button>
@@ -82,7 +73,7 @@
           </div>
 
           <!-- Preview Checkbox -->
-          <div *ngIf="configForm.get('displayMode')?.value === 'checkbox'" class="preview-checkbox">
+<div *ngIf="configForm.get('displayMode')!.value === 'checkbox'" class="preview-checkbox">
             <h5>{{ configForm.get('label')?.value || 'Libellé du champ' }}</h5>
             <div>
               <mat-checkbox disabled>Option exemple 1</mat-checkbox>

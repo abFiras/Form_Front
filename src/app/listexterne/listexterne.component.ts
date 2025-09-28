@@ -134,7 +134,7 @@ export class ListexterneComponent implements OnInit {
   }
 
   createNewList(): void {
-    this.router.navigate(['/external-lists/create']);
+    this.router.navigate(['/creelisteexterne']);
   }
 
   editList(listId: number): void {

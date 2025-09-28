@@ -108,6 +108,13 @@
   gap: 16px;
   margin-bottom: 16px;
 }
+.form-row1 {
+  margin-left: 19vw;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
 
 .form-row.full-width,
 .full-width {
@@ -197,6 +204,7 @@
 }
 
 .import-instructions {
+  margin-left: 19vw;
   display: flex;
   gap: 12px;
   padding: 16px;
@@ -230,6 +238,7 @@
 }
 
 .file-select-btn {
+  margin-left: 19vw;
   align-self: flex-start;
 }
 

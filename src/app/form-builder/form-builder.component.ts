@@ -333,7 +333,7 @@ createFieldFromPalette(paletteField: PaletteField): FormFieldDTO {
       baseField.placeholder = 'Sélectionnez une valeur...';
       baseField.attributes = {};
       baseField.attributes['externalListId'] = null;
-      baseField.attributes['externalListDisplayMode'] = 'select';
+      baseField.attributes['externalListDisplayMode'] = 'radio';
       baseField.attributes['externalListUrl'] = '';
       baseField.attributes['externalListParams'] = {};
 
@@ -359,22 +359,30 @@ createFieldFromPalette(paletteField: PaletteField): FormFieldDTO {
   return baseField;
 }
 
-  openExternalListConfig(field: FormFieldDTO): void {
-    const dialogRef = this.dialog.open(ExternalListConfigComponent, {
-      width: '600px',
-      data: { field }
-    });
+openExternalListConfig(field: FormFieldDTO): void {
+  const dialogRef = this.dialog.open(ExternalListConfigComponent, {
+    width: '600px',
+    data: { field }
+  });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const fieldIndex = this.formFields.findIndex(f => f.fieldName === field.fieldName);
-        if (fieldIndex >= 0) {
-          this.formFields[fieldIndex] = result;
-          this.rebuildPreviewForm();
-        }
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      // Utilisateur a cliqué sur "Enregistrer"
+      const fieldIndex = this.formFields.findIndex(f => f.fieldName === field.fieldName);
+      if (fieldIndex >= 0) {
+        this.formFields[fieldIndex] = result;
+        this.rebuildPreviewForm();
       }
-    });
-  }
+    } else {
+      // Utilisateur a cliqué sur "Annuler" - supprimer le champ
+      const fieldIndex = this.formFields.findIndex(f => f.fieldName === field.fieldName);
+      if (fieldIndex >= 0) {
+        this.onRemoveField(fieldIndex);
+        console.log('Configuration annulée, champ supprimé');
+      }
+    }
+  });
+}
 
   // Méthode saveForm mise à jour avec support des groupes
  // Méthode saveForm améliorée dans form-builder.component.ts
